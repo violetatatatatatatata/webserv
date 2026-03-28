@@ -2,34 +2,33 @@
 [http y sockets](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa)
 [artículo sobre webserver](https://m4nnb3ll.medium.com/webserv-building-a-non-blocking-web-server-in-c-98-a-42-project-04c7365e4ec7i)
 
-├── Makefile
-├── srcs
-│   ├── core
-│   │   ├── Client.cpp      # estado de la conexion
-│   │   ├── Cluster.cpp     # gestion de multiples servidores
-│   │   └── Server.cpp      # sockets de escucha
-│   ├── cgi
-│   │   └── CGI.cpp
-│   ├── utils
-│   │   └── Utils.cpp
-│   ├── http
-│   │   ├── Request.cpp     # parser de peticiones
-│   │   ├── Response.cpp    # generar respuestas
-│   │   └── Router.cpp      # resolucion de rutas
-│   ├── parse
-│   │   └── Config.cpp      # parser
-│   └── Webserv.cpp         # main
-├── inc
-│   ├── Webserv.hpp         # cositas generales, macros, colores
-│   ├── core
-│   │   ├── Client.hpp      
-│   │   ├── Cluster.hpp
-│   │   └── Server.hpp
-│   └── http
-│       ├── AutoIndex.hpp
-│       ├── CGI.hpp        
-│       ├── Request.hpp    
-│       └── Response.hpp   
-├── www                     # sitios de pruebas
+├── Makefile <br>
+├── srcs <br>
+│   ├── core<br>
+│   │   ├── Client.cpp      # estado de la conexion <br>
+│   │   ├── Cluster.cpp     # gestion de multiples servidores <br>
+│   │   └── Server.cpp      # sockets de escucha <br>
+│   ├── cgi<br>
+│   │   └── CGI.cpp<br>
+│   ├── utils<br>
+│   │   └── Utils.cpp<br>
+│   ├── http<br>
+│   │   ├── Request.cpp     # parser de peticiones <br>
+│   │   ├── Response.cpp    # generar respuestas <br>
+│   │   └── Router.cpp      # resolucion de rutas <br>
+│   ├── parse<br>
+│   │   └── Config.cpp      # parser <br>
+│   └── Webserv.cpp         # main <br>
+├── inc<br>
+│   ├── Webserv.hpp         # cositas generales, macros, colores <br>
+│   ├── core<br>
+│   │   ├── Client.hpp <br>      
+│   │   ├── Cluster.hpp <br>
+│   │   └── Server.hpp <br>
+│   └── http<br>
+│       ├── AutoIndex.hpp<br>
+│       ├── CGI.hpp        <br>
+│       ├── Request.hpp    <br>
+│       └── Response.hpp   <br>
+├── www                     # sitios de pruebas <br>
 │   └── index.html
-
