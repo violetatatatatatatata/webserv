@@ -6,7 +6,7 @@
 #    By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/01/16 14:57:51 by avelandr          #+#    #+#              #
-#    Updated: 2026/03/28 14:17:27 by avelandr         ###   ########.fr        #
+#    Updated: 2026/03/29 17:18:41 by avelandr         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -25,6 +25,7 @@ OBJ         = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC))
 DEP 		= $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.d, $(SRC))
 
 BOLD      = \033[1m
+WHITE	  = \033[37m
 BLACK     = \033[1;30m
 GREEN     = \033[1;32m
 YELLOW    = \033[1;33m
@@ -35,45 +36,7 @@ RESET     = \033[0m
 
 TOTAL_SRCS := $(words $(SRC))
 
-all: ws print libft $(NAME)
-
-ws:
-	@echo "$(YELLOW)"
-	@echo '██╗    ██╗███████╗██████╗ ███████╗███████╗██████╗ ██╗   ██╗'
-	@echo '██║    ██║██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗██║   ██║'
-	@echo '██║ █╗ ██║█████╗  ██████╔╝███████╗█████╗  ██████╔╝██║   ██║'
-	@echo '██║███╗██║██╔══╝  ██╔══██╗╚════██║██╔══╝  ██╔══██╗╚██╗ ██╔╝'
-	@echo '╚███╔███╔╝███████╗██████╔╝███████║███████╗██║  ██║ ╚████╔╝ '
-	@echo ' ╚══╝╚══╝ ╚══════╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  '	
-	@echo ""
-	@echo "========================================================="
-	@echo "  by: coco dani y violeta :p (poner logins aqui)"
-	@echo "========================================================="
-	@echo "$(RESET)"
-
-print:
-	@echo "$(YELLOW)"
-	@echo '           _                      _           '
-	@echo '    _     /||       .   .        ||\     _    '
-	@echo '   ( }    \||D    '   '     '   C||/    { )   '
-	@echo ' | /\__,=_[_]   '  .   . '       [_]_=,__/\ | '
-	@echo ' |_\_  |----|                    |----|  _/_| '
-	@echo ' |  |/ |    |                    |    | \|  | '
-	@echo ' |  /_ |    |                    |    | _\  | '
-	@echo "$(RESET)"
-
-libft:
-	@echo ""
-	@echo "$(BLUE)Building libft...$(RESET)"
-	@make -C ./libs/libft --no-print-directory
-
-$(NAME): $(OBJ)
-	@echo ""
-	@echo "$(BLUE)$(NAME) done!$(RESET)"
-	@echo ""
-	@echo "$(BLUE)Linking objects...$(RESET)"
-	@$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(NAME)
-	@echo "$(GREEN)Exercise $(NAME) compiled successfully!$(RESET)"
+all: print libft $(NAME)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
@@ -89,6 +52,41 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	rest=$$((50 - $$bar_len)); \
 	printf "\r$(BLUE)Compiling $(NAME): $(YELLOW)[$$bar_str$$spaces] $(YELLOW)$$percent%% $(RESET)"
 
+print:
+	@echo "$(YELLOW)"
+	@echo '██╗    ██╗███████╗██████╗ ███████╗███████╗██████╗ ██╗   ██╗'
+	@echo '██║    ██║██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗██║   ██║'
+	@echo '██║ █╗ ██║█████╗  ██████╔╝███████╗█████╗  ██████╔╝██║   ██║'
+	@echo '██║███╗██║██╔══╝  ██╔══██╗╚════██║██╔══╝  ██╔══██╗╚██╗ ██╔╝'
+	@echo '╚███╔███╔╝███████╗██████╔╝███████║███████╗██║  ██║ ╚████╔╝ '
+	@echo " ╚══╝╚══╝ ╚══════╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  $(RESET) $(CYAN)"
+	@echo "==========================================================="
+	@echo "           𝙝𝙚𝙘𝙝𝙤 𝙥𝙤𝙧: 𝙘𝙤𝙘𝙤, 𝙙𝙖𝙣𝙞 𝙮 𝙫𝙞𝙤𝙡𝙚𝙩𝙖 :)"
+	@echo "===========================================================$(RESET)$(BOLD)"
+	@echo '                 _                      _                 '
+	@echo '          _     /||       .   .        ||\     _          '
+	@echo '         ( }    \||D    `   `     .   C||/    { )         '
+	@echo '       | /\__,=_[_]   `  .   . `       [_]_=,__/\ |       '
+	@echo '       |_\_  |----|                    |----|  _/_|       '
+	@echo '       |  |/ |    |                    |    | \|  |       '
+	@echo '       |  /_ |    |                    |    | _\  |       '
+	@echo "$(RESET)"
+
+libft:
+	@echo ""
+	@echo "$(BLUE)Building libft...$(RESET)"
+	@make -C ./libs/libft --no-print-directory
+
+# Reglas obligatorias
+
+$(NAME): $(OBJ)
+	@echo ""
+	@echo "$(BLUE)$(NAME) done!$(RESET)"
+	@echo ""
+	@echo "$(BLUE)Linking objects...$(RESET)"
+	@$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(NAME)
+	@echo "$(GREEN)Exercise $(NAME) compiled successfully!$(RESET)"
+
 clean:
 	@rm -rf $(OBJ_DIR)
 	@make -C ./libs/libft clean  --no-print-directory
@@ -97,7 +95,6 @@ clean:
 fclean: clean
 	@rm -f $(NAME)
 	@make -C ./libs/libft fclean  --no-print-directory
-	@if [ -f "./libs/MLX42/libmlx42.a" ]; then rm -f ./libs/MLX42/libmlx42.a; fi
 	@echo "$(BLUE)Executable cleaned.$(RESET)"
 
 re: fclean all
