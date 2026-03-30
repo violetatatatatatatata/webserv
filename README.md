@@ -32,3 +32,6 @@
 │       └── Response.hpp   <br>
 ├── www                     # sitios de pruebas <br>
 │   └── index.html
+
+
+Usar print_msg !!! sirve para señalar info en diferentes niveles y tipos

@@ -13,9 +13,9 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-#define
+ #include <Webserv.hpp>
 
-#include <>
+// #define
 
 namespace Config {
 /*	port: puerto de escucha
@@ -41,20 +41,20 @@ class Server {
 			~Server();
 
 			// getters
-			int							getPort();
-			size_t						getMaxBodySize();
-			std::string&				getHost();
-			std::vector<std::string>&	getServerNames();
-			std::map<int, std::string>&	getErrorPages();
-			std::vector<Location>&		getLocations();
+			int							getPort() const;
+			size_t						getMaxBodySize() const;
+			const std::string&				getHost() const;
+			const std::vector<std::string>&	getServerNames() const;
+			const std::map<int, std::string>&	getErrorPages() const;
+			const std::vector<Location>&		getLocations() const;
 			
 			// setters
 			void	setPort(int port);
 			void	setHost(std::string& host);
 			void	setMaxBodySize(size_t size);
-			void	addServerName(std::string& name);
-			void	addErrorPage(int code, std::string& path);
-			void	addLocation(Location& location);
+			void	addServerName(const std::string& name);
+			void	addErrorPage(int code, const std::string& path);
+			void	addLocation(const Location& location);
 	};
 
 /*	autoindex: permite mirar si index.html existe o no. Si no existe, generar un html con la lista de archivos
@@ -84,22 +84,22 @@ class Location {
 			~Location();
 		
 			// getters
-			bool								getAutoindex()
-			std::string&						getPath();
-			std::string&						getRoot();
-			std::string&						getIndex();
-			std::string& 						getUploadStore();
-			std::vector<std::string>& 			getMethods();
-			std::map<std::string, std::string>&	getCgiInfo();
+			bool										getAutoindex()
+			const std::string&							getPath() const;
+			const std::string&							getRoot() const;
+			const std::string&							getIndex() const;
+			const std::string& 							getUploadStore() const;
+			const std::vector<std::string>& 			getMethods() const;
+			const std::map<std::string, std::string>&	getCgiInfo() const;
 			
 			// setters
-			void setPath(std::string& path);
-			void setRoot(std::string& root);
-			void setIndex(std::string& index);
+			void setPath(const std::string& path);
+			void setRoot(const std::string& root);
+			void setIndex(const std::string& index);
 			void setAutoindex(bool state);
-			void addMethod(std::string& method);
-			void setUploadStore(std::string& path);
-			void addCgiInfo(std::string& ext,: std::string& bin);
+			void addMethod(const std::string& method);
+			void setUploadStore(const std::string& path);
+			void addCgiInfo(const std::string& ext, const std::string& bin);
 };
 }
 
