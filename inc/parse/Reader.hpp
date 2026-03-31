@@ -1,35 +1,34 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_substr.c                                        :+:      :+:    :+:   */
+/*   Reader.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/12/18 16:53:40 by avelandr          #+#    #+#             */
-/*   Updated: 2025/12/18 16:55:58 by avelandr         ###   ########.fr       */
+/*   Created: 2026/03/31 12:59:13 by avelandr          #+#    #+#             */
+/*   Updated: 2026/03/31 14:47:29 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../Includes/libft.h"
+#ifndef READER_HPP
+# define READER_HPP
 
-char	*ft_substr(char const *s, unsigned int start, size_t len)
-{
-	char	*res;
-	char	*st;
+/*	aqui se carga TODO el file como un vector de strings (**file)
+ * */
+typedef std::vector<std::string> fileVector;
 
-	if (!s)
-		return (NULL);
-	if (start > ft_strlen(s))
-	{
-		len = 0;
-		start = ft_strlen(s);
-	}
-	if (ft_strlen(s + start) <= len)
-		len = ft_strlen(s + start);
-	st = (char *)s;
-	res = (char *)malloc(len + 1);
-	if (!res)
-		return (NULL);
-	ft_strlcpy(res, &st[start], len + 1);
-	return (res);
+ #include <Webserv.hpp>
+
+namespace Config {
+
+class Reader {
+
+	public:
+		fileVector	readFile(const char *f);
+		class FileNotFoundException: public std::exception {
+			virtual const char *what() const throw();
+		};
+};
 }
+
+#endif

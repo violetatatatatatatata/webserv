@@ -1,22 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_isalpha.c                                       :+:      :+:    :+:   */
+/*   Reader.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/12/18 16:41:21 by avelandr          #+#    #+#             */
-/*   Updated: 2025/12/18 16:41:59 by avelandr         ###   ########.fr       */
+/*   Created: 2026/03/31 14:44:22 by avelandr          #+#    #+#             */
+/*   Updated: 2026/03/31 14:44:44 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../Includes/libft.h"
+#include <Webserv.hpp>
 
-int	ft_isalpha(int c)
-{
-	if (c < 65 || c > 122 || (c < 97 && c > 90))
-	{
-		return (0);
-	}
-	return (1);
-}
+namespace Config {}
+

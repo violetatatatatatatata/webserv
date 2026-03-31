@@ -1,26 +1,34 @@
 /* ************************************************************************** */
+
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_lstsize_bonus.c                                 :+:      :+:    :+:   */
+/*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/12/18 16:49:15 by avelandr          #+#    #+#             */
-/*   Updated: 2025/12/18 16:49:58 by avelandr         ###   ########.fr       */
+/*   Created: 2026/03/31 10:15:33 by avelandr          #+#    #+#             */
+/*   Updated: 2026/03/31 10:16:14 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../Includes/libft.h"
+#ifndef CONFIG_HPP
+# define CONFIG_HPP
 
-int	ft_lstsize(t_list *lst)
-{
-	int		i;
+ #include <Webserv.hpp>
 
-	i = 0;
-	while (lst)
-	{
-		lst = lst->next;
-		i++;
-	}
-	return (i);
+namespace Config {
+
 }
+
+class Config {
+	private:
+
+	public:
+        Config(Config const &src);
+        virtual ~Config(void);
+        Config &operator=(Config const &src);
+
+		int	parse(const char *f);
+}
+
+#endif

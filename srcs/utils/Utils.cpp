@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/30 14:54:00 by avelandr          #+#    #+#             */
-/*   Updated: 2026/03/30 16:02:47 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/03/31 18:38:45 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,8 @@ static std::string build_msg(int level, int mod) {
         case WARN:		msg += "[WARN]\t";		break;
         case CGI_LOG:	msg += "[CGI]\t"; 		break;
     }
+	// he de hacer que no sea necesario pasar mod sino que asocie cada
+	// nivel al mod
     switch (mod) {
         case PARSER:	msg += "[Parser]\t";	break;
         case CORE:		msg += "[Core]\t"; 		break;
@@ -46,11 +48,14 @@ static std::string build_msg(int level, int mod) {
     return msg;
 }
 
-void print_msg(int level, int mod, std::string msg) {
+int	print_msg(int level, int mod, std::string msg)
+{
+	int			ret = (mod != ERR || mod != FATAL);
     std::string color = RESET;
+
     switch(level) {
         case ERR: case FATAL:
-			color = RED;		break;
+			color = RED;	break;
         case SUCCESS: case START:
 			color = GREEN;		break;
         case WARN:
@@ -71,4 +76,5 @@ void print_msg(int level, int mod, std::string msg) {
 			color = BOLD;
     }
     std::cout << color << build_msg(level, mod) << msg << RESET << std::endl;
+	return (ret);
 }
