@@ -6,12 +6,24 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:05:36 by avelandr          #+#    #+#             */
-/*   Updated: 2026/03/31 18:05:40 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/01 01:46:39 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef LOCATION_HPP
 # define LOCATION_HPP
+
+#include <Webserv.hpp>
+
+enum LocDir {
+    LOC_ROOT,
+    LOC_INDEX,
+    LOC_AUTOINDEX,
+    LOC_METHODS,
+    LOC_UPLOAD_STORE,
+    LOC_CGI_INFO,
+    LOC_UNEXPECTED
+};
 
 /*	autoindex: permite mirar si index.html existe o no. Si no existe, generar un html con la lista de archivos
  *	index: indica la respuesta predeterminada si la url acaba en /
@@ -23,18 +35,6 @@
  *	  key: la extensión del archivo (ej. ".php", ".py", ".pl").
 	  value: la ruta absoluta al ejecutable (ej. "/usr/bin/php-cgi", "/usr/bin/python3").
  * */
-
-enum loc {
-	PATH,
-	METHODS,
-	ROOT,
-	INDEX,
-	AUTOINDEX,
-	UPLOAD_STORE,
-	CGI,
-	RETURN
-}
-
 class Location {
 		private:
 			bool								_autoindex;
@@ -52,7 +52,7 @@ class Location {
 			~Location();
 		
 			// getters
-			bool										getAutoindex()
+			bool										getAutoindex();
 			const std::string&							getPath() const;
 			const std::string&							getRoot() const;
 			const std::string&							getIndex() const;

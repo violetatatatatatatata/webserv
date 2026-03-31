@@ -3,26 +3,26 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+         #
+#    By: avelandr <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/01/16 14:57:51 by avelandr          #+#    #+#              #
-#    Updated: 2026/03/31 18:45:21 by avelandr         ###   ########.fr        #
+#    Created: 2026/04/01 01:31:01 by avelandr          #+#    #+#              #
+#    Updated: 2026/04/01 01:36:33 by avelandr         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME        = webserv
 
-CC          = cc
-CFLAGS      = -Wall -Werror -Wextra -g -fsanitize=address
-INCLUDES    = -I./inc
+CXX         = c++
+CXXFLAGS    = -Wall -Werror -Wextra -g -fsanitize=address -std=c++98
+INCLUDES    = -Iinc -Iinc/http -Iinc/core -Iinc/parse
 
 SRC_DIR     = srcs
 OBJ_DIR     = objs
 
-SRC         = $(shell find $(SRC_DIR) -name "*.c")
+SRC         = $(shell find $(SRC_DIR) -name "*.cpp")
 
-OBJ         = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC))
-DEP 		= $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.d, $(SRC))
+OBJ         = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC))
+DEP 		= $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.d, $(SRC))
 
 BOLD      = \033[1m
 WHITE	  = \033[37m
@@ -38,7 +38,8 @@ TOTAL_SRCS := $(words $(SRC))
 
 all: print $(NAME)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@echo ""
 	@mkdir -p $(dir $@)
 	@curr=$$(find $(OBJ_DIR) -type f -name "*.o" 2>/dev/null | wc -l); \
 	curr=$$((curr + 1)); \
@@ -50,7 +51,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	rest=$$((10 - $$bar_len)); \
 	while [ $$i -lt $$rest ]; do spaces="$${spaces}▒"; i=$$((i+1)); done; \
 	printf "\r\033[K$(YELLOW)Generating $(NAME) objects... %-38.38s $(CYAN)$$bar_str$$spaces $(GREEN)$$percent%%$(RESET)" $@
-	@$(CC) $(CFLAGS) $(INCLUDES) -MMD -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -c $< -o $@
 
 print:
 	@echo "$(YELLOW)"
@@ -63,12 +64,12 @@ print:
 	@echo "==========================================================="
 	@echo "           𝙝𝙚𝙘𝙝𝙤 𝙥𝙤𝙧: 𝙘𝙤𝙘𝙤, 𝙙𝙖𝙣𝙞 𝙮 𝙫𝙞𝙤𝙡𝙚𝙩𝙖 :)"
 	@echo "===========================================================$(RESET)$(BOLD)"
-	@echo '                 _                      _                 '
-	@echo '          _     /||       .   .        ||\     _          '
+	@echo '                  _                      _                 '
+	@echo '          _     /||.   .        ||\     _          '
 	@echo '         ( }    \||D    `   `     .   C||/    { )         '
-	@echo '       | /\__,=_[_]   `  .   . `       [_]_=,__/\ |       '
-	@echo '       |_\_  |----|                    |----|  _/_|       '
-	@echo '       |  |/ |    |                    |    | \|  |       '
+	@echo '       |/\__,=_[_]   `  .   . `       [_]_=,__/\ |'
+	@echo '       |_\_  |----|                    |----|  _/_|'
+	@echo '       |  |/ |    |                    |    | \|  |'
 	@echo "       |  /_ |    |                    |    | _\  |       $(RESET)"
 
 # Reglas obligatorias
@@ -77,7 +78,7 @@ $(NAME): $(OBJ)
 	@echo "\n"
 	@echo "$(BLUE)Compiling $(NAME)...$(RESET)"
 	@echo ""
-	@$(CC) $(CFLAGS) $(OBJ) $(LDFLAGS) -o $(NAME)
+	@$(CXX) $(CXXFLAGS) $(OBJ) $(LDFLAGS) -o $(NAME)
 	@echo "$(GREEN)Done !$(RESET)"
 
 clean:

@@ -6,14 +6,12 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:01:18 by avelandr          #+#    #+#             */
-/*   Updated: 2026/03/31 18:35:50 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/01 01:46:06 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVERCONFIG_HPP
 # define SERVERCONFIG_HPP
-
-# define UNEXPECTED -42
 
 # include <Webserv.hpp>
 
@@ -24,10 +22,9 @@ enum Serv {
 	ERROR_PAGE,
 	MAX_BODY_SIZE,
 	ROOT,
-	INDEX
+	INDEX,
+	UNEXPECTED
 }
-
-namespace Config {
 
 /*	port: puerto de escucha
  *	max_size: maximo tamaño del body cuando este es fijo
@@ -42,6 +39,7 @@ class ServerConfig {
 			int											_port;
 			size_t										_maxSize;
 			std::string									_host;
+			std::string									_root;
 			std::vector<std::string>					_serverNames;
 			std::map<int, std::string>					_errPages;
 			std::vector<Location>						_locations;
@@ -57,6 +55,7 @@ class ServerConfig {
 			int									getPort() const;
 			size_t								getMaxBodySize() const;
 			const std::string&					getHost() const;
+			const std::string&					getRoot() const;
 			const std::vector<std::string>&		getServerNames() const;
 			const std::map<int, std::string>&	getErrorPages() const;
 			const std::vector<Location>&		getLocations() const;
@@ -64,15 +63,14 @@ class ServerConfig {
 			// setters
 			void	setPort(int port);
 			void	setHost(std::string& host);
+			void	setRoot(const std::string& root);
 			void	setMaxBodySize(size_t size);
 			void	addServerName(const std::string& name);
 			void	addErrorPage(int code, const std::string& path);
 			void	addLocation(const Location& location);
 
 			int	parseFile(const char *f);
-			int	parseServer(int pos, fileVector file, ConfigFile server);
-	};
-
-}
+			int	parseServer(int pos, fileVector file, ConfigFile &server);
+};
 
 #endif

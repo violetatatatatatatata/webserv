@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/30 14:45:43 by avelandr          #+#    #+#             */
-/*   Updated: 2026/03/30 16:02:31 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/01 01:47:02 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,14 +57,23 @@
 # include <arpa/inet.h>
 # include <netinet/in.h>
 
-// Libft
-extern "C" {
-# include <libft.h>
-}
+/*	aqui se carga TODO el file como un vector de strings (**file)
+ * */
+typedef std::vector<std::string> fileVector;
 
 // Implemented classes
+#include <AutoIndex.hpp>
+#include <CGI.hpp>
+#include <Request.hpp>
+#include <Response.hpp>
+#include <Client.hpp>
+#include <Cluster.hpp>
 #include <Server.hpp>
-#include <Utils.hpp>
+#include <Config.hpp>
+#include <Location.hpp>
+#include <Reader.hpp>
+#include <ServerConfig.hpp>
+#include <Webserv.hpp>
 
 /*	GLOBAL DEFINITIONS
  * */
@@ -105,5 +114,7 @@ enum e_module {
 /*	FUNCTION DEFINITIONS
  * */
 int print_msg(std::string msg, int ret);
+void std::string getDirectiveValue(int &pos, const fileVector &file,
+		const std::string &directiveName);
 
 #endif

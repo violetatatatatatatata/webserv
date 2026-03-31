@@ -6,20 +6,14 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 12:59:13 by avelandr          #+#    #+#             */
-/*   Updated: 2026/03/31 14:47:29 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/01 01:42:19 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef READER_HPP
 # define READER_HPP
 
-/*	aqui se carga TODO el file como un vector de strings (**file)
- * */
-typedef std::vector<std::string> fileVector;
-
  #include <Webserv.hpp>
-
-namespace Config {
 
 class Reader {
 
@@ -29,6 +23,5 @@ class Reader {
 			virtual const char *what() const throw();
 		};
 };
-}
 
 #endif

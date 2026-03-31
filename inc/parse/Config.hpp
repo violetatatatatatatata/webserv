@@ -16,10 +16,6 @@
 
  #include <Webserv.hpp>
 
-namespace Config {
-
-}
-
 class Config {
 	private:
 
@@ -29,6 +25,6 @@ class Config {
         Config &operator=(Config const &src);
 
 		int	parse(const char *f);
-}
+};
 
 #endif

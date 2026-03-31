@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/30 14:54:00 by avelandr          #+#    #+#             */
-/*   Updated: 2026/03/31 18:38:45 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/01 01:05:48 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,20 +37,12 @@ static std::string build_msg(int level, int mod) {
         case WARN:		msg += "[WARN]\t";		break;
         case CGI_LOG:	msg += "[CGI]\t"; 		break;
     }
-	// he de hacer que no sea necesario pasar mod sino que asocie cada
-	// nivel al mod
-    switch (mod) {
-        case PARSER:	msg += "[Parser]\t";	break;
-        case CORE:		msg += "[Core]\t"; 		break;
-        case HTTP:		msg += "[HTTP]\t"; 		break;
-        case CGI:		msg += "[Runner]\t";	break;
-    }
     return msg;
 }
 
-int	print_msg(int level, int mod, std::string msg)
+int	print_msg(int level, std::string msg)
 {
-	int			ret = (mod != ERR || mod != FATAL);
+	int			ret = (level != ERR || level != FATAL);
     std::string color = RESET;
 
     switch(level) {
@@ -75,6 +67,19 @@ int	print_msg(int level, int mod, std::string msg)
 		default
 			color = BOLD;
     }
-    std::cout << color << build_msg(level, mod) << msg << RESET << std::endl;
+    std::cout << color << build_msg(level) << msg << RESET << std::endl;
 	return (ret);
 }
+
+void std::string getDirectiveValue(int &pos, const fileVector &file, const std::string &directiveName) {
+    if (pos >= file.size() || file[pos] == ";")
+        return (print_msg(directiveName + ": missing value", ERR));
+    std::string value = file[pos];
+    if (value.empty())
+		return (print_msg(directiveName + " value cannot be empty!", ERR));
+    pos++;
+    if (pos >= file.size() || file[pos] != ";")
+        return (print_msg(directiveName + ": missing semicolon ';'", ERR));
+    return value;
+}
+

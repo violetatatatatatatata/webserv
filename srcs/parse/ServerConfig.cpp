@@ -1,57 +1,85 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   ServerConfig.cpp                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/03/31 14:40:51 by avelandr          #+#    #+#             */
-/*   Updated: 2026/03/31 18:43:24 by avelandr         ###   ########.fr       */
-/*                                                                            */
+/*																			  */
+/*														  :::	   ::::::::   */
+/*	 ServerConfig.cpp									:+:		 :+:	:+:   */
+/*													  +:+ +:+		  +:+	  */
+/*	 By: avelandr <avelandr@student.42barcelon		+#+  +:+	   +#+		  */
+/*												  +#+#+#+#+#+	+#+			  */
+/*	 Created: 2026/03/31 14:40:51 by avelandr		   #+#	  #+#			  */
+/*	 Updated: 2026/04/01 00:22:37 by avelandr		  ###	########.fr		  */
+/*																			  */
 /* ************************************************************************** */
 
 #include <Webserv.hpp>
 
-namespace Config {
-
-static int	parseListen(int pos, fileVector file, ServerConfig server) {
-
-	// ...
+static int parseListen(int &pos, const fileVector &file, ServerConfig &server) {
+    std::string val = getDirectiveValue(pos, file, "listen");
+    server.setPort(std::atoi(val.c_str()));
+    return pos;
 }
 
-static int	parseServerName(int pos, fileVector file, ServerConfig server) {
-
-	// ...
+static int parseHost(int &pos, const fileVector &file, ServerConfig &server) {
+    std::string val = getDirectiveValue(pos, file, "host");
+    server.setHost(val);
+    return pos;
 }
 
-static int	parseRoot(int pos, fileVector file, ServerConfig server) {
-
-	// ...
+static int parseMaxSize(int &pos, const fileVector &file, ServerConfig &server) {
+    std::string val = getDirectiveValue(pos, file, "client_max_body_size");
+    server.setMaxBodySize(std::atoll(val.c_str()));
+    return pos;
+}
+static int parseServerName(int &pos, const fileVector &file, ServerConfig &server) {
+	while (pos < file.size() && file[pos] != ";") {
+		server.addServerName(file[pos]);
+		pos++;
+	}
+	if (pos >= file.size() || file[pos] != ";")
+		return (print_msg("server_name: missing semicolon", ERR));
+	return pos;
 }
 
-static int	parseIndex(int pos, fileVector file, ServerConfig server) {
-
-	// ...
+static int parseRoot(int &pos, const fileVector &file, ServerConfig &server) {
+	if (pos >= file.size() || file[pos] == ";")
+		return (print_msg("root: missing value", ERR));
+	server.setRoot(file[pos]);
+	pos++;
+	if (pos >= file.size() || file[pos] != ";")
+		return (print_msg("root: missing semicolon", ERR));
+	return pos;
 }
 
-static int redirectDictionary(str::string word)
-{
-	enum Serv	ret;
-
-	if		(word == "listen")
-		ret = LISTEN;
-	else if (word == "host")
-		ret = HOST;
-	else if (word == "server_name")
+static int parseErrorPage(int &pos, const fileVector &file, ServerConfig &server) {
+	if (pos + 1 >= file.size())
+		return (print_msg("error_page: invalid format", ERR));
 	
-	// ...
+	int code = std::atoi(file[pos].c_str());
+	std::string path = file[pos + 1];
+	server.addErrorPage(code, path);
+	pos += 2;
+	if (pos >= file.size() || file[pos] != ";")
+		return (print_msg("error_page: missing semicolon", ERR));
+	return pos;
 }
 
+static int redirectDictionary(std::string word)
+{
+	if (word == "listen")					return LISTEN;
+	if (word == "host")						return HOST;
+	if (word == "server_name")				return SERVER_NAME;
+	if (word == "error_page")				return ERROR_PAGE;
+	if (word == "client_max_body_size")		return MAX_BODY_SIZE;
+	if (word == "root")						return ROOT;
+	if (word == "index")					return INDEX;
+	if (word == "location")					return LOCATION;
+	return UNEXPECTED;
+}
 
-static int	redirectServer(int pos, fileVector file, ServerConfig server, int serv)
+static int	redirectServer(int pos, fileVector file, ServerConfig &server, int serv)
 {
 	int	ret;
 
+	pos++;
 	switch (serv) {
 		case LISTEN:
 			ret = parseListen(pos, file, server);		break;
@@ -78,16 +106,19 @@ static int	redirectServer(int pos, fileVector file, ServerConfig server, int ser
 
 /*	implemented functions
  * */
-int	parseServer(int pos, fileVector file, ServerConfig server)
+int ServerConfig::parseServer(int pos, fileVector file, ServerConfig &server)
 {
 	unsigned int	status;
+	int				servEnum;
 
-	while (pos++ < file.size() && file[pos] != '}') {
-		status = redirectServer(pos, file, server);
+	while (pos < file.size() && file[pos] != "}") {
+		servEnum = redirectDictionary(file[pos]);
+		status = redirectServer(pos, file, server, servEnum);
 		if (status == UNEXPECTED)
 			return (print_msg("Unexpected character in server configuration!", ERR));
+		pos++;
 	}
-	this->_serverNames.push_back(server);
+	this->_serverNames.push_back(server.getHost());
 
 	return (print_msg("Server parsed successfully :)", DEBUG));
 }
@@ -95,13 +126,13 @@ int	parseServer(int pos, fileVector file, ServerConfig server)
 /*	costructor
  *		1048576 bytes = 1MB por defecto, como en Nginx
  * */ 
-ServerConfig::ServerConfig() : _port(0), _host(""), _max_body_size(1048576) {}
+ServerConfig::ServerConfig() : _port(0), _maxSize(1048576), _host("") {}
 
 /*	copy constructor
  *		crea un nuevo server con exactamente los dato de otro ya existente
  * */
 ServerConfig::ServerConfig(const ServerConfig &obj) {
-    *this = obj;
+	*this = obj;
 }
 
 /*	operator overload
@@ -110,15 +141,16 @@ ServerConfig::ServerConfig(const ServerConfig &obj) {
  *		automáticamente
  * */
 ServerConfig &ServerConfig::operator=(const ServerConfig &obj) {
-    if (this != &obj) { 
-        this->_port           = obj._port;
-        this->_host           = obj._host;
-        this->_max_body_size  = obj._max_body_size;
-        this->_server_names   = obj._server_names;
-        this->_error_pages    = obj._error_pages;
-        this->_locations      = obj._locations;
-    }
-    return *this;
+	if (this != &obj) { 
+		this->_port			  = obj._port;
+		this->_host			  = obj._host;
+		this->_max_body_size  = obj._maxSize;
+		this->_server_names   = obj._serverNames;
+		this->_error_pages	  = obj._errPages;
+		this->_locations	  = obj._locations;
+		this->_root = obj._root;
+	}
+	return *this;
 }
 
 /*	destructor
@@ -129,28 +161,32 @@ ServerConfig::~ServerConfig() {}
 
 // getters
 
-int ServerConfig::getPort() {
+int ServerConfig::getPort() const {
 	return _port;
 }
 
-size_t ServerConfig::getMaxBodySize() {
-	return _max_body_size;
+size_t ServerConfig::getMaxBodySize() const {
+	return _maxSize;
 }
 
-std::string& ServerConfig::getHost() {
-	return _host;
+const std::string& ServerConfig::getHost() const {
+	return _host; 
 }
 
-std::vector<std::string>& ServerConfig::getServerNames() {
-	return _server_names;
+const std::vector<std::string>& ServerConfig::getServerNames() const {
+	return _serverNames;
 }
 
-std::map<int, std::string>& ServerConfig::getErrorPages() {
-	return _error_pages;
+const std::map<int, std::string>& ServerConfig::getErrorPages() const {
+	return _errPages;
 }
 
-std::vector<Location>& ServerConfig::getLocations() {
+const std::vector<Location>& ServerConfig::getLocations() const {
 	return _locations;
+}
+
+const std::string& ServerConfig::getRoot() const {
+	return _root;
 }
 
 // setters
@@ -164,19 +200,21 @@ void ServerConfig::setHost(std::string& host) {
 }
 
 void ServerConfig::setMaxBodySize(size_t size) {
-	_max_body_size = size;
+	_maxSize = size;
 }
 
 void ServerConfig::addServerName(std::string& name) {
-	_server_names.push_back(name);
+	_serverNames.push_back(name);
 }
 
 void ServerConfig::addErrorPage(int code, std::string& path) {
-	_error_pages[code] = path;
+	_errorPages[code] = path;
 }
 
 void ServerConfig::addLocation(Location& location) {
 	_locations.push_back(location);
 }
 
+void ServerConfig::setRoot(const std::string& root) {
+	_root = root;
 }
