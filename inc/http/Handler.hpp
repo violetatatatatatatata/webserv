@@ -2,7 +2,7 @@
 
 #include "../Webserv.hpp"
 
-class Response
+class Httphandler
 {
     public:
 
