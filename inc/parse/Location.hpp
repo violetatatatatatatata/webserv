@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:05:36 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/01 01:46:39 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/01 02:16:13 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ class Location {
 			~Location();
 		
 			// getters
-			bool										getAutoindex();
+			bool										getAutoindex() const;
 			const std::string&							getPath() const;
 			const std::string&							getRoot() const;
 			const std::string&							getIndex() const;
@@ -69,7 +69,7 @@ class Location {
 			void setUploadStore(const std::string& path);
 			void addCgiInfo(const std::string& ext, const std::string& bin);
 
-			int	parseLocation(int pos, fileVector file);
+			int	parseLocation(size_t pos, fileVector file);
 };
 
 #endif

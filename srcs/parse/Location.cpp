@@ -6,31 +6,31 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 14:42:54 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/01 01:39:55 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/01 02:17:57 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Webserv.hpp>
 
-static int parseRootLoc(int &pos, const fileVector &file, Location &loc) {
+static int parseRootLoc(size_t pos, const fileVector &file, Location &loc) {
     std::string val = getDirectiveValue(pos, file, "root");
     loc.setRoot(val);
     return pos;
 }
 
-static int parseIndexLoc(int &pos, const fileVector &file, Location &loc) {
+static int parseIndexLoc(size_t pos, const fileVector &file, Location &loc) {
     std::string val = getDirectiveValue(pos, file, "index");
     loc.setIndex(val);
     return pos;
 }
 
-static int parseUploadStoreLoc(int &pos, const fileVector &file, Location &loc) {
+static int parseUploadStoreLoc(size_t pos, const fileVector &file, Location &loc) {
     std::string val = getDirectiveValue(pos, file, "upload_store");
     loc.setUploadStore(val);
     return pos;
 }
 
-static int parseAutoindexLoc(int &pos, const fileVector &file, Location &loc) {
+static int parseAutoindexLoc(size_t pos, const fileVector &file, Location &loc) {
     std::string val = getDirectiveValue(pos, file, "autoindex");
     if (val == "on")
 		loc.setAutoindex(true);
@@ -41,7 +41,7 @@ static int parseAutoindexLoc(int &pos, const fileVector &file, Location &loc) {
     return pos;
 }
 
-static int parseMethodsLoc(int &pos, const fileVector &file, Location &loc) {
+static int parseMethodsLoc(size_t pos, const fileVector &file, Location &loc) {
     if (pos >= file.size() || file[pos] == ";")
         return (print_msg("methods: missing values", ERR));
     while (pos < file.size() && file[pos] != ";") {
@@ -53,7 +53,7 @@ static int parseMethodsLoc(int &pos, const fileVector &file, Location &loc) {
     return pos;
 }
 
-static int parseCgiInfoLoc(int &pos, const fileVector &file, Location &loc) {
+static int parseCgiInfoLoc(size_t pos, const fileVector &file, Location &loc) {
     if (pos + 1 >= file.size())
         return (print_msg("cgi_info: invalid format", ERR));
     std::string ext = file[pos];
@@ -76,16 +76,17 @@ static int redirectDictionaryLoc(const std::string &word) {
     return LOC_UNEXPECTED;
 }
 
-int	parseLocation(int pos, fileVector file) {
+int	parseLocation(size_t pos, fileVector file) {
 	unsigned int	status;
 
-	while (pos++ < file.size() && file[pos] != '}') {
+	while (pos < file.size() && file[pos] != '}') {
 		if (file[pos] == "location") {
 			ConfigLocation loc;
             if (file[++i] != "{")
                 return (print_msg("Expected '{' after location directive", ERR));
             if (!redirectLocation(++pos, file, loc))
                 return (print_msg("Error in location configuration", ERR));
+			pos++;
 		}
 		else
 			return (print_msg("Missing location", ERR));
@@ -94,8 +95,9 @@ int	parseLocation(int pos, fileVector file) {
 	return (print_msg("Location parsed successfully :)", DEBUG));
 }
 
-Location::Location() : _path(""), _root(""), _index(""), _autoindex(false),
-	_upload_store("") {}
+Location::Location() 
+    : _path(""), _autoindex(false), _index(""), _root(""), 
+      _uploadStore(""), _cgiInfo(""), _redirect("") {}
 
 Location::Location(const Location &obj) {
     *this = obj;

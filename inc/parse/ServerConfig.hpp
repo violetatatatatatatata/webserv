@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:01:18 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/01 01:46:06 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/01 02:16:42 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ enum Serv {
 	ROOT,
 	INDEX,
 	UNEXPECTED
-}
+};
 
 /*	port: puerto de escucha
  *	max_size: maximo tamaño del body cuando este es fijo
@@ -70,7 +70,8 @@ class ServerConfig {
 			void	addLocation(const Location& location);
 
 			int	parseFile(const char *f);
-			int	parseServer(int pos, fileVector file, ConfigFile &server);
+			int parseServer(int pos, fileVector file,
+					ServerConfig &server);
 };
 
 #endif

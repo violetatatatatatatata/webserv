@@ -75,7 +75,7 @@ static int redirectDictionary(std::string word)
 	return UNEXPECTED;
 }
 
-static int	redirectServer(int pos, fileVector file, ServerConfig &server, int serv)
+static int	redirectServer(size_t pos, fileVector file, ServerConfig &server, int serv)
 {
 	int	ret;
 
@@ -106,7 +106,7 @@ static int	redirectServer(int pos, fileVector file, ServerConfig &server, int se
 
 /*	implemented functions
  * */
-int ServerConfig::parseServer(int pos, fileVector file, ServerConfig &server)
+int parseServer(size_t pos, fileVector file, ServerConfig &server)
 {
 	unsigned int	status;
 	int				servEnum;

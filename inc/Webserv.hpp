@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/30 14:45:43 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/01 01:47:02 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/01 02:09:40 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,8 +113,8 @@ enum e_module {
 
 /*	FUNCTION DEFINITIONS
  * */
-int print_msg(std::string msg, int ret);
-void std::string getDirectiveValue(int &pos, const fileVector &file,
+int			print_msg(std::string msg, int ret);
+std::string	getDirectiveValue(int &pos, const fileVector &file,
 		const std::string &directiveName);
 
 #endif
