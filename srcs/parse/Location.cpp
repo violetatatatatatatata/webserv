@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 14:42:54 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/02 16:08:56 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/02 16:45:07 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ static int redirectDictionary(const std::string &word) {
     return LOC_UNEXPECTED;
 }
 
-static int redirectLocation(size_t pos, fileVector file, Location loc, int locEnum)
+static int redirectLocation(size_t pos, fileVector file, Location &loc, int locEnum)
 {
 	int	ret;
 
@@ -98,15 +98,16 @@ static int redirectLocation(size_t pos, fileVector file, Location loc, int locEn
 	return (ret);
 }
 
-int Location::parseLocation(size_t pos, fileVector file, ServerConfig &s)
+int Location::parseLocation(size_t pos, fileVector file, ServerConfig &s, Location &loc)
 {
 	int	status;
 	int				locEnum;
-	Location		loc;
 
+	if (file[pos + 1] != "{")
+        return (print_msg("Expected '{' after location path", ERR));
+	this->setPath(file[pos]);
+    pos += 2;
 	while (pos < file.size() && file[pos] != "}") {
-		if (file[++pos] != "{")
-        	return (print_msg("Expected '{' after location directive", ERR));
 		locEnum = redirectDictionary(file[pos]);
 		if (locEnum == LOC_UNEXPECTED)
 			return (print_msg("Unexpected word in location configuration!", ERR));
@@ -117,7 +118,9 @@ int Location::parseLocation(size_t pos, fileVector file, ServerConfig &s)
 			return (print_msg("[LOC] Syntax failed!", FATAL));
 		pos++;
 	}
-	s.addLocation(loc);
+	if (pos >= file.size() || file[pos] != "}")
+       	return (print_msg("Location block not closed properly", FATAL));
+	s.addLocation(*this);
 
 	return (print_msg("Location parsed successfully :)", DEBUG));
 }

@@ -6,13 +6,13 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/30 14:54:00 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/02 11:21:51 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/02 17:34:38 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Webserv.hpp>
 
-static std::string build_msg(int level, int mod) {
+static std::string build_msg(int status) {
     struct tm   tstruct;
     time_t      now;
     char        buf[100];
@@ -23,7 +23,7 @@ static std::string build_msg(int level, int mod) {
     
 	std::string msg(buf);
 
-    switch (level) {
+    switch (status) {
         case INFO:		msg += "[INFO]\t";		break;
         case SUCCESS:	msg += "[SUCCESS]\t";	break;
         case ERR:		msg += "[ERROR]\t";		break;
@@ -40,12 +40,12 @@ static std::string build_msg(int level, int mod) {
     return msg;
 }
 
-int	print_msg(int level, std::string msg)
+int	print_msg(std::string msg, int status)
 {
-	int			ret = (level != ERR || level != FATAL);
+	int	ret = ((status != ERR) || (status != FATAL));
     std::string color = RESET;
 
-    switch(level) {
+    switch(status) {
         case ERR: case FATAL:
 			color = RED;	break;
         case SUCCESS: case START:
@@ -64,22 +64,33 @@ int	print_msg(int level, std::string msg)
 			color = MAGENTA;	break;
         case INFO:
 			color = CYAN;		break;
-		default
+		default:
 			color = BOLD;
     }
-    std::cout << color << build_msg(level) << msg << RESET << std::endl;
+    std::cout << color << build_msg(status) << msg << RESET << std::endl;
 	return (ret);
 }
 
-void std::string getDirectiveValue(size_t &pos, const fileVector &file, const std::string &directiveName) {
-    if (pos >= file.size() || file[pos] == ";")
-        return (print_msg(directiveName + ": missing value", ERR));
+std::string getDirectiveValue(size_t &pos, const fileVector &file, const std::string &directiveName) {
+	int	exit_status;
+
+	if (pos >= file.size() || file[pos] == ";")
+	{
+        exit_status = print_msg(directiveName + ": missing value", ERR);
+		return NULL;
+	}
     std::string value = file[pos];
-    if (value.empty())
-		return (print_msg(directiveName + " value cannot be empty!", ERR));
-    pos++;
-    if (pos >= file.size() || file[pos] != ";")
-        return (print_msg(directiveName + ": missing semicolon ';'", ERR));
-    return value;
+    if (value.empty()) {
+		exit_status = print_msg(directiveName + " value cannot be empty!", ERR);
+		return NULL;
+	}
+	pos++;
+    if (pos >= file.size() || file[pos] != ";") {
+        exit_status = print_msg(directiveName + ": missing semicolon ';'", ERR);
+		return NULL;
+	}
+	(void)exit_status;
+
+	return value;
 }
 

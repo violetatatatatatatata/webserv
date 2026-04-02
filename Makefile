@@ -5,8 +5,8 @@
 #                                                     +:+ +:+         +:+      #
 #    By: avelandr <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2026/04/01 01:31:01 by avelandr          #+#    #+#              #
-#    Updated: 2026/04/01 01:36:33 by avelandr         ###   ########.fr        #
+#    Created: 2026/04/02 17:53:24 by avelandr          #+#    #+#              #
+#    Updated: 2026/04/02 17:57:42 by avelandr         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -39,18 +39,17 @@ TOTAL_SRCS := $(words $(SRC))
 all: print $(NAME)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@echo ""
 	@mkdir -p $(dir $@)
 	@curr=$$(find $(OBJ_DIR) -type f -name "*.o" 2>/dev/null | wc -l); \
 	curr=$$((curr + 1)); \
 	percent=$$(( $$curr * 100 / $(TOTAL_SRCS) )); \
-	bar_len=$$(( $$percent / 10 )); \
+	bar_len=$$(( $$percent * 59 / 100 )); \
 	bar_str=""; i=0; \
 	while [ $$i -lt $$bar_len ]; do bar_str="$${bar_str}█"; i=$$((i+1)); done; \
 	spaces=""; i=0; \
-	rest=$$((10 - $$bar_len)); \
+	rest=$$((59 - $$bar_len)); \
 	while [ $$i -lt $$rest ]; do spaces="$${spaces}▒"; i=$$((i+1)); done; \
-	printf "\r\033[K$(YELLOW)Generating $(NAME) objects... %-38.38s $(CYAN)$$bar_str$$spaces $(GREEN)$$percent%%$(RESET)" $@
+	printf "\r\033[K$(YELLOW)Generating $(NAME) objects... %-38.38s\n\r\033[K$(CYAN)$$bar_str$$spaces $(GREEN)$$percent%%$(RESET)\033[A" $@
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -c $< -o $@
 
 print:
@@ -71,10 +70,10 @@ print:
 	@echo '       |_\_  |----|                    |----|  _/_|'
 	@echo '       |  |/ |    |                    |    | \|  |'
 	@echo "       |  /_ |    |                    |    | _\  |       $(RESET)"
-
-# Reglas obligatorias
+	@echo ""
 
 $(NAME): $(OBJ)
+	@echo ""
 	@echo "\n"
 	@echo "$(BLUE)Compiling $(NAME)...$(RESET)"
 	@echo ""
@@ -94,6 +93,6 @@ re: fclean all
 bonus: all
 	@echo ""
 	@echo "$(MAGENTA)Dear evaluator: mandatory is bonus now :)$(RESET)"
-	
+
 -include $(DEP)
 .PHONY: all clean fclean re bonus

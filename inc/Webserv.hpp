@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/30 14:45:43 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/02 10:43:04 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/02 17:30:54 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,7 @@ typedef std::vector<std::string> fileVector;
 
 /*	GLOBAL DEFINITIONS
  * */
+# define CYAN "\u001b[36m"
 # define RED "\033[31m"					// for failure
 # define GREEN "\033[32m"				// for success and start
 # define YELLOW "\033[33m"				
@@ -113,7 +114,7 @@ enum e_module {
 
 /*	FUNCTION DEFINITIONS
  * */
-int			print_msg(std::string msg, int ret);
+int			print_msg(std::string msg, int status);
 std::string	getDirectiveValue(size_t &pos, const fileVector &file,
 		const std::string &directiveName);
 

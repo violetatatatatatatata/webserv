@@ -102,7 +102,8 @@ static size_t	redirectServer(size_t pos, fileVector file, ServerConfig &server, 
 		case INDEX:
 			ret = parseIndex(pos, file, server);		break;
 		case LOCATION:
-			ret = parseLocation(pos, file, server);				break;
+			Location loc;
+			ret = loc.parseLocation(pos, file, server, loc);	break;
 	}
 	return (ret);
 }	
@@ -110,7 +111,7 @@ static size_t	redirectServer(size_t pos, fileVector file, ServerConfig &server, 
 
 /*	implemented functions
  * */
-int parseServer(size_t pos, fileVector file, ServerConfig &server)
+int ServerConfig::parseServer(size_t pos, fileVector file, ServerConfig &server)
 {
 	unsigned int	status;
 	int				servEnum;
@@ -170,7 +171,7 @@ ServerConfig::~ServerConfig() {}
 
 // getters
 
-int ServerConfig::getIndex() const {
+const std::string& ServerConfig::getIndex() const {
 	return _index;
 }
 
@@ -208,11 +209,11 @@ void ServerConfig::setPort(int port) {
 	_port = port;
 }
 
-void ServerConfig::setIndex(std::string& index) {
+void ServerConfig::setIndex(const std::string& index) {
 	_index = index;
 }
 
-void ServerConfig::setHost(std::string& host) {
+void ServerConfig::setHost(const std::string& host) {
 	_host = host;
 }
 
@@ -220,15 +221,15 @@ void ServerConfig::setMaxBodySize(size_t size) {
 	_max_body_size = size;
 }
 
-void ServerConfig::addServerName(std::string& name) {
+void ServerConfig::addServerName(const std::string& name) {
 	_server_names.push_back(name);
 }
 
-void ServerConfig::addErrorPage(int code, std::string& path) {
-	_errorPages[code] = path;
+void ServerConfig::addErrorPage(int code, const std::string& path) {
+	_error_pages[code] = path;
 }
 
-void ServerConfig::addLocation(Location& location) {
+void ServerConfig::addLocation(const Location& location) {
 	_locations.push_back(location);
 }
 

@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:05:36 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/02 16:08:53 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/02 16:31:52 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ class Location {
 			void setUploadStore(const std::string& path);
 			void addCgiInfo(const std::string& ext, const std::string& bin);
 
-			int	parseLocation(size_t pos, fileVector file, ServerConfig &s);
+			int	parseLocation(size_t pos, fileVector file, ServerConfig &s, Location &loc);
 };
 
 #endif

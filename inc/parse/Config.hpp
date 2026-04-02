@@ -14,17 +14,23 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
- #include <Webserv.hpp>
+#include <Webserv.hpp>
+#include <ServerConfig.hpp>
 
 class Config {
-	private:
+    private:
+        std::vector<ServerConfig> _servers;
 
-	public:
+    public:
+        Config();
         Config(Config const &src);
-        virtual ~Config(void);
+        
+		virtual ~Config(void);
         Config &operator=(Config const &src);
 
-		int	parse(const char *f);
+        int parseFile(const char *f);
+
+        std::vector<ServerConfig> getServers() const { return _servers; }
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:01:18 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/02 16:08:54 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/02 16:43:39 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ class ServerConfig {
 			
 			// setters
 			void	setPort(int port);
-			void	setHost(std::string& host);
+			void	setHost(const std::string& host);
 			void	setRoot(const std::string& root);
 			void	setMaxBodySize(size_t size);
 			void	addServerName(const std::string& name);
