@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:05:36 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/01 02:16:13 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/02 16:08:53 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,8 @@ enum LocDir {
     LOC_CGI_INFO,
     LOC_UNEXPECTED
 };
+
+class ServerConfig;
 
 /*	autoindex: permite mirar si index.html existe o no. Si no existe, generar un html con la lista de archivos
  *	index: indica la respuesta predeterminada si la url acaba en /
@@ -43,6 +45,7 @@ class Location {
 			std::string							_root;
 			std::string							_upload_store;
 			std::vector<std::string>			_methods;
+			std::string                         _redirect;
 			std::map<std::string, std::string>	_cgi_info;
 
 		public:
@@ -58,6 +61,7 @@ class Location {
 			const std::string&							getIndex() const;
 			const std::string& 							getUploadStore() const;
 			const std::vector<std::string>& 			getMethods() const;
+			const std::string&  getRedirect() const;
 			const std::map<std::string, std::string>&	getCgiInfo() const;
 			
 			// setters
@@ -66,10 +70,11 @@ class Location {
 			void setIndex(const std::string& index);
 			void setAutoindex(bool state);
 			void addMethod(const std::string& method);
+			void setRedirect(const std::string& redirect);
 			void setUploadStore(const std::string& path);
 			void addCgiInfo(const std::string& ext, const std::string& bin);
 
-			int	parseLocation(size_t pos, fileVector file);
+			int	parseLocation(size_t pos, fileVector file, ServerConfig &s);
 };
 
 #endif

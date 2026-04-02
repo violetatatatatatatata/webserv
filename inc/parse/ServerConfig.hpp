@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:01:18 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/01 02:16:42 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/02 16:08:54 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define SERVERCONFIG_HPP
 
 # include <Webserv.hpp>
+# include <Location.hpp>
 
 enum Serv {
 	LISTEN,
@@ -23,6 +24,7 @@ enum Serv {
 	MAX_BODY_SIZE,
 	ROOT,
 	INDEX,
+	LOCATION,
 	UNEXPECTED
 };
 
@@ -37,11 +39,12 @@ enum Serv {
 class ServerConfig {
 		private:
 			int											_port;
-			size_t										_maxSize;
+			size_t										_max_body_size;
 			std::string									_host;
 			std::string									_root;
-			std::vector<std::string>					_serverNames;
-			std::map<int, std::string>					_errPages;
+			std::string									_index;
+			std::vector<std::string>					_server_names;
+			std::map<int, std::string>					_error_pages;
 			std::vector<Location>						_locations;
 			std::map<int, std::vector<ServerConfig> >	_servers;
 		
@@ -56,6 +59,7 @@ class ServerConfig {
 			size_t								getMaxBodySize() const;
 			const std::string&					getHost() const;
 			const std::string&					getRoot() const;
+			const std::string&					getIndex() const;
 			const std::vector<std::string>&		getServerNames() const;
 			const std::map<int, std::string>&	getErrorPages() const;
 			const std::vector<Location>&		getLocations() const;
@@ -66,11 +70,12 @@ class ServerConfig {
 			void	setRoot(const std::string& root);
 			void	setMaxBodySize(size_t size);
 			void	addServerName(const std::string& name);
+			void	setIndex(const std::string& index);
 			void	addErrorPage(int code, const std::string& path);
 			void	addLocation(const Location& location);
 
 			int	parseFile(const char *f);
-			int parseServer(int pos, fileVector file,
+			int parseServer(size_t pos, fileVector file,
 					ServerConfig &server);
 };
 

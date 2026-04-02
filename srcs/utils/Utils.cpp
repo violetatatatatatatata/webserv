@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/30 14:54:00 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/01 01:05:48 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/02 11:21:51 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,7 @@ int	print_msg(int level, std::string msg)
 	return (ret);
 }
 
-void std::string getDirectiveValue(int &pos, const fileVector &file, const std::string &directiveName) {
+void std::string getDirectiveValue(size_t &pos, const fileVector &file, const std::string &directiveName) {
     if (pos >= file.size() || file[pos] == ";")
         return (print_msg(directiveName + ": missing value", ERR));
     std::string value = file[pos];
