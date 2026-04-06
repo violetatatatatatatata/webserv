@@ -16,14 +16,14 @@
  * */
 int	Config::parseFile(const char *f)
 {
-	int				i = -1;
-	fileVector		file;
+	size_t			i = -1;
+	fileVector	file;
 
 	file = Reader::readFile(f);
 
 	while (++i < file.size()) {
 		if (file[i] == "server") {
-			ConfigServer server;
+			ServerConfig server;
 			if (file[++i] != "{")
 				return (print_msg("Expected '{' after server directive", ERR));
 			if (!server.parseServer(++i, file, server))

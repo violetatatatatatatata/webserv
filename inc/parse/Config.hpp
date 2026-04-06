@@ -24,7 +24,7 @@ class Config {
         virtual ~Config(void);
         Config &operator=(Config const &src);
 
-		int	parse(const char *f);
+		int	parseFile(const char *f);
 };
 
 #endif

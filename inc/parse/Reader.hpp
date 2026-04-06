@@ -18,7 +18,7 @@
 class Reader {
 
 	public:
-		fileVector	readFile(const char *f);
+		static fileVector	readFile(const char *f);
 		class FileNotFoundException: public std::exception {
 			virtual const char *what() const throw();
 		};

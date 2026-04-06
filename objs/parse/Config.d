@@ -1,4 +1,4 @@
-objs/parse/Location.o: srcs/parse/Location.cpp inc/Webserv.hpp \
+objs/parse/Config.o: srcs/parse/Config.cpp inc/Webserv.hpp \
  inc/http/AutoIndex.hpp inc/http/CGI.hpp inc/http/Request.hpp \
  inc/http/../Webserv.hpp inc/http/Response.hpp inc/core/Client.hpp \
  inc/core/Cluster.hpp inc/core/Server.hpp inc/parse/Config.hpp \

@@ -22,20 +22,27 @@ class Router
 
         // Methods
         void solveRoute(const Request& request);
+        void findVirtualServer();
+        void findLocation();
 
         // Getters
-        std::string getRoute() const;
-        e_type      getType() const;
-        int         getError() const;
+        std::string   getRoute() const;
+        e_type        getType() const;
+        int           getError() const;
+        ServerConfig& getVirtualServer() const;
+        Location&     getLocation() const;
 
         // Setters
-        void setRoute();
-        void setType();
-        void setError();
+        void setRoute(std::string route);
+        void setType(e_type type);
+        void setError(int error);
 
     private:
 
-        std::string _route;
-        e_type      _type;
-        int         _err_code;
+        const std::string&   _route;
+        const ServerConfig&  _virtualServer;
+        const Location&      _location;
+        const Request&       _request;
+        const e_type         _type;
+        const int            _err_code;
 };

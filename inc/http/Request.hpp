@@ -20,24 +20,28 @@ class Request
 
         // Methods
 
-
         // Getters
-        e_method        getMethod();
-        std::string&    getVersion();
-        std::string&    getURI();
-        std::string&    getBody();
+        int                 getSocketFd() const;
+        e_method            getMethod() const;
+        const std::string&  getVersion() const;
+        const std::string&  getURI() const;
+        const std::string&  getBody() const;
+        const std::string&  getHeader(const std::string& header) const;
         
         // Setters
+        void setSocketFd(int socketFd);
         void setMethod(e_method method);
-        void setVersion(std::string version);
-        void setURI(std::string path); 
-        void setBody(std::string body);
+        void setVersion(std::string& httpVersion);
+        void setURI(std::string& URI); 
+        void setBody(std::string& body);
+        void setHeader(const std::string& header, const std::string& value);
 
     private:
 
-        e_method                            m_method;
-        std::string                         m_httpVersion;
-        std::string                         m_URI;
-        std::string                         m_body;
-        std::map<std::string, std::string>  m_headers;
+        int                                 _socketFd;
+        e_method                            _method;
+        std::string                         _httpVersion;
+        std::string                         _URI;
+        std::string                         _body;
+        std::map<std::string, std::string>  _headers;
 };
