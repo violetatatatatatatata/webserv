@@ -129,22 +129,29 @@ static size_t	redirectServer(size_t pos, fileVector file, ServerConfig &server, 
  * */
 int ServerConfig::parseServer(size_t pos, fileVector file, ServerConfig &server)
 {
-    int status;
-    int  servEnum;
+    long    status;
+    int     servEnum;
 
     while (pos < file.size() && file[pos] != "}") {
         servEnum = redirectDictionary(file[pos]);
-        if (servEnum == UNEXPECTED)
-            return (print_msg("Unexpected word in server configuration!", ERR));
+        if (servEnum == UNEXPECTED) {
+            print_msg("Unexpected word in server: " + file[pos], ERR);
+            return -1;
+        }
+            
         status = redirectServer(pos, file, server, servEnum);
-        if (status < 0)
-            return (print_msg("[SERV] Configuration failed!", ERR));
+        if (status < 0) 
+            return -1;
+            
         pos = static_cast<size_t>(status);
         pos++;
     }
     this->_server_names.push_back(server.getHost());
-    return (print_msg("Server parsed successfully :)", DEBUG));
+    
+    print_msg("Server parsed successfully :)", DEBUG);
+    return pos;
 }
+
 /*	costructor
  *		1048576 bytes = 1MB por defecto, como en Nginx
  * */ 

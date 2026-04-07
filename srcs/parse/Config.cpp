@@ -20,28 +20,32 @@ Config::~Config() {}
 Reader::Reader() {}
 Reader::~Reader() {}
 
-int	Config::parseFile(const char *f)
+int Config::parseFile(const char *f)
 {
-	size_t			i = 0;
-	Reader	   r; 
-	fileVector		file;
+    fileVector file;
+    Reader     r;
 
-	file = r.readFile(f);
-	if(file.empty())
-		return (print_msg("Config file is empty or not found", ERR));
+    file = r.readFile(f);
+    if (file.empty())
+        return (print_msg("Config file is empty or not found", ERR));
 
-	while (i < file.size()) {
-		if (file[i] == "server") {
-			ServerConfig s;
-			if (file[++i] != "{")
-				return (print_msg("Expected '{' after server directive", ERR));
-			if (!s.parseServer(++i, file, s))
-				return (print_msg("Error in config file", ERR));
-		}
-		else
-			return (print_msg("Unknown directive", ERR));
-		i++;
+    size_t i = 0;
+    while (i < file.size()) {
+        if (file[i] == "server") {
+            ServerConfig s;
+            i++;
+            if (i >= file.size() || file[i] != "{")
+                return (print_msg("Expected '{' after server", ERR));
+            i++;
+            long result = s.parseServer(i, file, s);
+            if (result < 0)
+                return -1;
+            i = static_cast<size_t>(result);
+
+            this->_servers.push_back(s);
+        } else
+            return (print_msg("Unexpected token in global scope: " + file[i], ERR));
+        i++;
 	}
-	return (print_msg("File parsed successfully :)", DEBUG));
+    return EXIT_SUCCESS;
 }
-
