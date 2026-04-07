@@ -6,62 +6,80 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 14:42:54 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/02 16:45:07 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/07 14:46:57 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <Webserv.hpp>
 
-static size_t parseRootLoc(size_t pos, const fileVector &file, Location &loc) {
+static long parseRootLoc(size_t &pos, const fileVector &file, Location &loc) {
     std::string val = getDirectiveValue(pos, file, "root");
+    if (val.empty())
+		return -1;
     loc.setRoot(val);
     return pos;
 }
 
-static size_t parseIndexLoc(size_t pos, const fileVector &file, Location &loc) {
+static long parseIndexLoc(size_t &pos, const fileVector &file, Location &loc) {
     std::string val = getDirectiveValue(pos, file, "index");
+    if (val.empty())
+		return -1;
     loc.setIndex(val);
     return pos;
 }
 
-static size_t parseUploadStoreLoc(size_t pos, const fileVector &file, Location &loc) {
+static long parseUploadStoreLoc(size_t &pos, const fileVector &file, Location &loc) {
     std::string val = getDirectiveValue(pos, file, "upload_store");
+    if (val.empty())
+		return -1;
     loc.setUploadStore(val);
     return pos;
 }
 
-static size_t parseAutoindexLoc(size_t pos, const fileVector &file, Location &loc) {
+static long parseAutoindexLoc(size_t &pos, const fileVector &file, Location &loc) {
     std::string val = getDirectiveValue(pos, file, "autoindex");
-    if (val == "on")
-		loc.setAutoindex(true);
-    else if (val == "off")
-		loc.setAutoindex(false);
-    else
-		return (print_msg("autoindex: invalid value (must be 'on' or 'off')", ERR));
+    if (val.empty())
+		return -1;
+    if (val == "on") loc.setAutoindex(true);
+    else if (val == "off") loc.setAutoindex(false);
+    else {
+        print_msg("autoindex: invalid value (must be 'on' or 'off')", ERR);
+        return -1;
+    }
     return pos;
 }
 
-static size_t parseMethodsLoc(size_t pos, const fileVector &file, Location &loc) {
-    if (pos >= file.size() || file[pos] == ";")
-        return (print_msg("methods: missing values", ERR));
+static long parseMethodsLoc(size_t &pos, const fileVector &file, Location &loc) {
+    pos++;
+    if (pos >= file.size() || file[pos] == ";") {
+        print_msg("methods: missing values", ERR);
+        return -1;
+    }
     while (pos < file.size() && file[pos] != ";") {
         loc.addMethod(file[pos]);
         pos++;
     }
-    if (pos >= file.size() || file[pos] != ";")
-        return (print_msg("methods: missing semicolon", ERR));
+    if (pos >= file.size() || file[pos] != ";") {
+        print_msg("methods: missing semicolon", ERR);
+        return -1;
+    }
     return pos;
 }
 
-static size_t parseCgiLoc(size_t pos, const fileVector &file, Location &loc) {
-    if (pos + 1 >= file.size())
-        return (print_msg("cgi_info: invalid format", ERR));
+static long parseCgiLoc(size_t &pos, const fileVector &file, Location &loc) {
+    pos++;
+    if (pos + 1 >= file.size() || file[pos] == ";") {
+        print_msg("cgi_info: invalid format", ERR);
+        return -1;
+    }
     std::string ext = file[pos];
     std::string bin = file[pos + 1];
     loc.addCgiInfo(ext, bin);
     pos += 2;
-    if (pos >= file.size() || file[pos] != ";")
-        return (print_msg("cgi_info: missing semicolon", ERR));
+    if (pos >= file.size() || file[pos] != ";") {
+        print_msg("cgi_info: missing semicolon", ERR);
+        return -1;
+    }
     return pos;
 }
 

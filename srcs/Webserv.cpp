@@ -6,7 +6,7 @@
 /*   By: avelandr <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/02 17:14:31 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/02 17:15:01 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/07 14:24:48 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,10 +15,8 @@
 #include <iostream>
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        std::cout << "Uso: ./webserv [archivo.config]" << std::endl;
-        return 1;
-    }
+    if (argc != 2)
+        return (print_msg("Uso: ./webserv [archivo.config]", FATAL));
     Config parser;
     if (parser.parseFile(argv[1]) == 0) {
         std::cout << "Configuración válida" << std::endl;

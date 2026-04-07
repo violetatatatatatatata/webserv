@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/30 14:54:00 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/02 17:34:38 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/07 14:44:51 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ static std::string build_msg(int status) {
 
 int	print_msg(std::string msg, int status)
 {
-	int	ret = ((status != ERR) || (status != FATAL));
+	int	ret = ((status == ERR) || (status == FATAL));
     std::string color = RESET;
 
     switch(status) {
@@ -71,26 +71,21 @@ int	print_msg(std::string msg, int status)
 	return (ret);
 }
 
-std::string getDirectiveValue(size_t &pos, const fileVector &file, const std::string &directiveName) {
-	int	exit_status;
-
-	if (pos >= file.size() || file[pos] == ";")
-	{
-        exit_status = print_msg(directiveName + ": missing value", ERR);
-		return NULL;
-	}
+std::string getDirectiveValue(size_t &pos, const fileVector &file, const std::string &directiveName)
+{
+    if (pos >= file.size() || file[pos] != directiveName)
+        return ("");
+    pos++;
+    if (pos >= file.size() || file[pos] == ";") {
+        print_msg(directiveName + ": missing value", ERR);
+        return ("");
+    }
     std::string value = file[pos];
-    if (value.empty()) {
-		exit_status = print_msg(directiveName + " value cannot be empty!", ERR);
-		return NULL;
-	}
-	pos++;
+    pos++;
     if (pos >= file.size() || file[pos] != ";") {
-        exit_status = print_msg(directiveName + ": missing semicolon ';'", ERR);
-		return NULL;
-	}
-	(void)exit_status;
+        print_msg(directiveName + ": missing semicolon ';'", ERR);
+        return ("");
+    }
 
-	return value;
+    return (value);
 }
-

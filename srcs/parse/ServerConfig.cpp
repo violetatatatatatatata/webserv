@@ -12,62 +12,79 @@
 
 #include <Webserv.hpp>
 
-static size_t parseListen(size_t &pos, const fileVector &file, ServerConfig &server) {
+static long parseListen(size_t &pos, const fileVector &file, ServerConfig &server) {
     std::string val = getDirectiveValue(pos, file, "listen");
+    if (val.empty())
+		return -1;
     server.setPort(std::atoi(val.c_str()));
     return pos;
 }
 
-static size_t parseHost(size_t &pos, const fileVector &file, ServerConfig &server) {
+static long parseHost(size_t &pos, const fileVector &file, ServerConfig &server) {
     std::string val = getDirectiveValue(pos, file, "host");
+    if (val.empty())
+		return -1;
     server.setHost(val);
     return pos;
 }
 
-static int parseIndex(size_t pos, const fileVector &file, ServerConfig &serv) {
+static long parseIndex(size_t &pos, const fileVector &file, ServerConfig &serv) {
     std::string val = getDirectiveValue(pos, file, "index");
+    if (val.empty())
+		return -1;
     serv.setIndex(val);
     return pos;
 }
 
-static size_t parseMaxSize(size_t &pos, const fileVector &file, ServerConfig &server) {
+static long parseMaxSize(size_t &pos, const fileVector &file, ServerConfig &server) {
     std::string val = getDirectiveValue(pos, file, "client_max_body_size");
+    if (val.empty())
+		return -1;
     server.setMaxBodySize(std::atoll(val.c_str()));
     return pos;
 }
-static size_t parseServerName(size_t &pos, const fileVector &file, ServerConfig &server) {
-	while (pos < file.size() && file[pos] != ";") {
-		server.addServerName(file[pos]);
-		pos++;
-	}
-	if (pos >= file.size() || file[pos] != ";")
-		return (print_msg("server_name: missing semicolon", FATAL));
-	return pos;
+
+static long parseRoot(size_t &pos, const fileVector &file, ServerConfig &server) {
+    std::string val = getDirectiveValue(pos, file, "root");
+    if (val.empty())
+		return -1;
+    server.setRoot(val);
+    return pos;
 }
 
-static size_t parseRoot(size_t &pos, const fileVector &file, ServerConfig &server) {
-	if (pos >= file.size() || file[pos] == ";")
-		return (print_msg("root: missing value", ERR));
-	server.setRoot(file[pos]);
-	pos++;
-	if (pos >= file.size() || file[pos] != ";")
-		return (print_msg("root: missing semicolon", FATAL));
-	return pos;
+static long parseServerName(size_t &pos, const fileVector &file, ServerConfig &server) {
+    pos++;
+    if (pos >= file.size() || file[pos] == ";") {
+        print_msg("server_name: missing value", ERR);
+        return -1;
+    }
+    while (pos < file.size() && file[pos] != ";") {
+        server.addServerName(file[pos]);
+        pos++;
+    }
+    if (pos >= file.size() || file[pos] != ";") {
+        print_msg("server_name: missing semicolon", ERR);
+        return -1;
+    }
+    return pos;
 }
 
-static size_t parseErrorPage(size_t &pos, const fileVector &file, ServerConfig &server) {
-	if (pos + 1 >= file.size())
-		return (print_msg("error_page: invalid format", ERR));
-	
-	int code = std::atoi(file[pos].c_str());
-	std::string path = file[pos + 1];
-	server.addErrorPage(code, path);
-	pos += 2;
-	if (pos >= file.size() || file[pos] != ";")
-		return (print_msg("error_page: missing semicolon", FATAL));
-	return pos;
+static long parseErrorPage(size_t &pos, const fileVector &file, ServerConfig &server) {
+    pos++;
+    if (pos + 1 >= file.size() || file[pos] == ";") {
+        print_msg("error_page: invalid format", ERR);
+        return -1;
+    }
+    int code = std::atoi(file[pos].c_str());
+    std::string path = file[pos + 1];
+    server.addErrorPage(code, path);
+    pos += 2;
+    if (pos >= file.size() || file[pos] != ";") {
+        print_msg("error_page: missing semicolon", ERR);
+        return -1;
+    }
+    return pos;
 }
-
 static size_t redirectDictionary(std::string word)
 {
 	if (word == "listen")					return LISTEN;
@@ -85,7 +102,6 @@ static size_t	redirectServer(size_t pos, fileVector file, ServerConfig &server, 
 {
 	int	ret;
 
-	pos++;
 	switch (serv) {
 		case LISTEN:
 			ret = parseListen(pos, file, server);		break;
@@ -113,25 +129,22 @@ static size_t	redirectServer(size_t pos, fileVector file, ServerConfig &server, 
  * */
 int ServerConfig::parseServer(size_t pos, fileVector file, ServerConfig &server)
 {
-	unsigned int	status;
-	int				servEnum;
+    int status;
+    int  servEnum;
 
-	while (pos < file.size() && file[pos] != "}") {
-		servEnum = redirectDictionary(file[pos]);
-		if (servEnum == UNEXPECTED)
-			return (print_msg("Unexpected word in server configuration!", ERR));
-		status = redirectServer(pos, file, server, servEnum);
-		if (status == ERR)
-			return (print_msg("[SERV] Missing configuration in config file", WARN));
-		else if (status == FATAL)
-			return (print_msg("[SERV] Syntax failed!", FATAL));
-		pos++;
-	}
-	this->_server_names.push_back(server.getHost());
-
-	return (print_msg("Server parsed successfully :)", DEBUG));
+    while (pos < file.size() && file[pos] != "}") {
+        servEnum = redirectDictionary(file[pos]);
+        if (servEnum == UNEXPECTED)
+            return (print_msg("Unexpected word in server configuration!", ERR));
+        status = redirectServer(pos, file, server, servEnum);
+        if (status < 0)
+            return (print_msg("[SERV] Configuration failed!", ERR));
+        pos = static_cast<size_t>(status);
+        pos++;
+    }
+    this->_server_names.push_back(server.getHost());
+    return (print_msg("Server parsed successfully :)", DEBUG));
 }
-
 /*	costructor
  *		1048576 bytes = 1MB por defecto, como en Nginx
  * */ 
