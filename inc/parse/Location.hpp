@@ -75,7 +75,8 @@ class Location {
 			void setUploadStore(const std::string& path);
 			void addCgiInfo(const std::string& ext, const std::string& bin);
 
-			int	parseLocation(size_t pos, fileVector file, ServerConfig &s, Location &loc);
+			bool parseLocation(size_t &pos, const fileVector &file,
+					ServerConfig &s, Location &loc);
 };
 
 #endif

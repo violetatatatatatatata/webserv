@@ -75,7 +75,7 @@ class ServerConfig {
 			void	addLocation(const Location& location);
 
 			int	parseFile(const char *f);
-			int parseServer(size_t pos, fileVector file,
+			bool parseServer(size_t &pos, const fileVector &file,
 					ServerConfig &server);
 };
 

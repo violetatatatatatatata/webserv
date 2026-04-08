@@ -13,7 +13,7 @@
 NAME        = webserv
 
 CXX         = c++
-CXXFLAGS    = -Wall -Werror -Wextra -g -fsanitize=address -std=c++98
+CXXFLAGS    = -std=c++98 -Wall -Werror -Wextra -g -fsanitize=address
 INCLUDES    = -Iinc -Iinc/http -Iinc/core -Iinc/parse
 
 SRC_DIR     = srcs

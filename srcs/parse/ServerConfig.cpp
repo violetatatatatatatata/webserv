@@ -40,7 +40,13 @@ static int parseMaxSize(size_t &pos, const fileVector &file, ServerConfig &serve
     std::string val = getDirectiveValue(pos, file, "client_max_body_size");
     if (val.empty())
 		return -1;
-    server.setMaxBodySize(std::atoll(val.c_str()));
+    std::stringstream ss(val);
+    size_t size;
+    if (!(ss >> size) || !ss.eof()) {
+        print_msg("client_max_body_size: invalid number format", ERR);
+        return -1;
+    }
+    server.setMaxBodySize(size);
     return pos;
 }
 
@@ -85,7 +91,8 @@ static int parseErrorPage(size_t &pos, const fileVector &file, ServerConfig &ser
     }
     return pos;
 }
-static size_t redirectDictionary(std::string word)
+
+static int redirectDictionary(const std::string &word)
 {
 	if (word == "listen")					return LISTEN;
 	if (word == "host")						return HOST;
@@ -98,7 +105,8 @@ static size_t redirectDictionary(std::string word)
 	return UNEXPECTED;
 }
 
-static size_t	redirectServer(size_t pos, fileVector file, ServerConfig &server, int serv)
+static bool redirectServer(size_t &pos, const fileVector &file,
+		ServerConfig &server, int serv)
 {
 	int	ret;
 
@@ -124,38 +132,32 @@ static size_t	redirectServer(size_t pos, fileVector file, ServerConfig &server, 
 	return (ret);
 }	
 
-
-/*	implemented functions
- * */
-int ServerConfig::parseServer(size_t pos, fileVector file, ServerConfig &server)
+bool ServerConfig::parseServer(size_t &pos, const fileVector &file,
+		ServerConfig &server)
 {
-    int    status;
+    bool    status;
     int     servEnum;
 
     while (pos < file.size() && file[pos] != "}") {
         servEnum = redirectDictionary(file[pos]);
         if (servEnum == UNEXPECTED) {
             print_msg("Unexpected word in server: " + file[pos], ERR);
-            return -1;
+            return false;
         }
-            
         status = redirectServer(pos, file, server, servEnum);
-        if (status < 0) 
-            return -1;
-            
-        pos = static_cast<size_t>(status);
+        if (!status) 
+            return false;
         pos++;
     }
     this->_server_names.push_back(server.getHost());
     
     print_msg("Server parsed successfully :)", DEBUG);
-    return pos;
+    return true;
 }
 
 /*	costructor
- *		1048576 bytes = 1MB por defecto, como en Nginx
  * */ 
-ServerConfig::ServerConfig() : _port(0), _max_body_size(1048576), _host("") {}
+ServerConfig::ServerConfig() : _port(0), _max_body_size(DEFAULT_SIZE), _host("") {}
 
 /*	copy constructor
  *		crea un nuevo server con exactamente los dato de otro ya existente

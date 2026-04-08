@@ -138,7 +138,8 @@ static int redirectDictionary(const std::string &word) {
     return LOC_UNEXPECTED;
 }
 
-int Location::parseLocation(size_t pos, fileVector file, ServerConfig &s, Location &loc)
+bool Location::parseLocation(size_t &pos, const fileVector &file, 
+		ServerConfig &s, Location &loc)
 {
     int    status;
     int     locEnum;

@@ -37,11 +37,8 @@ int Config::parseFile(const char *f)
             if (i >= file.size() || file[i] != "{")
                 return (print_msg("Expected '{' after server", ERR));
             i++;
-            long result = s.parseServer(i, file, s);
-            if (result < 0)
-                return -1;
-            i = static_cast<size_t>(result);
-
+            if (!s.parseServer(i, file, s))
+				return -1;
             this->_servers.push_back(s);
         } else
             return (print_msg("Unexpected token in global scope: " + file[i], ERR));

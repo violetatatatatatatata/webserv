@@ -88,6 +88,9 @@ typedef std::vector<std::string> fileVector;
 # define BOLD "\033[1;37m"				// for debugging porpuses
 # define RESET "\033[0m"
 
+//		1048576 bytes = 1MB por defecto
+# define DEFAULT_SIZE 1048576
+
 /* ENUM
  * */
 enum e_level {
