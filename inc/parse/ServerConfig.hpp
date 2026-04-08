@@ -28,13 +28,36 @@ enum Serv {
 	UNEXPECTED
 };
 
-/*	port: puerto de escucha
- *	max_size: maximo tamaño del body cuando este es fijo
- *	host: ip del host
- *	server_names: lista de nombres
- *	err_pages: mapa de paginas html que se acceden mediante la id del error
- *	locations: bloque de locations
- *	servers: mapa con todos los puertos y los servidores asociados a este
+/*	_port: puerto en el que el servidor escuchará las conexiones
+ *	_max_body_size: límite máximo permitido para el cuerpo de las peticiones del cliente
+ *	_host: dirección IP o nombre de host asociado al servidor
+ *	_root: directorio raíz desde donde se servirán los archivos
+ *	_index: archivo por defecto que se servirá al acceder a un directorio
+ *	_server_names: lista de nombres (dominios) que identifican al servidor
+ *	_error_pages: mapa que asocia códigos de error HTTP con rutas a páginas personalizadas
+ *	_locations: lista de bloques de configuración específicos para rutas (URIs)
+ *	_servers: mapa para organizar configuraciones de servidor por puerto
+ *
+ *	getPort: devuelve el puerto de escucha
+ *	getMaxBodySize: devuelve el tamaño máximo del cuerpo de la petición
+ *	getHost: devuelve la dirección IP/host
+ *	getRoot: devuelve la ruta raíz del servidor
+ *	getIndex: devuelve el archivo de índice configurado
+ *	getServerNames: devuelve la lista de nombres del servidor
+ *	getErrorPages: devuelve el mapa de páginas de error
+ *	getLocations: devuelve el vector con todas las rutas configuradas
+ *
+ *	setPort: establece el puerto del servidor
+ *	setHost: establece la dirección IP del servidor
+ *	setRoot: establece el directorio raíz del servidor
+ *	setMaxBodySize: define el tamaño máximo del body permitido
+ *	addServerName: añade un nuevo nombre a la lista de nombres del servidor
+ *	setIndex: establece el archivo de índice por defecto
+ *	addErrorPage: añade una ruta de página personalizada para un código de error específico
+ *	addLocation: añade un bloque de configuración de ruta (Location) al servidor
+ *
+ *	parseFile: inicia el procesamiento de un archivo de configuración
+ *	parseServer: analiza un bloque de servidor específico dentro del archivo
  * */
 class ServerConfig {
 		private:

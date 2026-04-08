@@ -167,8 +167,8 @@ bool Location::parseLocation(size_t &pos, const fileVector &file,
         return -1;
     }
     s.addLocation(*this);
-    print_msg("Location parsed successfully :)", DEBUG);
-    return pos;
+    
+	return pos;
 }
 
 Location::Location()

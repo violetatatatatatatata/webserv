@@ -17,6 +17,15 @@
 #include <Webserv.hpp>
 #include <ServerConfig.hpp>
 
+/*	_servers: vector que almacena todas las configuraciones de servidores analizadas
+ *
+ *	Config: constructor por defecto
+ *	~Config: destructor de la clase
+ *	operator=: sobrecarga del operador de asignación
+ *
+ *	parseFile: lee y procesa el archivo de configuración completo para llenar el vector de servidores
+ *	getServers: devuelve la lista de todos los servidores configurados
+ * */
 class Config {
     private:
         std::vector<ServerConfig> _servers;
@@ -24,13 +33,12 @@ class Config {
     public:
         Config();
         Config(Config const &src);
-        
 		virtual ~Config(void);
         Config &operator=(Config const &src);
 
         int parseFile(const char *f);
 
-        std::vector<ServerConfig> getServers() const { return _servers; }
+        std::vector<ServerConfig> getServers() const { return _servers; };
 };
 
 #endif

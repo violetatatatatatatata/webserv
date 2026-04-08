@@ -18,17 +18,7 @@ int main(int argc, char **argv) {
     if (argc != 2)
         return (print_msg("Uso: ./webserv [archivo.config]", FATAL));
     Config parser;
-    if (parser.parseFile(argv[1]) == 0) {
-        std::cout << "Configuración válida" << std::endl;
-        
-        std::vector<ServerConfig> servers = parser.getServers();
-        for (size_t i = 0; i < servers.size(); ++i) {
-            std::cout << "Server " << i << ": " << servers[i].getHost() 
-                      << ":" << servers[i].getPort() << std::endl;
-        }
-    } else {
-        std::cout << "Error en la configuración" << std::endl;
-        return 1;
-    }
-    return 0;
+    if (parser.parseFile(argv[1]) == 0)
+    	return (print_msg("todo bien! :)", DEBUG));
+    return (print_msg("mu mal :(", DEBUG));
 }

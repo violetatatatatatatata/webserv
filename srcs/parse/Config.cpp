@@ -14,12 +14,6 @@
 
 /*	Implemented classes
  * */
-Config::Config() {}
-Config::~Config() {}
-
-Reader::Reader() {}
-Reader::~Reader() {}
-
 int Config::parseFile(const char *f)
 {
     fileVector file;
@@ -46,3 +40,10 @@ int Config::parseFile(const char *f)
 	}
     return EXIT_SUCCESS;
 }
+
+// OCF
+Config::Config() {}
+Config::~Config() {}
+
+Reader::Reader() {}
+Reader::~Reader() {}

@@ -12,6 +12,71 @@
 
 #include <Webserv.hpp>
 
+// BORRAR AL ENTREGAR !!!
+
+static void debugLocation(const Location& loc) {
+    std::ostringstream oss;
+    
+    oss << "\n--- DEBUG LOCATION ---" << std::endl;
+    oss << "Path: " << loc.getPath() << std::endl;
+    oss << "Root: " << loc.getRoot() << std::endl;
+    oss << "Index: " << loc.getIndex() << std::endl;
+    oss << "Autoindex: " << (loc.getAutoindex() ? "ON" : "OFF") << std::endl;
+    oss << "Upload Store: " << loc.getUploadStore() << std::endl;
+    oss << "Redirect: " << loc.getRedirect() << std::endl;
+    oss << "Methods: ";
+    const std::vector<std::string>& methods = loc.getMethods();
+    for (size_t i = 0; i < methods.size(); ++i) {
+        oss << methods[i] << (i < methods.size() - 1 ? ", " : "");
+    }
+    oss << std::endl;
+    oss << "CGI Info:" << std::endl;
+    const std::map<std::string, std::string>& cgi = loc.getCgiInfo();
+    if (cgi.empty()) {
+        oss << "  [None]" << std::endl;
+    } else {
+        for (std::map<std::string, std::string>::const_iterator it = cgi.begin(); it != cgi.end(); ++it) {
+            oss << "  [" << it->first << " -> " << it->second << "]" << std::endl;
+        }
+    }
+    oss << "----------------------\n";
+    print_msg(oss.str(), DEBUG);
+}
+
+static void debugServerConfig(const ServerConfig& config) {
+    std::ostringstream oss;
+    
+    oss << "\n=== DEBUG SERVER CONFIG ===" << std::endl;
+    oss << "Port: " << config.getPort() << std::endl;
+    oss << "Host: " << config.getHost() << std::endl;
+    oss << "Max Body Size: " << config.getMaxBodySize() << std::endl;
+    oss << "Root: " << config.getRoot() << std::endl;
+    oss << "Index: " << config.getIndex() << std::endl;
+
+    oss << "Server Names: ";
+    const std::vector<std::string>& names = config.getServerNames();
+    for (size_t i = 0; i < names.size(); ++i) {
+        oss << names[i] << (i < names.size() - 1 ? ", " : "");
+    }
+    oss << std::endl;
+    oss << "Error Pages:" << std::endl;
+    const std::map<int, std::string>& err_pages = config.getErrorPages();
+    if (err_pages.empty()) {
+        oss << "  [None]" << std::endl;
+    } else {
+        for (std::map<int, std::string>::const_iterator it = err_pages.begin(); it != err_pages.end(); ++it) {
+            oss << "  [Error " << it->first << " -> " << it->second << "]" << std::endl;
+        }
+    }
+    oss << "===========================\n";
+    print_msg(oss.str(), DEBUG);
+    const std::vector<Location>& locs = config.getLocations();
+    for (size_t i = 0; i < locs.size(); ++i) {
+        debugLocation(locs[i]);
+    }
+}
+// ------------
+
 static int parseListen(size_t &pos, const fileVector &file, ServerConfig &server) {
     std::string val = getDirectiveValue(pos, file, "listen");
     if (val.empty())
@@ -150,9 +215,9 @@ bool ServerConfig::parseServer(size_t &pos, const fileVector &file,
         pos++;
     }
     this->_server_names.push_back(server.getHost());
-    
-    print_msg("Server parsed successfully :)", DEBUG);
-    return true;
+   	
+	debugServerConfig(server);
+	return true;
 }
 
 /*	costructor

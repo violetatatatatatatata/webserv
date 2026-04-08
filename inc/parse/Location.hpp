@@ -28,15 +28,34 @@ enum LocDir {
 
 class ServerConfig;
 
-/*	autoindex: permite mirar si index.html existe o no. Si no existe, generar un html con la lista de archivos
- *	index: indica la respuesta predeterminada si la url acaba en /
- *	path: prefijo de la url 
- *	root: ruta absoluta o relativa en el disco duro local
- *	upload_store: la ruta en el servidor para los archivos de los metodos POST o PUT
- *	methods: lista de palabras permitidas (GET, POST, ...)
- *	cgi_info: mapa que usa el servidor para saber qué script ejecutar
- *	  key: la extensión del archivo (ej. ".php", ".py", ".pl").
-	  value: la ruta absoluta al ejecutable (ej. "/usr/bin/php-cgi", "/usr/bin/python3").
+/*	_autoindex: booleano que activa o desactiva el listado de directorios si no hay un index
+ *	_index: archivo por defecto para esta ubicación específica
+ *	_path: prefijo de la URL que define este bloque de configuración
+ *	_root: directorio raíz específico para esta ubicación
+ *	_upload_store: ruta del servidor donde se guardarán los archivos subidos
+ *	_methods: lista de métodos HTTP permitidos (GET, POST, DELETE, etc.)
+ *	_redirect: URL o ruta a la que se debe redirigir la petición
+ *	_cgi_info: mapa que asocia extensiones de archivos con sus ejecutables CGI correspondientes
+ *
+ *	getAutoindex: comprueba si el autoindex está habilitado
+ *	getPath: devuelve la ruta (path) de la ubicación
+ *	getRoot: devuelve el directorio raíz de la ubicación
+ *	getIndex: devuelve el archivo de índice de la ubicación
+ *	getUploadStore: devuelve la ruta de almacenamiento de subidas
+ *	getMethods: devuelve los métodos HTTP permitidos en esta ruta
+ *	getRedirect: devuelve la configuración de redirección
+ *	getCgiInfo: devuelve el mapa de configuración de CGI
+ *
+ *	setPath: establece la ruta de la ubicación
+ *	setRoot: establece el directorio raíz específico
+ *	setIndex: establece el archivo de índice específico
+ *	setAutoindex: habilita o deshabilita el listado de directorios
+ *	addMethod: añade un método HTTP a la lista de permitidos
+ *	setRedirect: establece una regla de redirección
+ *	setUploadStore: define dónde se guardarán los archivos subidos
+ *	addCgiInfo: registra una extensión y su binario CGI asociado
+ *
+ *	parseLocation: analiza el contenido de un bloque location dentro del archivo de configuración
  * */
 class Location {
 		private:
