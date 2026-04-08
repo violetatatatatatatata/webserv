@@ -12,6 +12,27 @@
 
 #include <Webserv.hpp>
 
+static int parseReturnLoc(size_t &pos, const fileVector &file, Location &loc) {
+    pos++;
+    if (pos >= file.size() || file[pos] == ";") {
+        print_msg("return: missing value", ERR);
+        return -1;
+    }
+    std::string redirect_val = "";
+    while (pos < file.size() && file[pos] != ";") {
+        if (!redirect_val.empty())
+            redirect_val += " ";
+        redirect_val += file[pos];
+        pos++;
+    }
+    if (pos >= file.size() || file[pos] != ";") {
+        print_msg("return: missing semicolon", ERR);
+        return -1;
+    }
+    loc.setRedirect(redirect_val);
+    return pos;
+}
+
 static int parseRootLoc(size_t &pos, const fileVector &file, Location &loc) {
     std::string val = getDirectiveValue(pos, file, "root");
     if (val.empty())
@@ -99,6 +120,8 @@ static int redirectLocation(size_t &pos, const fileVector &file, Location &loc, 
 			ret = parseUploadStoreLoc(pos, file, loc); 	break;
         case LOC_CGI_INFO:      
 			ret = parseCgiLoc(pos, file, loc); 			break;
+		case LOC_RETURN:
+            ret = parseReturnLoc(pos, file, loc);       break;
     }
     return ret;
 }
@@ -111,6 +134,7 @@ static int redirectDictionary(const std::string &word) {
             || word == "allow_methods") return LOC_METHODS;
     if (word == "upload_store")         return LOC_UPLOAD_STORE;
     if (word == "cgi_info")             return LOC_CGI_INFO;
+	if (word == "return")               return LOC_RETURN;
     return LOC_UNEXPECTED;
 }
 

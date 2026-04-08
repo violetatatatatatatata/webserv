@@ -17,16 +17,20 @@
 
 //	>> operador de extraccion de flujo
 fileVector Reader::readFile(const char* f) {
-    std::ifstream file(f);
-    fileVector tokens;
-    std::string line;
-
-    if (!file.is_open())
+    std::ifstream file(f); 
+    fileVector tokens; 
+    std::string line; 
+ 
+    if (!file.is_open()) 
         return tokens;
 
-    while (std::getline(file, line)) {
-        std::string spaced_line;
+    while (std::getline(file, line))
+	{
+        size_t hash_pos = line.find('#');
+        if (hash_pos != std::string::npos)
+            line = line.substr(0, hash_pos);
 
+        std::string spaced_line;
         for (size_t i = 0; i < line.length(); ++i) {
             if (line[i] == ';' || line[i] == '{' || line[i] == '}') {
                 spaced_line += ' ';
@@ -34,15 +38,14 @@ fileVector Reader::readFile(const char* f) {
                 spaced_line += ' ';
             } else {
                 spaced_line += line[i];
-            }
-        }
-
+            }   
+        }   
         std::istringstream iss(spaced_line);
         std::string token;
         while (iss >> token) {
             tokens.push_back(token);
-        }
-    }
+        }   
+    }   
     file.close();
     return tokens;
 }

@@ -12,7 +12,7 @@
 
 #include <Webserv.hpp>
 
-static long parseListen(size_t &pos, const fileVector &file, ServerConfig &server) {
+static int parseListen(size_t &pos, const fileVector &file, ServerConfig &server) {
     std::string val = getDirectiveValue(pos, file, "listen");
     if (val.empty())
 		return -1;
@@ -20,7 +20,7 @@ static long parseListen(size_t &pos, const fileVector &file, ServerConfig &serve
     return pos;
 }
 
-static long parseHost(size_t &pos, const fileVector &file, ServerConfig &server) {
+static int parseHost(size_t &pos, const fileVector &file, ServerConfig &server) {
     std::string val = getDirectiveValue(pos, file, "host");
     if (val.empty())
 		return -1;
@@ -28,7 +28,7 @@ static long parseHost(size_t &pos, const fileVector &file, ServerConfig &server)
     return pos;
 }
 
-static long parseIndex(size_t &pos, const fileVector &file, ServerConfig &serv) {
+static int parseIndex(size_t &pos, const fileVector &file, ServerConfig &serv) {
     std::string val = getDirectiveValue(pos, file, "index");
     if (val.empty())
 		return -1;
@@ -36,7 +36,7 @@ static long parseIndex(size_t &pos, const fileVector &file, ServerConfig &serv) 
     return pos;
 }
 
-static long parseMaxSize(size_t &pos, const fileVector &file, ServerConfig &server) {
+static int parseMaxSize(size_t &pos, const fileVector &file, ServerConfig &server) {
     std::string val = getDirectiveValue(pos, file, "client_max_body_size");
     if (val.empty())
 		return -1;
@@ -44,7 +44,7 @@ static long parseMaxSize(size_t &pos, const fileVector &file, ServerConfig &serv
     return pos;
 }
 
-static long parseRoot(size_t &pos, const fileVector &file, ServerConfig &server) {
+static int parseRoot(size_t &pos, const fileVector &file, ServerConfig &server) {
     std::string val = getDirectiveValue(pos, file, "root");
     if (val.empty())
 		return -1;
@@ -52,7 +52,7 @@ static long parseRoot(size_t &pos, const fileVector &file, ServerConfig &server)
     return pos;
 }
 
-static long parseServerName(size_t &pos, const fileVector &file, ServerConfig &server) {
+static int parseServerName(size_t &pos, const fileVector &file, ServerConfig &server) {
     pos++;
     if (pos >= file.size() || file[pos] == ";") {
         print_msg("server_name: missing value", ERR);
@@ -69,7 +69,7 @@ static long parseServerName(size_t &pos, const fileVector &file, ServerConfig &s
     return pos;
 }
 
-static long parseErrorPage(size_t &pos, const fileVector &file, ServerConfig &server) {
+static int parseErrorPage(size_t &pos, const fileVector &file, ServerConfig &server) {
     pos++;
     if (pos + 1 >= file.size() || file[pos] == ";") {
         print_msg("error_page: invalid format", ERR);
@@ -129,7 +129,7 @@ static size_t	redirectServer(size_t pos, fileVector file, ServerConfig &server, 
  * */
 int ServerConfig::parseServer(size_t pos, fileVector file, ServerConfig &server)
 {
-    long    status;
+    int    status;
     int     servEnum;
 
     while (pos < file.size() && file[pos] != "}") {

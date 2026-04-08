@@ -22,7 +22,8 @@ enum LocDir {
     LOC_METHODS,
     LOC_UPLOAD_STORE,
     LOC_CGI_INFO,
-    LOC_UNEXPECTED
+	LOC_RETURN,
+	LOC_UNEXPECTED
 };
 
 class ServerConfig;
