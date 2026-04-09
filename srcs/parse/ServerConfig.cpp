@@ -309,7 +309,11 @@ void ServerConfig::setMaxBodySize(size_t size) {
 }
 
 void ServerConfig::addServerName(const std::string& name) {
-	_server_names.push_back(name);
+    for (size_t i = 0; i < _server_names.size(); ++i) {
+        if (_server_names[i] == name)
+            return ;
+    }
+    _server_names.push_back(name);
 }
 
 void ServerConfig::addErrorPage(int code, const std::string& path) {
