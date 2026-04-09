@@ -17,7 +17,8 @@
 #include <Webserv.hpp>
 #include <ServerConfig.hpp>
 
-/*	_servers: vector que almacena todas las configuraciones de servidores analizadas
+/*	
+ *	_servers: mapa para organizar configuraciones de servidor por puerto
  *
  *	Config: constructor por defecto
  *	~Config: destructor de la clase
@@ -28,7 +29,7 @@
  * */
 class Config {
     private:
-        std::vector<ServerConfig> _servers;
+			std::map<int, std::vector<ServerConfig> >	_servers;
 
     public:
         Config();
@@ -38,7 +39,7 @@ class Config {
 
         int parseFile(const char *f);
 
-        std::vector<ServerConfig> getServers() const { return _servers; };
+		std::map<int, std::vector<ServerConfig> > getServers() const { return _servers; };
 };
 
 #endif

@@ -143,7 +143,7 @@ static int parseServerName(size_t &pos, const fileVector &file, ServerConfig &se
 static int parseErrorPage(size_t &pos, const fileVector &file, ServerConfig &server) {
     pos++;
     if (pos + 1 >= file.size() || file[pos] == ";") {
-        print_msg("error_page: invalid format", ERR);
+			print_msg("error_page: invalid format", ERR);
         return -1;
     }
     int code = std::atoi(file[pos].c_str());

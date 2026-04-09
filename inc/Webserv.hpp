@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/30 14:45:43 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/07 14:20:24 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/09 12:41:03 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@
 # include <stdio.h>
 # include <stdlib.h>
 # include <string.h>
+# include <cstdlib>
 # include <fcntl.h>
 # include <time.h>
 # include <limits.h>

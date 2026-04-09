@@ -14,6 +14,32 @@
 
 /*	Implemented classes
  * */
+static bool is_duplicated(const ServerConfig& s, std::vector<ServerConfig>& curr)
+{
+    int port = s.getPort();
+
+    std::stringstream ss;
+    ss << port;
+    std::string s_port = ss.str();
+
+    for (size_t j = 0; j < curr.size(); ++j)
+    {   
+        const std::vector<std::string>& names = s.getServerNames();
+        const std::vector<std::string>& existing_names = curr[j].getServerNames();
+            
+        for (size_t n = 0; n < names.size(); ++n) {
+            for (size_t m = 0; m < existing_names.size(); ++m) {
+                if (names[n] == existing_names[m]) {
+                    print_msg("Duplicate server_name '" + names[n]
+                        + "' on port " + s_port, ERR);
+                    return true;
+                }   
+            }   
+        }   
+    }
+    return false;
+}
+
 int Config::parseFile(const char *f)
 {
     fileVector file;
@@ -33,7 +59,12 @@ int Config::parseFile(const char *f)
             i++;
             if (!s.parseServer(i, file, s))
 				return -1;
-            this->_servers.push_back(s);
+			
+			std::vector<ServerConfig>& curr = this->_servers[s.getPort()];
+			if (is_duplicated(s, curr))
+				return -1;
+			
+			this->_servers[s.getPort()].push_back(s);
         } else
             return (print_msg("Unexpected token in global scope: " + file[i], ERR));
         i++;

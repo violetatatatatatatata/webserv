@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:01:18 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/02 16:43:39 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/09 12:07:37 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,6 @@ enum Serv {
  *	_server_names: lista de nombres (dominios) que identifican al servidor
  *	_error_pages: mapa que asocia códigos de error HTTP con rutas a páginas personalizadas
  *	_locations: lista de bloques de configuración específicos para rutas (URIs)
- *	_servers: mapa para organizar configuraciones de servidor por puerto
  *
  *	getPort: devuelve el puerto de escucha
  *	getMaxBodySize: devuelve el tamaño máximo del cuerpo de la petición
@@ -69,7 +68,6 @@ class ServerConfig {
 			std::vector<std::string>					_server_names;
 			std::map<int, std::string>					_error_pages;
 			std::vector<Location>						_locations;
-			std::map<int, std::vector<ServerConfig> >	_servers;
 		
 		public:
 			ServerConfig();
