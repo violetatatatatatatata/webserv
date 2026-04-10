@@ -14,6 +14,7 @@
 # define SERVERCONFIG_HPP
 
 # include <Webserv.hpp>
+# include <Location.hpp>
 
 enum Serv {
 	LISTEN,
@@ -59,14 +60,14 @@ enum Serv {
  * */
 class ServerConfig {
 		private:
-			int											_port;
-			size_t										_max_body_size;
-			std::string									_host;
+			int											    _port;
+			size_t									    _max_body_size;
+			std::string							    _host;
 			std::string									_root;
 			std::string									_index;
-			std::vector<std::string>					_server_names;
-			std::map<int, std::string>					_error_pages;
-			std::vector<Location>						_locations;
+			std::vector<std::string>		_server_names;
+			std::map<int, std::string>  _error_pages;
+			std::vector<Location>				_locations;
 		
 		public:
 			ServerConfig(int port); //to delete
@@ -76,14 +77,14 @@ class ServerConfig {
 			~ServerConfig();
 
 			// getters
-			int									getPort() const;
-			size_t								getMaxBodySize() const;
-			const std::string&					getHost() const;
-			const std::string&					getRoot() const;
-			const std::string&					getIndex() const;
+			int									              getPort() const;
+			size_t								            getMaxBodySize() const;
+			const std::string&				      	getHost() const;
+			const std::string&					      getRoot() const;
+			const std::string&					      getIndex() const;
 			const std::vector<std::string>&		getServerNames() const;
 			const std::map<int, std::string>&	getErrorPages() const;
-			const std::vector<Location>&		getLocations() const;
+			const std::vector<Location>&		  getLocations() const;
 			
 			// setters
 			void	setPort(int port);
@@ -95,9 +96,9 @@ class ServerConfig {
 			void	addErrorPage(int code, const std::string& path);
 			void	addLocation(const Location& location);
 
-                        // methods
-			int	parseFile(const char *f);
-                        bool    hasServerName(const std::string& server_name) const;
+      // methods
+			int	 parseFile(const char *f);
+      bool hasServerName(const std::string& server_name) const;
 			bool parseServer(size_t &pos, const fileVector &file,
 					ServerConfig &server);
 };

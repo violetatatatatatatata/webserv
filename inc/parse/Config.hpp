@@ -29,7 +29,7 @@
  * */
 class Config {
     private:
-	    std::map<int, std::vector<ServerConfig> >	_servers;
+			std::map<int, std::vector<ServerConfig> >	_servers;
 
     public:
         Config();
@@ -40,7 +40,7 @@ class Config {
         int parseFile(const char *f);
         const ServerConfig& findSpecificServer(const int port, const std::string& host) const;
 
-		std::map<int, std::vector<ServerConfig> > getServers() const { return _servers; };
+		    std::map<int, std::vector<ServerConfig> > getServers() const { return _servers; };
 };
 
 #endif
