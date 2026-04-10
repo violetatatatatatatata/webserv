@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../Webserv.hpp"
-
 class Response
 {
     public:
@@ -19,5 +17,5 @@ class Response
 
     private:
 
-        int socketFd;
+        int _socketFd;
 };

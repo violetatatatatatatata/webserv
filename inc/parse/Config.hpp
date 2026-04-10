@@ -14,17 +14,33 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
- #include <Webserv.hpp>
+#include <Webserv.hpp>
+#include <ServerConfig.hpp>
 
+/*	
+ *	_servers: mapa para organizar configuraciones de servidor por puerto
+ *
+ *	Config: constructor por defecto
+ *	~Config: destructor de la clase
+ *	operator=: sobrecarga del operador de asignación
+ *
+ *	parseFile: lee y procesa el archivo de configuración completo para llenar el vector de servidores
+ *	getServers: devuelve la lista de todos los servidores configurados
+ * */
 class Config {
-	private:
+    private:
+	    std::map<int, std::vector<ServerConfig> >	_servers;
 
-	public:
+    public:
+        Config();
         Config(Config const &src);
-        virtual ~Config(void);
+		virtual ~Config();
         Config &operator=(Config const &src);
 
-		int	parseFile(const char *f);
+        int parseFile(const char *f);
+        const ServerConfig& findSpecificServer(const int port, const std::string& host) const;
+
+		std::map<int, std::vector<ServerConfig> > getServers() const { return _servers; };
 };
 
 #endif

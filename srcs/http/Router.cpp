@@ -1,81 +1,41 @@
 #include "../inc/http/Router.hpp"
 
-Router::Router()
-{
+Router::Router() {}
+Router::~Router() {}
 
+const ServerConfig& Router::findMatchingServer(const Request& request, const Config& config)
+{
+  int port = request.getPort();
+  std::string host = request.getHeader("host");
+
+  if (host.empty())
+  {
+    host = "default";
+  }
+
+  return (config.findSpecificServer(port, host));
 }
 
-Router::Router(const Router& other)
+const Location* Router::findMatchingLocation(const Request& request, const ServerConfig& server)
 {
+  const Location* location = NULL;
+  std::string curr_location_path;
+  std::string prev_location_path;
+  std::vector<Location>::const_iterator locations_it = server.getLocations().begin();
 
-}
+  for (; locations_it < server.getLocations().end(); locations_it++)
+  {
+    curr_location_path = locations_it->getPath();
 
-Router::~Router()
-{
+    if (!request.getURI().compare(0, curr_location_path.size(), curr_location_path))
+    {
+      if (curr_location_path.size() > prev_location_path.size())
+      {
+        location = &(*locations_it);
+      }
+    }
+    prev_location_path = curr_location_path;
+  }
 
-}
-
-Router& Router::operator=(const Router& other)
-{
-
-}
-
-// Getters
-
-std::string Router::getRoute() const
-{
-  return _route;
-}
-
-e_type Router::getType() const
-{
-  return _type;
-}
-
-int Router::getError() const
-{
-  return _error;
-}
-
-ServerConfig& Router::getVirtualServer() const
-{
-  return _virtualServer;
-}
-
-Location& Router::getLocation() const
-{
-  return _location;
-}
-
-// Setter
-
-void Router::setRoute(std::string route)
-{
-  _route = route;
-}
-
-void Router::setType(e_type type)
-{
-  _type = type;
-}
-
-void Router::setError(int error)
-{
-  _error = error;
-}
-
-// Methods
-
-void Router::solveRoute(const Request& request)
-{
-
-}
-
-void Router::findVirtualServer()
-{
-  std::map<int, std::vector<ServerConfig>> servers = Config::getServers();
-}
-
-void Router::findLocation()
-{
+  return location;
 }

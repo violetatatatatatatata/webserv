@@ -35,3 +35,8 @@
 
 
 Usar print_msg !!! sirve para señalar info en diferentes niveles y tipos
+
+Uso de la IA:
+usé IA para escribir mensajes de DEBUG (borrar al final del proyecto) y comentarios en funciones.
+También las usé para tareas repetitivas como crear setters y getters para cada atributo de las funciones y
+como asistente debuggando y explicandome conceptos de nginx que no conocía

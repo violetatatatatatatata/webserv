@@ -12,57 +12,152 @@
 
 #include <Webserv.hpp>
 
-static int parseListen(int &pos, const fileVector &file, ServerConfig &server) {
+// BORRAR AL ENTREGAR !!!
+
+static void debugLocation(const Location& loc) {
+    std::ostringstream oss;
+    
+    oss << "\n--- DEBUG LOCATION ---" << std::endl;
+    oss << "Path: " << loc.getPath() << std::endl;
+    oss << "Root: " << loc.getRoot() << std::endl;
+    oss << "Index: " << loc.getIndex() << std::endl;
+    oss << "Autoindex: " << (loc.getAutoindex() ? "ON" : "OFF") << std::endl;
+    oss << "Upload Store: " << loc.getUploadStore() << std::endl;
+    oss << "Redirect: " << loc.getRedirect() << std::endl;
+    oss << "Methods: ";
+    const std::vector<std::string>& methods = loc.getMethods();
+    for (size_t i = 0; i < methods.size(); ++i) {
+        oss << methods[i] << (i < methods.size() - 1 ? ", " : "");
+    }
+    oss << std::endl;
+    oss << "CGI Info:" << std::endl;
+    const std::map<std::string, std::string>& cgi = loc.getCgiInfo();
+    if (cgi.empty()) {
+        oss << "  [None]" << std::endl;
+    } else {
+        for (std::map<std::string, std::string>::const_iterator it = cgi.begin(); it != cgi.end(); ++it) {
+            oss << "  [" << it->first << " -> " << it->second << "]" << std::endl;
+        }
+    }
+    oss << "----------------------\n";
+    print_msg(oss.str(), DEBUG);
+}
+
+static void debugServerConfig(const ServerConfig& config) {
+    std::ostringstream oss;
+    
+    oss << "\n=== DEBUG SERVER CONFIG ===" << std::endl;
+    oss << "Port: " << config.getPort() << std::endl;
+    oss << "Host: " << config.getHost() << std::endl;
+    oss << "Max Body Size: " << config.getMaxBodySize() << std::endl;
+    oss << "Root: " << config.getRoot() << std::endl;
+    oss << "Index: " << config.getIndex() << std::endl;
+
+    oss << "Server Names: ";
+    const std::vector<std::string>& names = config.getServerNames();
+    for (size_t i = 0; i < names.size(); ++i) {
+        oss << names[i] << (i < names.size() - 1 ? ", " : "");
+    }
+    oss << std::endl;
+    oss << "Error Pages:" << std::endl;
+    const std::map<int, std::string>& err_pages = config.getErrorPages();
+    if (err_pages.empty()) {
+        oss << "  [None]" << std::endl;
+    } else {
+        for (std::map<int, std::string>::const_iterator it = err_pages.begin(); it != err_pages.end(); ++it) {
+            oss << "  [Error " << it->first << " -> " << it->second << "]" << std::endl;
+        }
+    }
+    oss << "===========================\n";
+    print_msg(oss.str(), DEBUG);
+    const std::vector<Location>& locs = config.getLocations();
+    for (size_t i = 0; i < locs.size(); ++i) {
+        debugLocation(locs[i]);
+    }
+}
+// ------------
+
+static int parseListen(size_t &pos, const fileVector &file, ServerConfig &server) {
     std::string val = getDirectiveValue(pos, file, "listen");
+    if (val.empty())
+		return -1;
     server.setPort(std::atoi(val.c_str()));
     return pos;
 }
 
-static int parseHost(int &pos, const fileVector &file, ServerConfig &server) {
+static int parseHost(size_t &pos, const fileVector &file, ServerConfig &server) {
     std::string val = getDirectiveValue(pos, file, "host");
+    if (val.empty())
+		return -1;
     server.setHost(val);
     return pos;
 }
 
-static int parseMaxSize(int &pos, const fileVector &file, ServerConfig &server) {
-    std::string val = getDirectiveValue(pos, file, "client_max_body_size");
-    server.setMaxBodySize(std::atoll(val.c_str()));
+static int parseIndex(size_t &pos, const fileVector &file, ServerConfig &serv) {
+    std::string val = getDirectiveValue(pos, file, "index");
+    if (val.empty())
+		return -1;
+    serv.setIndex(val);
     return pos;
 }
-static int parseServerName(int &pos, const fileVector &file, ServerConfig &server) {
-	while (pos < file.size() && file[pos] != ";") {
-		server.addServerName(file[pos]);
-		pos++;
-	}
-	if (pos >= file.size() || file[pos] != ";")
-		return (print_msg("server_name: missing semicolon", ERR));
-	return pos;
+
+static int parseMaxSize(size_t &pos, const fileVector &file, ServerConfig &server) {
+    std::string val = getDirectiveValue(pos, file, "client_max_body_size");
+    if (val.empty())
+		return -1;
+    std::stringstream ss(val);
+    size_t size;
+    if (!(ss >> size) || !ss.eof()) {
+        print_msg("client_max_body_size: invalid number format", ERR);
+        return -1;
+    }
+    server.setMaxBodySize(size);
+    return pos;
 }
 
-static int parseRoot(int &pos, const fileVector &file, ServerConfig &server) {
-	if (pos >= file.size() || file[pos] == ";")
-		return (print_msg("root: missing value", ERR));
-	server.setRoot(file[pos]);
-	pos++;
-	if (pos >= file.size() || file[pos] != ";")
-		return (print_msg("root: missing semicolon", ERR));
-	return pos;
+static int parseRoot(size_t &pos, const fileVector &file, ServerConfig &server) {
+    std::string val = getDirectiveValue(pos, file, "root");
+    if (val.empty())
+		return -1;
+    server.setRoot(val);
+    return pos;
 }
 
-static int parseErrorPage(int &pos, const fileVector &file, ServerConfig &server) {
-	if (pos + 1 >= file.size())
-		return (print_msg("error_page: invalid format", ERR));
-	
-	int code = std::atoi(file[pos].c_str());
-	std::string path = file[pos + 1];
-	server.addErrorPage(code, path);
-	pos += 2;
-	if (pos >= file.size() || file[pos] != ";")
-		return (print_msg("error_page: missing semicolon", ERR));
-	return pos;
+static int parseServerName(size_t &pos, const fileVector &file, ServerConfig &server) {
+    pos++;
+    if (pos >= file.size() || file[pos] == ";") {
+        print_msg("server_name: missing value", ERR);
+        return -1;
+    }
+    while (pos < file.size() && file[pos] != ";") {
+        server.addServerName(file[pos]);
+        pos++;
+    }
+    if (pos >= file.size() || file[pos] != ";") {
+        print_msg("server_name: missing semicolon", ERR);
+        return -1;
+    }
+    return pos;
 }
 
-static int redirectDictionary(std::string word)
+static int parseErrorPage(size_t &pos, const fileVector &file, ServerConfig &server) {
+    pos++;
+    if (pos + 1 >= file.size() || file[pos] == ";") {
+			print_msg("error_page: invalid format", ERR);
+        return -1;
+    }
+    int code = std::atoi(file[pos].c_str());
+    std::string path = file[pos + 1];
+    server.addErrorPage(code, path);
+    pos += 2;
+    if (pos >= file.size() || file[pos] != ";") {
+        print_msg("error_page: missing semicolon", ERR);
+        return -1;
+    }
+    return pos;
+}
+
+static int redirectDictionary(const std::string &word)
 {
 	if (word == "listen")					return LISTEN;
 	if (word == "host")						return HOST;
@@ -75,11 +170,11 @@ static int redirectDictionary(std::string word)
 	return UNEXPECTED;
 }
 
-static int	redirectServer(size_t pos, fileVector file, ServerConfig &server, int serv)
+static bool redirectServer(size_t &pos, const fileVector &file,
+		ServerConfig &server, int serv)
 {
 	int	ret;
 
-	pos++;
 	switch (serv) {
 		case LISTEN:
 			ret = parseListen(pos, file, server);		break;
@@ -96,37 +191,53 @@ static int	redirectServer(size_t pos, fileVector file, ServerConfig &server, int
 		case INDEX:
 			ret = parseIndex(pos, file, server);		break;
 		case LOCATION:
-			ret = parseLocation(pos, file);				break;
-		default:
-			ret = UNEXPECTED;
+			Location loc;
+			ret = loc.parseLocation(pos, file, server, loc);	break;
 	}
 	return (ret);
 }	
 
-
-/*	implemented functions
- * */
-int parseServer(size_t pos, fileVector file, ServerConfig &server)
+bool ServerConfig::parseServer(size_t &pos, const fileVector &file,
+		ServerConfig &server)
 {
-	unsigned int	status;
-	int				servEnum;
+    bool    status;
+    int     servEnum;
 
-	while (pos < file.size() && file[pos] != "}") {
-		servEnum = redirectDictionary(file[pos]);
-		status = redirectServer(pos, file, server, servEnum);
-		if (status == UNEXPECTED)
-			return (print_msg("Unexpected character in server configuration!", ERR));
-		pos++;
-	}
-	this->_serverNames.push_back(server.getHost());
-
-	return (print_msg("Server parsed successfully :)", DEBUG));
+    while (pos < file.size() && file[pos] != "}") {
+        servEnum = redirectDictionary(file[pos]);
+        if (servEnum == UNEXPECTED) {
+            print_msg("Unexpected word in server: " + file[pos], ERR);
+            return false;
+        }
+        status = redirectServer(pos, file, server, servEnum);
+        if (!status) 
+            return false;
+        pos++;
+    }
+    this->_server_names.push_back(server.getHost());
+   	
+	debugServerConfig(server);
+	return true;
 }
 
-/*	costructor
- *		1048576 bytes = 1MB por defecto, como en Nginx
+bool    ServerConfig::hasServerName(const std::string& server_name) const {
+        for (std::vector<std::string>::const_iterator it = _server_names.begin(); it < _server_names.end(); it++) {
+                if (*it == server_name)
+                        return true;
+        }
+        return false;
+}
+
+// To delete, just for testing:
+ServerConfig::ServerConfig(int i) : _port(i), _max_body_size(1048576), _host("") {
+
+        _server_names.push_back("ex.com");
+        _server_names.push_back("example.com");
+}
+
+/*	constructor
  * */ 
-ServerConfig::ServerConfig() : _port(0), _maxSize(1048576), _host("") {}
+ServerConfig::ServerConfig() : _port(0), _max_body_size(DEFAULT_SIZE), _host("") {}
 
 /*	copy constructor
  *		crea un nuevo server con exactamente los dato de otro ya existente
@@ -144,9 +255,10 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &obj) {
 	if (this != &obj) { 
 		this->_port			  = obj._port;
 		this->_host			  = obj._host;
-		this->_max_body_size  = obj._maxSize;
-		this->_server_names   = obj._serverNames;
-		this->_error_pages	  = obj._errPages;
+		this->_index		  = obj._index;
+		this->_max_body_size  = obj._max_body_size;
+		this->_server_names   = obj._server_names;
+		this->_error_pages	  = obj._error_pages;
 		this->_locations	  = obj._locations;
 		this->_root = obj._root;
 	}
@@ -161,12 +273,16 @@ ServerConfig::~ServerConfig() {}
 
 // getters
 
+const std::string& ServerConfig::getIndex() const {
+	return _index;
+}
+
 int ServerConfig::getPort() const {
 	return _port;
 }
 
 size_t ServerConfig::getMaxBodySize() const {
-	return _maxSize;
+	return _max_body_size;
 }
 
 const std::string& ServerConfig::getHost() const {
@@ -174,11 +290,11 @@ const std::string& ServerConfig::getHost() const {
 }
 
 const std::vector<std::string>& ServerConfig::getServerNames() const {
-	return _serverNames;
+	return _server_names;
 }
 
 const std::map<int, std::string>& ServerConfig::getErrorPages() const {
-	return _errPages;
+	return _error_pages;
 }
 
 const std::vector<Location>& ServerConfig::getLocations() const {
@@ -195,23 +311,31 @@ void ServerConfig::setPort(int port) {
 	_port = port;
 }
 
-void ServerConfig::setHost(std::string& host) {
+void ServerConfig::setIndex(const std::string& index) {
+	_index = index;
+}
+
+void ServerConfig::setHost(const std::string& host) {
 	_host = host;
 }
 
 void ServerConfig::setMaxBodySize(size_t size) {
-	_maxSize = size;
+	_max_body_size = size;
 }
 
-void ServerConfig::addServerName(std::string& name) {
-	_serverNames.push_back(name);
+void ServerConfig::addServerName(const std::string& name) {
+    for (size_t i = 0; i < _server_names.size(); ++i) {
+        if (_server_names[i] == name)
+            return ;
+    }
+    _server_names.push_back(name);
 }
 
-void ServerConfig::addErrorPage(int code, std::string& path) {
-	_errorPages[code] = path;
+void ServerConfig::addErrorPage(int code, const std::string& path) {
+	_error_pages[code] = path;
 }
 
-void ServerConfig::addLocation(Location& location) {
+void ServerConfig::addLocation(const Location& location) {
 	_locations.push_back(location);
 }
 

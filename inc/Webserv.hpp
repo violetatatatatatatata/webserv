@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/30 14:45:43 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/01 02:09:40 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/04/09 12:41:03 by avelandr         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@
 # include <stdio.h>
 # include <stdlib.h>
 # include <string.h>
+# include <cstdlib>
 # include <fcntl.h>
 # include <time.h>
 # include <limits.h>
@@ -62,9 +63,13 @@
 typedef std::vector<std::string> fileVector;
 
 // Implemented classes
-#include <AutoIndex.hpp>
-#include <CGI.hpp>
+#include <AutoIndexHandler.hpp>
+#include <RedirectHandler.hpp>
+#include <CGIHandler.hpp>
+#include <HandlerFactory.hpp>
+#include <HttpHandler.hpp>
 #include <Request.hpp>
+#include <Router.hpp>
 #include <Response.hpp>
 #include <Client.hpp>
 #include <Cluster.hpp>
@@ -77,6 +82,7 @@ typedef std::vector<std::string> fileVector;
 
 /*	GLOBAL DEFINITIONS
  * */
+# define CYAN "\x1b[36m"
 # define RED "\033[31m"					// for failure
 # define GREEN "\033[32m"				// for success and start
 # define YELLOW "\033[33m"				
@@ -86,6 +92,9 @@ typedef std::vector<std::string> fileVector;
 # define MAGENTA "\x1b[35m"				// client disconnected and cgi log
 # define BOLD "\033[1;37m"				// for debugging porpuses
 # define RESET "\033[0m"
+
+//		1048576 bytes = 1MB por defecto
+# define DEFAULT_SIZE 1048576
 
 /* ENUM
  * */
@@ -113,8 +122,8 @@ enum e_module {
 
 /*	FUNCTION DEFINITIONS
  * */
-int			print_msg(std::string msg, int ret);
-std::string	getDirectiveValue(int &pos, const fileVector &file,
+int			print_msg(std::string msg, int status);
+std::string	getDirectiveValue(size_t &pos, const fileVector &file,
 		const std::string &directiveName);
 
 #endif
