@@ -18,4 +18,5 @@ class Response
     private:
 
         int _socketFd;
+        int error_code;
 };

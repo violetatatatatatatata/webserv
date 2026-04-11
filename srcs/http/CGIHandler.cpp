@@ -1,6 +1,6 @@
 #include "CGIHandler.hpp"
 
-CGIHandler::CGIHandler(const Request& request, const Location& location, const ServerConfig& server) :
+CGIHandler::CGIHandler(const Request& request, const Location* location, const ServerConfig& server) :
 HttpHandler(request, location, server)
 {
 }
@@ -15,4 +15,9 @@ CGIHandler& CGIHandler::operator=(const CGIHandler& other)
 
     }
     return *this;
+}
+
+// Methods
+void CGIHandler::resolveRequest()
+{
 }

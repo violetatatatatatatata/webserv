@@ -4,13 +4,6 @@
 #include <string>
 #include <map>
 
-enum e_method
-{
-    GET,
-    POST,
-    DELETE
-};
-
 class Request
 {
     public:
@@ -26,7 +19,7 @@ class Request
         // Getters
         int                 getSocketFd() const;
         int                 getPort() const;
-        e_method            getMethod() const;
+        const std::string&  getMethod() const;
         const std::string&  getVersion() const;
         const std::string&  getURI() const;
         const std::string&  getBody() const;
@@ -35,7 +28,7 @@ class Request
         // Setters
         void setSocketFd(int socketFd);
         void setPort(int port);
-        void setMethod(e_method method);
+        void setMethod(const std::string& method);
         void setVersion(std::string& httpVersion);
         void setURI(std::string& URI); 
         void setBody(std::string& body);
@@ -45,7 +38,7 @@ class Request
 
         int                                 _port;
         int                                 _socketFd;
-        e_method                            _method;
+        std::string                         _method;
         std::string                         _httpVersion;
         std::string                         _URI;
         std::string                         _body;

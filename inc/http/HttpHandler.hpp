@@ -1,21 +1,23 @@
 #pragma once
 
-#include "Location.hpp"
-#include "Request.hpp"
-//#include "ServerConfig.hpp"
 #include <string>
+#include <vector>
+#include <iostream>
+#include <filesystem>
 
+class Location;
+class Request;
 class ServerConfig;
 
 class HttpHandler
 {
     public:
 
-        HttpHandler(const Request& request, const Location& location, const ServerConfig& server);
+        HttpHandler(const Request& request, const Location* location, const ServerConfig& server);
         virtual ~HttpHandler();
+
         // Methods
-        bool checkIfFileExist() const;
-        void resolvePath();
+        virtual void resolveRequest() = 0;
 
     private:
         
@@ -24,9 +26,7 @@ class HttpHandler
 
     protected:
 
-        const ServerConfig& _server;
-        const Location&     _location;
         const Request&      _request;
-
-        std::string _absolute_path;
+        const Location*     _location;
+        const ServerConfig& _server;
 };

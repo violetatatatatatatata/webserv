@@ -7,8 +7,11 @@ class ServerConfig;
 class CGIHandler : public HttpHandler
 {
   public:
-    CGIHandler(const Request& request, const Location& location, const ServerConfig& server);
+    CGIHandler(const Request& request, const Location* location, const ServerConfig& server);
     ~CGIHandler();
+
+    // Methods
+    void resolveRequest();
     
   private:
   

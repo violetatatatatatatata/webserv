@@ -1,6 +1,6 @@
 #include "AutoIndexHandler.hpp"
 
-AutoIndexHandler::AutoIndexHandler(const Request& request, const Location& location, const ServerConfig& server) : HttpHandler(request, location, server)
+AutoIndexHandler::AutoIndexHandler(const Request& request, const Location* location, const ServerConfig& server) : HttpHandler(request, location, server)
 {
 }
 
@@ -14,4 +14,9 @@ AutoIndexHandler& AutoIndexHandler::operator=(const AutoIndexHandler& other)
 
     }
     return *this;
+}
+
+// Methods
+void AutoIndexHandler::resolveRequest()
+{
 }

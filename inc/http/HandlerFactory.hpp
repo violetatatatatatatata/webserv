@@ -1,12 +1,13 @@
 #pragma once
 
-#include "../parse/Location.hpp"
-#include "../parse/ServerConfig.hpp"
-#include "HttpHandler.hpp"
+class HttpHandler;
+class Location;
+class ServerConfig;
+class Request;
 
 class HandlerFactory
 {
   public:
   
-    static const HttpHandler* create(const Request& request, const Location& location, const ServerConfig& server);
+    static HttpHandler* create(const Request& request, const Location* location, const ServerConfig& server);
 };

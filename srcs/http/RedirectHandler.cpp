@@ -1,6 +1,6 @@
 #include "RedirectHandler.hpp"
 
-RedirectHandler::RedirectHandler(const Request& request, const Location& location, const ServerConfig& server) : HttpHandler(request, location, server)
+RedirectHandler::RedirectHandler(const Request& request, const Location* location, const ServerConfig& server) : HttpHandler(request, location, server)
 {
 }
 
@@ -14,4 +14,9 @@ RedirectHandler& RedirectHandler::operator=(const RedirectHandler& other)
         
     }
     return *this;
+}
+
+// Methods
+void RedirectHandler::resolveRequest()
+{
 }
