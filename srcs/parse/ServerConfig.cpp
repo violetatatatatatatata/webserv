@@ -194,6 +194,7 @@ static bool redirectServer(size_t &pos, const fileVector &file,
 			Location loc;
 			ret = loc.parseLocation(pos, file, server, loc);	break;
 	}
+
 	return (ret);
 }	
 

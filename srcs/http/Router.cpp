@@ -1,4 +1,8 @@
-#include "../inc/http/Router.hpp"
+#include "Router.hpp"
+#include "Location.hpp"
+#include "Request.hpp"
+#include "Config.hpp"
+#include "ServerConfig.hpp"
 
 Router::Router() {}
 Router::~Router() {}
@@ -36,6 +40,6 @@ const Location* Router::findMatchingLocation(const Request& request, const Serve
     }
     prev_location_path = curr_location_path;
   }
-
+  
   return location;
 }

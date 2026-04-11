@@ -138,6 +138,26 @@ static int redirectDictionary(const std::string &word) {
     return LOC_UNEXPECTED;
 }
 
+void Location::resolveLocType()
+{
+    if (!_redirect.empty())
+    {
+        _locType = REDIRECT_TYPE;
+    }
+    else if (!_cgi_info.empty())
+    {
+        _locType = CGI_TYPE;
+    }
+    else if (_autoindex)
+    {
+        _locType = AUTOINDEX_TYPE;
+    }
+    else
+    {
+        _locType = STATIC_TYPE;
+    }
+}
+
 bool Location::parseLocation(size_t &pos, const fileVector &file, 
 		ServerConfig &s, Location &loc)
 {
@@ -166,6 +186,7 @@ bool Location::parseLocation(size_t &pos, const fileVector &file,
         print_msg("Location block not closed properly", FATAL);
         return -1;
     }
+    resolveLocType();
     s.addLocation(*this);
     
 	return pos;
@@ -188,7 +209,8 @@ Location &Location::operator=(const Location &obj) {
         this->_methods      = obj._methods;     
         this->_upload_store = obj._upload_store;
         this->_cgi_info     = obj._cgi_info;    
-        this->_redirect     = obj._redirect;    
+        this->_redirect     = obj._redirect;
+        this->_locType      = obj._locType;
     }
     return *this;
 }
@@ -249,10 +271,6 @@ void Location::setIndex(const std::string& index) {
 
 void Location::setAutoindex(bool state) {
     _autoindex = state;
-}
-
-void Location::setLocType(e_locType locType) {
-    _locType = locType;
 }
 
 void Location::setUploadStore(const std::string& path) {

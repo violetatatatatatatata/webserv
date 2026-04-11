@@ -1,4 +1,4 @@
-#include "../inc/http/Response.hpp"
+#include "Response.hpp"
 
 Response::Response()
 {

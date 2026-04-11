@@ -1,23 +1,37 @@
 #include "HandlerFactory.hpp"
+#include "ServerConfig.hpp"
+#include "Location.hpp"
+#include "StaticHandler.hpp"
+#include "CGIHandler.hpp"
+#include "RedirectHandler.hpp"
+#include "AutoIndexHandler.hpp"
 
-const HttpHandler* HandlerFactory::create(const Request& request, const Location& location, const ServerConfig& server)
+HttpHandler* HandlerFactory::create(const Request& request, const Location* location, const ServerConfig& server)
 {
   HttpHandler* handler = NULL;
   
-  switch (location.getLocType())
+  if (!location && !server.getRoot().empty())
   {
-    case STATIC_TYPE:
-      return new HttpHandler(request, location, server);
-      break ;
-    case CGI_TYPE:
-      return new CGIHandler(request, location, server);
-      break ;
-    case REDIRECT_TYPE:
-      return new RedirectHandler(request, location, server);
-      break ;
-    case AUTOINDEX_TYPE:
-      return new AutoIndexHandler(request, location, server);
-      break ;
+    return new StaticHandler(request, location, server);
+  }
+  
+  if (location)
+  {
+    switch (location->getLocType())
+    {
+      case STATIC_TYPE:
+        return new StaticHandler(request, location, server);
+        break ;
+      case CGI_TYPE:
+        return new CGIHandler(request, location, server);
+        break ;
+      case REDIRECT_TYPE:
+        return new RedirectHandler(request, location, server);
+        break ;
+      case AUTOINDEX_TYPE:
+        return new AutoIndexHandler(request, location, server);
+        break ;
+    }
   }
 
   return handler;

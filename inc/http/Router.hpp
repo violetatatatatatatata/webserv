@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Request.hpp"
-#include "../parse/Config.hpp"
-#include "../parse/ServerConfig.hpp"
-#include "../parse/Location.hpp"
+class Request;
+class Location;
+class ServerConfig;
+class Config;
 
 class Router
 {

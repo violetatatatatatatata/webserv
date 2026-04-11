@@ -1,4 +1,4 @@
-#include "../inc/http/Request.hpp"
+#include "Request.hpp"
 
 Request::Request()
 {
@@ -9,11 +9,11 @@ Request::Request(int i)
 {
     _port = i;
     _socketFd = i;
-    _method = GET;
+    _method = "GET";
     _httpVersion = "1.0";
     _URI = "/exemple/fichier.txt";
     _body = "";
-    _headers["host"] = "example.com";
+    _headers["host"] = "localhost";
 }
 
 Request::Request(const Request& other)
@@ -66,7 +66,7 @@ int Request::getSocketFd() const
   return _socketFd;
 }
 
-e_method Request::getMethod() const
+const std::string& Request::getMethod() const
 {
   return _method;
 }
@@ -107,7 +107,7 @@ void Request::setSocketFd(int socketFd)
   _socketFd = socketFd;
 }
 
-void Request::setMethod(e_method method)
+void Request::setMethod(const std::string& method)
 {
   _method = method;
 }

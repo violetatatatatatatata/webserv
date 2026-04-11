@@ -102,7 +102,6 @@ class Location {
 			void setRoot(const std::string& root);
 			void setIndex(const std::string& index);
 			void setAutoindex(bool state);
-			void setLocType(e_locType locType);
 			void addMethod(const std::string& method);
 			void setRedirect(const std::string& redirect);
 			void setUploadStore(const std::string& path);
@@ -110,6 +109,7 @@ class Location {
 
 			bool parseLocation(size_t &pos, const fileVector &file,
 					ServerConfig &s, Location &loc);
+			void resolveLocType();
 };
 
 #endif
