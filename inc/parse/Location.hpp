@@ -30,7 +30,7 @@ enum LocDir {
 	LOC_UNEXPECTED
 };
 
-enum e_locType {
+enum LocType {
 	STATIC_TYPE,
 	CGI_TYPE,
 	REDIRECT_TYPE,
@@ -76,7 +76,7 @@ class Location {
 			std::string													_root;
 			std::string													_upload_store;
 			std::string                         _redirect;
-			e_locType		  											_locType;
+			LocType		  												_locType;
 			std::vector<std::string>						_methods;
 			std::map<std::string, std::string>	_cgi_info;
 
@@ -88,7 +88,7 @@ class Location {
 		
 			// getters
 			bool																			getAutoindex() const;
-			e_locType														      getLocType() const;
+			LocType														      getLocType() const;
 			const std::string&												getPath() const;
 			const std::string&												getRoot() const;
 			const std::string&												getIndex() const;

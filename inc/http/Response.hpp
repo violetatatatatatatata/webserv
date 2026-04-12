@@ -9,14 +9,18 @@ class Response
         ~Response();
         Response& operator=(const Response& other);
 
+        // Methods
+        void fillBody();
+
         // Getters
         int getSocketFd() const;
 
         // Setters
-        void setSocketFd(int socketFd);
+        void setSocketFd(int socket_Fd);
+        void setError(int error_code);
 
     private:
 
-        int _socketFd;
-        int error_code;
+        int _socket_Fd;
+        int _error_code;
 };

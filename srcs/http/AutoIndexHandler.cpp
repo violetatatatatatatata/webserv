@@ -17,6 +17,7 @@ AutoIndexHandler& AutoIndexHandler::operator=(const AutoIndexHandler& other)
 }
 
 // Methods
-void AutoIndexHandler::resolveRequest()
+void AutoIndexHandler::handleRequest(Response& response)
 {
+    (void)response;
 }

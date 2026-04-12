@@ -1,9 +1,8 @@
 #include "Request.hpp"
+#include <algorithm>
 
-Request::Request()
-{
-
-}
+Request::Request() {}
+Request::~Request() {}
 
 Request::Request(int i)
 {
@@ -11,7 +10,7 @@ Request::Request(int i)
     _socketFd = i;
     _method = "GET";
     _httpVersion = "1.0";
-    _URI = "/exemple/fichier.txt";
+    _URI = "/example/file.txt";
     _body = "";
     _headers["host"] = "localhost";
 }
@@ -19,11 +18,6 @@ Request::Request(int i)
 Request::Request(const Request& other)
 {
   *this = other;
-}
-
-Request::~Request()
-{
-
 }
 
 Request& Request::operator=(const Request& other)

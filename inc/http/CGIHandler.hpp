@@ -11,7 +11,7 @@ class CGIHandler : public HttpHandler
     ~CGIHandler();
 
     // Methods
-    void resolveRequest();
+    void handleRequest(Response& response);
     
   private:
   

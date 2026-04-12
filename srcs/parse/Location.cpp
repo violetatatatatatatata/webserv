@@ -223,7 +223,7 @@ bool Location::getAutoindex() const {
     return _autoindex;
 }
 
-e_locType Location::getLocType() const {
+LocType Location::getLocType() const {
     return _locType;
 }
 

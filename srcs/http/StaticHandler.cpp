@@ -1,16 +1,18 @@
 #include "StaticHandler.hpp"
+#include "ServerConfig.hpp"
 #include "Location.hpp"
 #include "Request.hpp"
-#include "ServerConfig.hpp"
+#include "Response.hpp"
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
 
 StaticHandler::StaticHandler(const Request& request, const Location* location, const ServerConfig& server) :
 HttpHandler(request, location, server)
 {
 }
 
-StaticHandler::~StaticHandler()
-{
-}
+StaticHandler::~StaticHandler() {}
 
 StaticHandler& StaticHandler::operator=(const StaticHandler& other)
 {
@@ -21,53 +23,6 @@ StaticHandler& StaticHandler::operator=(const StaticHandler& other)
 }
 
 // Methods
-void StaticHandler::resolveRequest()
-{
-    resolveAbsolutePath();
-    
-    if (!isMethodAuthorized())
-    {
-        //error_code = 405;
-        return ;
-    }
-    
-    std::string methods[] =
-    {
-        "GET",
-        "POST",
-        "DELETE"
-    };
-
-    void (StaticHandler::*methodFunctions[3])(void) const =
-    {
-        &StaticHandler::resolveGET,
-        &StaticHandler::resolvePOST,
-        &StaticHandler::resolveDELETE
-    };
-
-    for (int i = 0; i < 3; i++)
-    {
-        if (_request.getMethod() == methods[i])
-        {
-            (this->*methodFunctions[i])();
-        }
-    }
-
-}
-
-void StaticHandler::resolveAbsolutePath()
-{
-    // If no location bloc or no root in location bloc -> take the root from server
-    if (_location == NULL || _location->getRoot().empty())
-    {
-        _absolute_path = _server.getRoot() + _request.getURI();
-    }
-    else
-    {
-        _absolute_path = _location->getRoot() + _request.getURI();
-    }
-}
-
 bool StaticHandler::isMethodAuthorized() const
 {
     // If no methods defined in config -> only GET is authorized
@@ -93,39 +48,169 @@ bool StaticHandler::isMethodAuthorized() const
     return false;
 }
 
-bool StaticHandler::isFileExistant() const
+int StaticHandler::checkStat(struct stat& st) const
 {
-    return false;
+    if (stat(_absolute_path.c_str(), &st) == -1)
+    {
+        switch(errno)
+        {
+            case ENOENT:
+            case ENOTDIR:
+                return 404;
+            case EACCES:
+                return 403;
+            default:
+                return 500;
+        }
+    }
+    return 0;
 }
 
-bool StaticHandler::isFileReadable() const
+// Return empty string if no indexes
+static const std::string& getCorrectIndex(const std::string& location_index, const std::string& server_index)
 {
-    return false;
+    if (location_index.empty())
+    {
+        return server_index;
+    }
+    else
+    {
+        return location_index;
+    }
 }
 
-void StaticHandler::resolveGET() const
+// Resolve the directory path
+int StaticHandler::resolveDirectory()
+{
+    // No vector de index en Location y ServerConfig?
+    //const std::vector<std::string>& index = getCorrectIndex(_location->getIndex(), _server.getIndex());
+    const std::string& index = getCorrectIndex(_location->getIndex(), _server.getIndex());
+
+    if (index.empty())
+    {
+        return 404;
+    }
+
+    _absolute_path += index;
+
+    return 0;
+}
+
+int StaticHandler::resolveAbsolutePath()
+{
+    // If no location bloc or no root in location bloc -> take the root from server
+    if (_location == NULL || _location->getRoot().empty())
+    {
+        _absolute_path = _server.getRoot() + _request.getURI();
+    }
+    else
+    {
+        _absolute_path = _location->getRoot() + _request.getURI();
+    }
+
+    struct stat st;
+
+    int res = checkStat(st);
+    if (res != 0)
+    {
+        return res;
+    }
+
+    if (S_ISDIR(st.st_mode) && resolveDirectory() == 404)
+    {
+        return 404;
+    }
+
+    return 0;
+}
+
+int StaticHandler::isFileInError() const
+{
+    struct stat st;
+
+    int res = checkStat(st);
+    if (res != 0)
+    {
+        return res;
+    }
+
+    if (S_ISDIR(st.st_mode))
+    {
+            return 404;
+    }
+
+    if (access(_absolute_path.c_str(), R_OK) == -1)
+    {
+        return 403;
+    }
+
+    return 0;
+}
+
+void StaticHandler::handleRequest(Response& response)
+{
+    if (!isMethodAuthorized())
+    {
+        response.setError(405);
+        print_msg(RED "Method authorized." RESET, DEBUG);
+        return ;
+    }
+    print_msg(GREEN "Method authorized." RESET, DEBUG);
+
+    int res = resolveAbsolutePath();
+    if (res != 0)
+    {
+        print_msg(RED "Path error." RESET, DEBUG);
+        response.setError(res);
+        return ;
+    }
+    print_msg(std::string(GREEN) + "Absolute path resolved: " + _absolute_path + RESET, DEBUG);
+
+    std::string methods[] =
+    {
+        "GET",
+        "POST",
+        "DELETE"
+    };
+
+    void (StaticHandler::*methodFunctions[3])(Response&) const =
+    {
+        &StaticHandler::handleGET,
+        &StaticHandler::handlePOST,
+        &StaticHandler::handleDELETE
+    };
+
+    for (int i = 0; i < 3; i++)
+    {
+        if (_request.getMethod() == methods[i])
+        {
+            (this->*methodFunctions[i])(response);
+        }
+    }
+
+}
+
+void StaticHandler::handleGET(Response& response) const
 {
     print_msg(GREEN "The request will be resolved as a static GET." RESET, DEBUG);
 
-    if (!isFileExistant())
+    int res = isFileInError();
+    if (res != 0)
     {
-        //error_code = 404;
-    }
-
-    if (!isFileReadable())
-    {
-        //error_code = 403;
+        response.setError(res);
+        return ;
     }
 }
 
-void StaticHandler::resolvePOST() const
+void StaticHandler::handlePOST(Response& response) const
 {
-     print_msg(GREEN "The request will be resolved as a static POST." RESET, DEBUG);
-   
+    print_msg(GREEN "The request will be resolved as a static POST." RESET, DEBUG);
+    (void)response;
 }
 
-void StaticHandler::resolveDELETE() const
+void StaticHandler::handleDELETE(Response& response) const
 {
-     print_msg(GREEN "The request will be resolved as a static DELETE." RESET, DEBUG);
+    print_msg(GREEN "The request will be resolved as a static DELETE." RESET, DEBUG);
+    (void)response;
 }
 
