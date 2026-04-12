@@ -9,7 +9,7 @@ class RedirectHandler : public HttpHandler
     RedirectHandler(const Request& request, const Location* location, const ServerConfig& server);
     ~RedirectHandler();
 
-    void resolveRequest();
+    void handleRequest(Response& response);
     
   private:
   

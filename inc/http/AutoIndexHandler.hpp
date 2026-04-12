@@ -10,7 +10,7 @@ class AutoIndexHandler : public HttpHandler
     ~AutoIndexHandler();
     
     // Methods
-    void resolveRequest();
+    void handleRequest(Response& response);
 
   private:
   

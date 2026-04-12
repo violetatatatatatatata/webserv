@@ -27,13 +27,14 @@ int main(int argc, char **argv){
     	return (print_msg("mu mal :(", DEBUG));
 	       
     Request request(8080);
+    Response response;
     const ServerConfig& server = Router::findMatchingServer(request, parser);
     const Location* location = Router::findMatchingLocation(request, server);
 
     HttpHandler* const handler = HandlerFactory::create(request, location, server);
     
     if (handler)
-        handler->resolveRequest();
+        handler->handleRequest(response);
     else
         std::cout << "NULL" << std::endl;
 

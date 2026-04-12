@@ -1,13 +1,9 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <iostream>
-#include <filesystem>
-
 class Location;
 class Request;
 class ServerConfig;
+class Response;
 
 class HttpHandler
 {
@@ -17,7 +13,7 @@ class HttpHandler
         virtual ~HttpHandler();
 
         // Methods
-        virtual void resolveRequest() = 0;
+        virtual void handleRequest(Response& response) = 0;
 
     private:
         

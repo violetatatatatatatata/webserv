@@ -18,6 +18,7 @@ CGIHandler& CGIHandler::operator=(const CGIHandler& other)
 }
 
 // Methods
-void CGIHandler::resolveRequest()
+void CGIHandler::handleRequest(Response& response)
 {
+    (void)response;
 }
