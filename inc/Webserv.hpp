@@ -22,6 +22,7 @@
 # include <string>
 # include <limits>
 # include <cstdio>
+# include <cstring>
 
 // CPP containers
 # include <map>

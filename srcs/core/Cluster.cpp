@@ -36,7 +36,30 @@ void Cluster::init() {
 
 		if (portToFd.find(port) == portToFd.end()) {
 		
-		
+		int serverFd = socket(AF_INET, SOCK_STREAM, 0);
+			if (serverFd < 0) {
+				print_msg("Failed to create socket", FATAL);
+				return; 
+				//std::exception??
+			}
+
+			// "Setemos" el socket
+			int opt = 1;
+			if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+				print_msg("Failed to set SO_REUSEADDR", WARN);
+			}
+            
+			struct sockaddr_in addr;
+            std::memset(&addr, 0, sizeof(addr)); 
+            addr.sin_family = AF_INET;
+            addr.sin_addr.s_addr = htonl(INADDR_ANY);
+            addr.sin_port = htons(port);
+
+            // 4. Atar el socket a la dirección (Bind)
+            if (bind(serverFd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+                print_msg("Bind failed", FATAL); 
+                close(serverFd);
+                return;
 		
 		}
 		else { //Si el puerto ya esta en uso.
