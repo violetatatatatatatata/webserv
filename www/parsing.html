@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Parsing Guide</title>
+    <style>
+        body {
+            text-align: center;
+            line-height: 1.6;
+        }
+        ul {
+            display: inline-block;
+            text-align: left;
+            padding-left: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .contact {
+            margin-bottom: 30px;
+        }
+        img {
+            display: block;
+            margin: 10px auto;
+        }
+        .tux-img {
+            display: block !important;
+            margin: 20px auto !important;
+        }
+        code {
+            font-family: monospace;
+            background-color: #eeeeee;
+            padding: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Webserv Parsing Guide</h1>
+    <h3>Step by step technical breakdown (｢• ω •)｢</h3>
+
+    <img src="https://gloomy-poison.neocities.org/web_graphics/filetransferdividers.gif" alt="welcome" width="350" style="display:inline-block;">
+
+    <p>
+        <small>The parsing process transforms the <code>.config</code> file into C++ structures.</small><br>
+        <small>It identifies server blocks, ports, and specific route configurations.</small><br>
+        <small>This system ensures that each request reaches the correct virtual server.</small>
+    </p>
+
+    <h2>Parsing Workflow</h2>
+    <ul>
+        <li><b>Reader:</b> Opens the file and generates tokens (words and symbols).</li>
+        <li><b>Config:</b> The main class that groups servers by their port.</li>
+        <li><b>ServerConfig:</b> Stores data for a single <code>server {}</code> block.</li>
+        <li><b>Location:</b> Stores rules for specific URL paths and methods.</li>
+    </ul>
+
+    <h2>Key Class Attributes</h2>
+    <ul>
+        <li><code>_servers</code>: Map that handles multiple ports (Config class).</li>
+        <li><code>_error_pages</code>: Map for custom error HTMLs (ServerConfig class).</li>
+        <li><code>_methods</code>: List of allowed GET/POST/DELETE (Location class).</li>
+        <li><code>_cgi_info</code>: Map for script executors (Location class).</li>
+    </ul>
+
+    <h2>The Default Server Rule</h2>
+    <p>
+        <small>The first server defined for a port is stored at index [0].</small><br>
+        <small>If no <code>server_name</code> matches, index [0] handles the request.</small>
+    </p>
+
+    <img src="https://media.tenor.com/NeJfHqkmdMIAAAAi/tux-linux-penguin.gif" alt="tux" width="200" class="tux-img">
+
+    <div class="contact">
+        <h3>/home/avelandr/Desktop/mondongo/M5/webserv/www/parsing.html<a href="">Back to Home</a></h3>
+    </div>
+
+    <hr>
+    <p><i>This documentation belongs to the 42 BCN project.</i></p>
+    <h3>Made by:</h3>
+    <p>Coco, Dani and Violeta</p>
+</body>
+</html>

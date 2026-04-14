@@ -1,14 +1,76 @@
 <!DOCTYPE html>
-<html>
-<head><title>Webserv 42 - Main</title></head>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <style>
+        body {
+            text-align: center;
+            line-height: 1.6;
+        }
+        ul {
+            display: inline-block;
+            text-align: left;
+            padding-left: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .contact {
+            margin-bottom: 30px;
+        }
+        img {
+            display: block;
+            margin: 10px auto;
+        }
+        .tux-img {
+            display: block !important; 
+            margin: 20px auto !important;
+        }
+    </style>
+</head>
 <body>
-    <h1>Bienvenido al Servidor Principal (Puerto 8080)</h1>
-    <p>Este es el servidor principal que maneja GET, POST, DELETE y CGI.</p>
+    <h1>Welcome to our Webserv!</h1>
+    <h3>This is a guide on how to build your own (｢• ω •)｢</h3>
+    
+    <img src="https://gloomy-poison.neocities.org/web_graphics/filetransferdividers.gif" alt="welcome" width="350" style="display:inline-block;">
+    
+    <p>
+        <small>Webserv is a C++98 project that implements a non-blocking HTTP/1.1 server.</small><br>
+        <small>It uses a multiplexer like 'select' or 'poll' to handle multiple clients simultaneously,</small><br>
+        <small>serving static files, managing uploads/deletions, and executing CGI scripts.</small><br>
+        <small>The server is fully configurable via an Nginx-style file, allowing for</small><br>
+        <small>custom ports, routes, and error pages.</small>
+    </p>
+                                                                                
+    <h2>Webserv implementation step by step!</h2>
+                                                                                
     <ul>
-        <li><a href="/assets">Probar Autoindex (Listado de carpetas)</a></li>
-        <li><a href="/old-page">Probar Redirección Interna</a></li>
-        <li><a href="/google">Probar Redirección a Google</a></li>
-        <li><a href="/cgi-bin/hello.py">Ejecutar Python CGI</a></li>
+        <li><a href="/home/avelandr/Desktop/mondongo/M5/webserv/www/parsing.html">Parse .config files based on Nginx functionalities</a></li>
+        <li><a href="/home/avelandr/Desktop/mondongo/M5/webserv/www/error.html">Generating error exceptions</a></li>
     </ul>
+
+    <img src="https://media.tenor.com/NeJfHqkmdMIAAAAi/tux-linux-penguin.gif" alt="tux" width="200" class="tux-img">
+
+    <h2>Contacts</h2>
+                                                                                
+    <div class="contact">
+        <h3><a href="https://www.linkedin.com/in/violeta-velandria-768898348">Violeta</a>
+        <img src="https://64.media.tumblr.com/5565449ef1c365c44ad6db5f8b23149d/d74387bbfa9eb3e2-24/s1280x1920/90eb08094ac83756384b50d03e5e9bd21277de71.gifv" alt="yo" width="300"></h3>
+    </div>
+                                                                                
+    <div class="contact">
+        <h3><a href="https://www.linkedin.com/in/daniel-atienza-romero-10488264?utm_source=share_via&utm_content=profile&utm_medium=member_android">Dani</a>
+        <img src="https://64.media.tumblr.com/4e705b00ceeb7c6fa498f915b038db90/d74387bbfa9eb3e2-01/s1280x1920/6a467c15b32e69a0e99169cdca1ec01b08899c64.gifv" alt="dani" width="300"></h3>
+    </div>
+                                                                                
+    <div class="contact">
+        <h3><a href="https://www.linkedin.com/in/daniel-atienza-romero-10488264?utm_source=share_via&utm_content=profile&utm_medium=member_android">Coco</a>
+        <img src="https://64.media.tumblr.com/d4f74de2464e26cea8a2c553f1eec53a/d74387bbfa9eb3e2-8c/s1280x1920/14aff8bc3d1a8f017340d7553262b6b9e521be76.gifv" alt="coco" width="300"></h3>
+    </div>
+                                                                                
+    <hr>
+    <p><i>This project was made for the 42 BCN School.</i></p>
+    <h3>Made by:</h3>
+    <p>Coco, Dani and Violeta</p>
 </body>
 </html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Error Handling Guide</title>
+    <style>
+        body {
+            text-align: center;
+            line-height: 1.6;
+        }
+        ul {
+            display: inline-block;
+            text-align: left;
+            padding-left: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .contact {
+            margin-bottom: 30px;
+        }
+        img {
+            display: block;
+            margin: 10px auto;
+        }
+        .tux-img {
+            display: block !important;
+            margin: 20px auto !important;
+        }
+        code {
+            font-family: monospace;
+            background-color: #eeeeee;
+            padding: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Webserv Error Handling</h1>
+    <h3>Exception-based error management (｢• ω •)｢</h3>
+
+    <img src="https://gloomy-poison.neocities.org/web_graphics/filetransferdividers.gif" alt="welcome" width="350" style="display:inline-block;">
+
+    <p>
+        <small>Our server uses C++ exceptions to handle HTTP error states.</small><br>
+        <small>This allows us to stop execution and jump directly to the response phase.</small><br>
+        <small>Custom HTML pages are then served based on the specific error code.</small>
+    </p>
+
+    <h2>1. The Exception Hierarchy</h2>
+    
+    <ul>
+        <li><code>HttpException:</code> The base class that stores the HTTP status code.</li>
+        <li><code>Client Errors (4xx):</code> Exceptions like 404 (Not Found) or 403 (Forbidden).</li>
+        <li><code>Server Errors (5xx):</code> Exceptions like 500 (Internal) or 504 (Gateway Timeout).</li>
+    </ul>
+
+    <h2>2. Implementation Flow</h2>
+    <ul>
+        <li><b>Throw:</b> When a file is missing or a CGI fails, we <code>throw</code> an exception.</li>
+        <li><b>Catch:</b> The main loop catches <code>HttpException</code> to prevent crashes.</li>
+        <li><b>Response:</b> The <code>Response</code> class builds the header and loads the HTML.</li>
+    </ul>
+
+    <h2>3. Custom Error Pages</h2>
+    <p>
+        <small>The server looks for custom pages in the <code>error_page</code> directive.</small><br>
+        <small>If not found, it falls back to our default files in <code>www/client_error/</code>.</small>
+    </p>
+
+    <img src="https://media.tenor.com/NeJfHqkmdMIAAAAi/tux-linux-penguin.gif" alt="tux" width="200" class="tux-img">
+
+    <h2>Navigation</h2>
+    <div class="contact">
+        <h3>/home/avelandr/Desktop/mondongo/M5/webserv/www/parsing.html<a href="">Back to Home</a></h3>
+    </div>
+
+    <hr>
+    <p><i>This documentation belongs to the 42 BCN project.</i></p>
+    <h3>Made by:</h3>
+    <p>Coco, Dani and Violeta</p>
+</body>
+</html>
