@@ -43,31 +43,48 @@ void Cluster::init() {
 				//std::exception??
 			}
 
-			// "Setemos" el socket
+			// "Seteamos" el socket
 			int opt = 1;
 			if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
 				print_msg("Failed to set SO_REUSEADDR", WARN);
 			}
-            
+			
 			struct sockaddr_in addr;
-            std::memset(&addr, 0, sizeof(addr)); 
-            addr.sin_family = AF_INET;
-            addr.sin_addr.s_addr = htonl(INADDR_ANY);
-            addr.sin_port = htons(port);
+			std::memset(&addr, 0, sizeof(addr)); 
+			addr.sin_family = AF_INET;
+			addr.sin_addr.s_addr = htonl(INADDR_ANY);
+			addr.sin_port = htons(port);
 
-            // 4. Atar el socket a la dirección (Bind)
-            if (bind(serverFd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-                print_msg("Bind failed", FATAL); 
-                close(serverFd);
-                return;
-		
+			if (bind(serverFd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+				print_msg("Bind failed", FATAL); 
+				close(serverFd);
+				//std::exception??
+				return;
+			}
+
+			if (listen(serverFd, SOMAXCONN) < 0) {
+				print_msg("Listen failed", FATAL);
+				close(serverFd);
+				return;
+			}
+
+			portToFd[port] = serverFd;
+			this->_serverFds[serverFd].push_back(_configs[i]);
+
+			struct pollfd pfd;
+			pfd.fd = serverFd;
+			pfd.events = POLLIN;
+			pfd.revents = 0;
+			this->_fds.push_back(pfd);
+
+			//print_msg(, SUCCESS);
+
+		} else { 
+
+			this->_serverFds[portToFd[port]].push_back(_configs[i]);
+			
+			//print_msg(, INFO);
 		}
-		else { //Si el puerto ya esta en uso.
-
-
-		}
-	
-	
 	}
 
 }
