@@ -43,7 +43,6 @@ void Cluster::init() {
 				//std::exception??
 			}
 
-			// "Seteamos" el socket
 			int opt = 1;
 			if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
 				print_msg("Failed to set SO_REUSEADDR", WARN);
@@ -77,13 +76,13 @@ void Cluster::init() {
 			pfd.revents = 0;
 			this->_fds.push_back(pfd);
 
-			//print_msg(, SUCCESS);
+			print_msg("Socket connected", SUCCESS);
 
 		} else { 
 
 			this->_serverFds[portToFd[port]].push_back(_configs[i]);
 			
-			//print_msg(, INFO);
+			print_msg("server add", INFO);
 		}
 	}
 
