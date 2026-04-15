@@ -2,75 +2,194 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Home</title>
+    <title>Home - Webserv v1.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
         body {
-            text-align: center;
-            line-height: 1.6;
+            background: url("https://cdn.vectorstock.com/i/500p/43/41/rainbow-cloud-background-with-sprinkles-vector-46904341.jpg");
+            margin: 0;
+            display: flex;
+            line-height: 1.5;
+            font-family: "MS Sans Serif", Geneva, sans-serif;
+            font-size: 13px;
         }
-        ul {
+
+        .sidebar {
+            width: 180px;
+            background-color: #c0c0c0;
+            height: 100vh;
+            position: fixed;
+            border: 3px outset #eee;
+            border-right-color: #000;
+            border-bottom-color: #000;
+            padding: 0;
+            box-sizing: border-box;
+            text-align: center;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            background-color: #1400FF;
+            color: white;
+            padding: 5px;
+            margin: 2px;
+            border: 2px inset #fff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+        }
+
+        .sidebar h2 {
+            font-family: 'VT323', monospace;
+            font-size: 32px;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .sidebar ul {
+            display: block;
+            text-align: left;
+            padding: 10px;
+            margin: 0;
+            list-style-type: none;
+        }
+
+        .sidebar li {
+            margin: 10px 0;
+        }
+
+        .sidebar a {
+            color: #0000ee;
+            text-decoration: underline;
+        }
+
+        .sidebar a:visited {
+            color: #551a8b;
+        }
+
+        .main-content {
+            margin-left: 180px;
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+        }
+
+        section {
+            background-color: #c0c0c0;
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 700px;
+            border: 3px inset #fff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            text-align: left;
+        }
+
+        h1, h2, h3 {
+            color: #000;
+            font-family: "MS Sans Serif", Geneva, sans-serif;
+        }
+
+        ul.main-list, .eval-list {
             display: inline-block;
             text-align: left;
-            padding-left: 20px;
-            margin-top: 20px;
-            margin-bottom: 20px;
         }
-        .contact {
-            margin-bottom: 30px;
-        }
+
         img {
             display: block;
             margin: 10px auto;
         }
+
         .tux-img {
-            display: block !important; 
+            display: block !important;
             margin: 20px auto !important;
+        }
+
+        hr {
+            border: 0;
+            border-top: 2px solid #000;
+            margin: 20px 0;
         }
     </style>
 </head>
 <body>
-    <h1>Welcome to our Webserv!</h1>
-    <h3>This is a guide on how to build your own (｢• ω •)｢</h3>
-    
-    <img src="https://gloomy-poison.neocities.org/web_graphics/filetransferdividers.gif" alt="welcome" width="350" style="display:inline-block;">
-    
-    <p>
-        <small>Webserv is a C++98 project that implements a non-blocking HTTP/1.1 server.</small><br>
-        <small>It uses a multiplexer like 'select' or 'poll' to handle multiple clients simultaneously,</small><br>
-        <small>serving static files, managing uploads/deletions, and executing CGI scripts.</small><br>
-        <small>The server is fully configurable via an Nginx-style file, allowing for</small><br>
-        <small>custom ports, routes, and error pages.</small>
-    </p>
-                                                                                
-    <h2>Webserv implementation step by step!</h2>
-                                                                                
-    <ul>
-        <li><a href="/home/avelandr/Desktop/mondongo/M5/webserv/www/parsing.html">Parse .config files based on Nginx functionalities</a></li>
-        <li><a href="/home/avelandr/Desktop/mondongo/M5/webserv/www/error.html">Generating error exceptions</a></li>
-    </ul>
 
-    <img src="https://media.tenor.com/NeJfHqkmdMIAAAAi/tux-linux-penguin.gif" alt="tux" width="200" class="tux-img">
+    <nav class="sidebar">
+        <div class="sidebar-header">
+			<img src="https://64.media.tumblr.com/49001a657b6463a9a8c4c95a3e1334dd/048193933d9c179c-b8/s250x400/b0bd985a31aae91dece45169a05a602791661a35.gifv" width="120" alt="line"></center>
+        </div>
+        <ul>
+            <li><a href="#welcome">:: Home</a></li>
+            <li><a href="#implementation">:: Implementation</a></li>
+            <li><a href="#contacts">:: Contacts</a></li>
+            <li><a href="#evaluation">:: Evaluation</a></li>
+            <br>
+        </ul>
+    </nav>
 
-    <h2>Contacts</h2>
-                                                                                
-    <div class="contact">
-        <h3><a href="https://www.linkedin.com/in/violeta-velandria-768898348">Violeta</a>
-        <img src="https://64.media.tumblr.com/5565449ef1c365c44ad6db5f8b23149d/d74387bbfa9eb3e2-24/s1280x1920/90eb08094ac83756384b50d03e5e9bd21277de71.gifv" alt="yo" width="300"></h3>
+    <div class="main-content">
+		
+		<img src="https://64.media.tumblr.com/587d87666a11e1f1a83cf5e33e8240d1/017346084e430beb-b5/s250x400/2063b6d1aecf5d88a41d8f6ee7af4a87d86b011f.gifv" width="500" alt="line"></center>
+        
+        <h1 id="welcome">Welcome to Webserv!</h1>
+        <h3>Build your own HTTP server (｢• ω •)｢</h3>
+
+        <center><img src="https://gloomy-poison.neocities.org/web_graphics/filetransferdividers.gif" alt="divider" width="750"></center>
+
+        <section>
+            <b>Project Info:</b><br>
+            Webserv is a C++98 project that implements a non-blocking HTTP/1.1 server.
+            It uses a multiplexer (select/poll) to handle multiple clients simultaneously.
+            <br><br>
+            <b>Features:</b> serving static files, POST/DELETE methods, CGI scripts.
+            Configurable via Nginx-style file.
+        </section>
+
+        <h2 id="implementation">How to build yourn own step by step!</h2>
+
+        <ul class="main-list">
+			<li>[STEP 1] <a href="parsing.html">Parse config files</a></li>
+            <li>[STEP 2] <a href="error.html">Error exceptions</a></li>
+        </ul>
+
+        <img src="https://media.tenor.com/NeJfHqkmdMIAAAAi/tux-linux-penguin.gif" alt="tux" width="200" class="tux-img">
+
+        <h2 id="contacts">Made by:</h2>
+
+        <table border="1" bgcolor="#c0c0c0" cellspacing="0" cellpadding="5" align="center" width="80%">
+            <tr>
+                <th>Name</th>
+                <th>Profile</th>
+            </tr>
+            <tr>
+                <td>Violeta @avelandr</td>
+                <td><a href="https://www.linkedin.com/in/violeta-velandria-768898348">Linkedin</a></td>
+            </tr>
+            <tr>
+                <td>Dani @</td>
+                <td><a href="https://www.linkedin.com/in/daniel-atienza-romero-10488264">Linkedin</a></td>
+            </tr>
+            <tr>
+                <td>Coco @cochatel</td>
+                <td><a href="https://www.linkedin.com/in/daniel-atienza-romero-10488264">Linkedin</a></td>
+            </tr>
+        </table>
+        <br>
+        <img src="https://64.media.tumblr.com/d4f74de2464e26cea8a2c553f1eec53a/d74387bbfa9eb3e2-8c/s1280x1920/14aff8bc3d1a8f017340d7553262b6b9e521be76.gifv" alt="coco" width="250">
+
+        <h2 id="evaluation">Testing</h2>
+        <ul class="eval-list">
+            <li><a href="non_existing_path">Try non-existing page (404)</a></li>
+        </ul>
+
+        <br>
+        <center><img src="https://64.media.tumblr.com/6e82a4ff1bab7e55efc5cef9258f8416/97459689802eeab7-3a/s1280x1920/6926328f98a77d5db6052cbfc241548cce29ef4b.gifv" alt="flames" width="1000"></center>
+
+        <hr>
+        <p align="center">
+            <i>Made for 42 BCN.</i><br>
+            <b>by: Coco, Dani, Violeta</b>
+        </p>
     </div>
-                                                                                
-    <div class="contact">
-        <h3><a href="https://www.linkedin.com/in/daniel-atienza-romero-10488264?utm_source=share_via&utm_content=profile&utm_medium=member_android">Dani</a>
-        <img src="https://64.media.tumblr.com/4e705b00ceeb7c6fa498f915b038db90/d74387bbfa9eb3e2-01/s1280x1920/6a467c15b32e69a0e99169cdca1ec01b08899c64.gifv" alt="dani" width="300"></h3>
-    </div>
-                                                                                
-    <div class="contact">
-        <h3><a href="https://www.linkedin.com/in/daniel-atienza-romero-10488264?utm_source=share_via&utm_content=profile&utm_medium=member_android">Coco</a>
-        <img src="https://64.media.tumblr.com/d4f74de2464e26cea8a2c553f1eec53a/d74387bbfa9eb3e2-8c/s1280x1920/14aff8bc3d1a8f017340d7553262b6b9e521be76.gifv" alt="coco" width="300"></h3>
-    </div>
-                                                                                
-    <hr>
-    <p><i>This project was made for the 42 BCN School.</i></p>
-    <h3>Made by:</h3>
-    <p>Coco, Dani and Violeta</p>
 </body>
 </html>
