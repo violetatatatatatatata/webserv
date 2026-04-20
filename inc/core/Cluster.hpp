@@ -7,10 +7,10 @@
 
 class Cluster {
 	private:
-		const std::vector<ServerConfig>&			_configs;    // Ref to servers
-		std::vector<struct pollfd>					_fds;        // array to poll
-		std::map<int, std::vector<ServerConfig>	> _serverFds;  // fds connection socket -> virtual servers
-		//std::map<int, Client>						_clientsFds; // fds clients -> state
+	std::map<int, std::vector<ServerConfig> >	_configs;    
+		std::vector<struct pollfd>					_fds;        
+		std::map<int, std::vector<ServerConfig> >	_serverFds;  
+		//std::map<int, Client>						_clientsFds; 
 	
 	public:
 
@@ -19,7 +19,9 @@ class Cluster {
 		~Cluster();
 		Cluster & operator=(const Cluster & other);
 		
-		Cluster(const std::vector<ServerConfig>& servers);
+		Cluster(const std::map<int, std::vector<ServerConfig> >& servers);
+
+		void run();
 
 	private:
 		void init();

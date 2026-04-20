@@ -2,7 +2,7 @@
 
 //Orthodox Canonical Form
 
-Cluster::Cluster(const std::vector<ServerConfig>& servers) : _configs(servers) {
+Cluster::Cluster(const std::map<int, std::vector<ServerConfig> >& servers) : _configs(servers) {
 	print_msg("Initializing cluster", DEBUG);
 	init();
 }
@@ -11,9 +11,16 @@ Cluster::Cluster(const Cluster & other) : _configs(other._configs) {
 	*this = other;
 }
 
+
 Cluster::~Cluster() {
-	print_msg("Destrutor cluster", DEBUG);
-	// TODO: close FD's
+    
+    for (size_t i = 0; i < this->_fds.size(); ++i) {
+        if (this->_fds[i].fd >= 0) {
+            close(this->_fds[i].fd);
+        //print_msg(); Puertos cerrados?
+		}
+    }
+    this->_fds.clear();
 }
 
 Cluster & Cluster::operator=(const Cluster & other) {
@@ -26,64 +33,88 @@ Cluster & Cluster::operator=(const Cluster & other) {
 }
 
 
-
 void Cluster::init() {
+	
+	std::map<int, std::vector<ServerConfig> >::const_iterator it;
 
-	std::map<int, int> portToFd;
+	for (it = _configs.begin(); it != _configs.end(); ++it) {
+		int port = it->first;
 
-	for (size_t i = 0; i < _configs.size(); ++i) {
-		int port = _configs[i].getPort();
-
-		if (portToFd.find(port) == portToFd.end()) {
-		
 		int serverFd = socket(AF_INET, SOCK_STREAM, 0);
-			if (serverFd < 0) {
-				print_msg("Failed to create socket", FATAL);
-				return; 
-				//std::exception??
-			}
+		if (serverFd < 0) {
+			print_msg("Failed to create socket", FATAL);
+			return; 
+		}
 
-			int opt = 1;
-			if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-				print_msg("Failed to set SO_REUSEADDR", WARN);
-			}
+		int opt = 1;
+		if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+			print_msg("Failed to set SO_REUSEADDR", WARN);
+		}
+		
+		struct sockaddr_in addr;
+		std::memset(&addr, 0, sizeof(addr)); 
+		addr.sin_family = AF_INET;
+		addr.sin_addr.s_addr = htonl(INADDR_ANY);
+		addr.sin_port = htons(port);
+
+		if (bind(serverFd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+			print_msg("Bind failed", FATAL); 
+			close(serverFd);
+			return;
+		}
+
+		if (listen(serverFd, SOMAXCONN) < 0) {
+			print_msg("Listen failed", FATAL);
+			close(serverFd);
+			return;
+		}
+
+		this->_serverFds[serverFd] = it->second;
+
+		struct pollfd pfd;
+		pfd.fd = serverFd;
+		pfd.events = POLLIN;
+		pfd.revents = 0;
+		
+		this->_fds.push_back(pfd);
+
+		std::ostringstream oss;
+		oss << "Listening on port " << port;
+		print_msg(oss.str(), SUCCESS);
+	}
+}
+
+void Cluster::run() {
+	print_msg("Cluster test", START);
+
+	while (true) {
+		int poll_count = poll(&this->_fds[0], this->_fds.size(), -1);
+
+		if (poll_count < 0) {
+			print_msg("Poll error", FATAL);
+			break;
+		}
+
+		for (size_t i = 0; i < this->_fds.size(); ++i) {
 			
-			struct sockaddr_in addr;
-			std::memset(&addr, 0, sizeof(addr)); 
-			addr.sin_family = AF_INET;
-			addr.sin_addr.s_addr = htonl(INADDR_ANY);
-			addr.sin_port = htons(port);
+			if (this->_fds[i].revents & POLLIN) { 
+				
+				int serverFd = this->_fds[i].fd;
+				print_msg("Connection detected!", DEBUG);
 
-			if (bind(serverFd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-				print_msg("Bind failed", FATAL); 
-				close(serverFd);
-				//std::exception??
-				return;
+				struct sockaddr_in clientAddr;
+				socklen_t clientLen = sizeof(clientAddr);
+				int clientFd = accept(serverFd, (struct sockaddr*)&clientAddr, &clientLen);
+
+				if (clientFd >= 0) {
+					print_msg("Client accepted", SUCCESS);
+					
+					std::string msg = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nWebserv Test!\r\n";
+					send(clientFd, msg.c_str(), msg.size(), 0);
+
+					close(clientFd);
+				}
 			}
-
-			if (listen(serverFd, SOMAXCONN) < 0) {
-				print_msg("Listen failed", FATAL);
-				close(serverFd);
-				return;
-			}
-
-			portToFd[port] = serverFd;
-			this->_serverFds[serverFd].push_back(_configs[i]);
-
-			struct pollfd pfd;
-			pfd.fd = serverFd;
-			pfd.events = POLLIN;
-			pfd.revents = 0;
-			this->_fds.push_back(pfd);
-
-			print_msg("Socket connected", SUCCESS);
-
-		} else { 
-
-			this->_serverFds[portToFd[port]].push_back(_configs[i]);
-			
-			print_msg("server add", INFO);
 		}
 	}
-
 }

@@ -17,27 +17,33 @@
 
 int main(int argc, char **argv){
 
-    if (argc != 2)
-        return (print_msg("Uso: ./webserv [archivo.config]", FATAL));
-    
-    Config parser;
-    if (parser.parseFile(argv[1]) == 0)
-    	print_msg("todo bien! :)", DEBUG);
-    else
-    	return (print_msg("mu mal :(", DEBUG));
-	       
-    Request request(8080);
-    Response response;
-    const ServerConfig& server = Router::findMatchingServer(request, parser);
-    const Location* location = Router::findMatchingLocation(request, server);
+	if (argc != 2)
+		return (print_msg("Uso: ./webserv [archivo.config]", FATAL));
+	
+	Config parser;
+	if (parser.parseFile(argv[1]) == 0) {
+		print_msg("todo bien! :)", DEBUG);
+	
+		Cluster cluster(parser.getServers()); 
+		cluster.run();
+	
+	}
+	else
+		return (print_msg("mu mal :(", DEBUG));
+	/*       
+	Request request(8080);
+	Response response;
+	const ServerConfig& server = Router::findMatchingServer(request, parser);
+	const Location* location = Router::findMatchingLocation(request, server);
 
-    HttpHandler* const handler = HandlerFactory::create(request, location, server);
-    
-    if (handler)
-        handler->handleRequest(response);
-    else
-        std::cout << "NULL" << std::endl;
+	HttpHandler* const handler = HandlerFactory::create(request, location, server);
+	
+	if (handler)
+		handler->handleRequest(response);
+	else
+		std::cout << "NULL" << std::endl;
 
-    delete(handler);
-    (void)handler;
+	delete(handler);
+	(void)handler;
+	*/
 }
