@@ -11,7 +11,7 @@ HttpHandler* HandlerFactory::create(const Request& request, const Location* loca
   HttpHandler* handler = NULL;
   
   if (!location && !server.getRoot().empty())
-    return new StaticHandler(request, location, server);
+    return new StaticHandler(request, location, server); // Corregir -> podria ser Redirection o Autoindex
   
   if (location)
   {
