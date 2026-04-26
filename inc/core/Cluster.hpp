@@ -10,19 +10,19 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#ifndef CLUSTER_HPP
+# define CLUSTER_HPP
 
  #include <Webserv.hpp>
 
-//class Client; //TODO
+class Client;
 
 class Cluster {
 	private:
 	std::map<int, std::vector<ServerConfig> >	_configs;    
 		std::vector<struct pollfd>					_fds;        
 		std::map<int, std::vector<ServerConfig> >	_serverFds;  
-		//std::map<int, Client>						_clientsFds; 
+		std::map<int, Client>						_clientsFds; 
 	
 	public:
 

@@ -36,3 +36,18 @@ Client::~Client() {}
 int Client::getFd() const { return _fd; }
 
 const std::string& Client::getBuffer() const { return _requestBuffer;}
+
+void Client::appendData(const char* buffer, ssize_t bytesRead) {
+	
+	if (bytesRead > 0) {
+		this->_requestBuffer.append(buffer, bytesRead);
+	}
+}
+
+bool Client::isHeaderComplete() const {
+	
+if (this->_requestBuffer.find("\r\n\r\n") != std::string::npos) {
+		return true;
+	} else
+		return false;
+}

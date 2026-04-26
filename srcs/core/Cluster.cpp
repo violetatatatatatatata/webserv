@@ -58,6 +58,8 @@ void Cluster::init() {
 			return; 
 		}
 
+		fcntl(serverFd, F_SETFL, O_NONBLOCK); //socket no bloqueante
+
 		int opt = 1;
 		if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
 			print_msg("Failed to set SO_REUSEADDR", WARN);
@@ -96,12 +98,31 @@ void Cluster::init() {
 	}
 }
 
+void Cluster::acceptClient(int serverFd) {
+	struct sockaddr_in clientAddr;
+	socklen_t clientLen = sizeof(clientAddr);
+	int clientFd = accept(serverFd, (struct sockaddr*)&clientAddr, &clientLen);
+
+	if (clientFd >= 0) {
+		print_msg("Client accepted", SUCCESS);
+		
+		fcntl(clientFd, F_SETFL, O_NONBLOCK);
+		
+		this->_clientsFds[clientFd] = Client(clientFd);
+
+		// 3. Le decimos a poll() que empiece a vigilarle
+		struct pollfd pfd;
+		pfd.fd = clientFd;
+		pfd.events = POLLIN;
+		pfd.revents = 0;
+		this->_fds.push_back(pfd);
+	}
+}
+
 void Cluster::run() {
-	print_msg("Cluster test", START);
 
 	while (true) {
 		int poll_count = poll(&this->_fds[0], this->_fds.size(), -1);
-
 		if (poll_count < 0) {
 			print_msg("Poll error", FATAL);
 			break;
@@ -109,22 +130,43 @@ void Cluster::run() {
 
 		for (size_t i = 0; i < this->_fds.size(); ++i) {
 			
-			if (this->_fds[i].revents & POLLIN) { 
+			if (!(this->_fds[i].revents & POLLIN)) 
+				continue; 
 				
-				int serverFd = this->_fds[i].fd;
-				print_msg("Connection detected!", DEBUG);
+			int currentFd = this->_fds[i].fd;
 
-				struct sockaddr_in clientAddr;
-				socklen_t clientLen = sizeof(clientAddr);
-				int clientFd = accept(serverFd, (struct sockaddr*)&clientAddr, &clientLen);
+			//SERVIDOR
+			if (this->_serverFds.count(currentFd) > 0) {
+				this->acceptClient(currentFd);
+			}
+			// CLIENTE
+			else {
+				char buffer[10000] = {0};
+				int bytes_read = recv(currentFd, buffer, sizeof(buffer) - 1, 0);
 
-				if (clientFd >= 0) {
-					print_msg("Client accepted", SUCCESS);
-					
-					std::string msg = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nWebserv Test!\r\n";
-					send(clientFd, msg.c_str(), msg.size(), 0);
+				if (bytes_read > 0) {
 
-					close(clientFd);
+					this->_clientsFds[currentFd].appendData(buffer, bytes_read);
+
+					if (this->_clientsFds[currentFd].isHeaderComplete()) {
+						std::cout << "\n PETICION RECIBIDA \n";
+
+						// ***  HTTP *** 
+						
+						// Respuesta test.
+						std::string msg = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nTEST, mensaje revibido!\r\n";
+						send(currentFd, msg.c_str(), msg.size(), 0);
+						
+						close(currentFd);
+						this->_fds[i].fd = -1;
+						this->_clientsFds.erase(currentFd);
+					}
+				} 
+				else if (bytes_read == 0) {
+
+					close(currentFd);
+					this->_fds[i].fd = -1;
+					this->_clientsFds.erase(currentFd);
 				}
 			}
 		}
