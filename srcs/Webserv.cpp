@@ -26,17 +26,26 @@ int main(int argc, char **argv){
     else
     	return (print_msg("mu mal :(", DEBUG));
 	       
-    Request request(8080);
+    std::string str = "GET /index.html HTTP/1.1\r\n"
+"Host: localhost:8080\r\n"
+"User-Agent: WebservTest/1.0\r\n"
+"Accept: text/html\r\n"
+"Content-Length: 13\r\n"
+"\r\n"
+"Hello world!";
+    Request request(str);
     Response response;
     const ServerConfig& server = Router::findMatchingServer(request, parser);
     const Location* location = Router::findMatchingLocation(request, server);
 
     HttpHandler* const handler = HandlerFactory::create(request, location, server);
     
+
     if (handler)
         handler->handleRequest(response);
     else
         std::cout << "NULL" << std::endl;
+    std::cout << response.buildResponse() << std::endl;
 
     delete(handler);
     (void)handler;

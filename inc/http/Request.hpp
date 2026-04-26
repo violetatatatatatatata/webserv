@@ -8,7 +8,7 @@ class Request
     public:
 
         Request(int i);
-        Request();
+        Request(const std::string& raw);
         Request(const Request& other);
         ~Request();
         Request& operator=(const Request& other);
@@ -34,6 +34,8 @@ class Request
         void setHeader(const std::string& header, std::string& value);
 
     private:
+
+        void parse(const std::string& raw);
 
         int                                 _port;
         int                                 _socketFd;

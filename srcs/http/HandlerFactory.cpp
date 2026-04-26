@@ -11,26 +11,16 @@ HttpHandler* HandlerFactory::create(const Request& request, const Location* loca
   HttpHandler* handler = NULL;
   
   if (!location && !server.getRoot().empty())
-  {
     return new StaticHandler(request, location, server);
-  }
   
   if (location)
   {
     switch (location->getLocType())
     {
-      case STATIC_TYPE:
-        return new StaticHandler(request, location, server);
-        break ;
-      case CGI_TYPE:
-        return new CGIHandler(request, location, server);
-        break ;
-      case REDIRECT_TYPE:
-        return new RedirectHandler(request, location, server);
-        break ;
-      case AUTOINDEX_TYPE:
-        return new AutoIndexHandler(request, location, server);
-        break ;
+      case STATIC_TYPE: return new StaticHandler(request, location, server);
+      case CGI_TYPE: return new CGIHandler(request, location, server);
+      case REDIRECT_TYPE: return new RedirectHandler(request, location, server);
+      case AUTOINDEX_TYPE: return new AutoIndexHandler(request, location, server);
     }
   }
 
