@@ -20,5 +20,5 @@ RedirectHandler& RedirectHandler::operator=(const RedirectHandler& other)
 // Methods
 void RedirectHandler::handleRequest(Response& response)
 {
-    response.setError(301);
+    response.setResponseData(301, "file", "file"); // to fix
 }

@@ -3,9 +3,12 @@
 #include "Location.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+#include "Error.hpp"
+#include <sstream>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+#include <cstdio>
 
 StaticHandler::StaticHandler(const Request& request, const Location* location, const ServerConfig& server) :
 HttpHandler(request, location, server)
@@ -48,9 +51,9 @@ bool StaticHandler::isMethodAuthorized() const
     return false;
 }
 
-int StaticHandler::checkStat(struct stat& st) const
+static int checkStat(struct stat& st, const std::string& file)
 {
-    if (stat(_absolute_path.c_str(), &st) == -1)
+    if (stat(file.c_str(), &st) == -1)
     {
         switch(errno)
         {
@@ -66,6 +69,29 @@ int StaticHandler::checkStat(struct stat& st) const
     return 0;
 }
 
+static int isFileInError(int mode, const std::string file)
+{
+    struct stat st;
+
+    int res = checkStat(st, file);
+    if (res != 0)
+    {
+        return res;
+    }
+
+    if (S_ISDIR(st.st_mode))
+    {
+            return 404;
+    }
+
+    if (access(file.c_str(), mode) == -1)
+    {
+        return 403;
+    }
+
+    return 0;
+}
+
 // Return empty string if no indexes
 static const std::string& getCorrectIndex(const std::string& location_index, const std::string& server_index)
 {
@@ -77,6 +103,22 @@ static const std::string& getCorrectIndex(const std::string& location_index, con
     {
         return location_index;
     }
+}
+
+static std::string getFileContent(std::string path)
+{
+    int fd = open(path.c_str(), O_RDONLY);
+    char buffer[4096];
+    std::string content;
+    ssize_t bytes;
+    std::stringstream ss;
+
+    while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
+    {
+        content.append(buffer, bytes);
+    }
+    
+    return content;
 }
 
 // Resolve the directory path
@@ -110,7 +152,7 @@ int StaticHandler::resolveAbsolutePath()
 
     struct stat st;
 
-    int res = checkStat(st);
+    int res = checkStat(st, _absolute_path);
     if (res != 0)
     {
         return res;
@@ -124,47 +166,53 @@ int StaticHandler::resolveAbsolutePath()
     return 0;
 }
 
-int StaticHandler::isFileInError() const
+std::string buildError(int code, const ServerConfig& config);
+std::string StaticHandler::getErrorBody(int error) const
 {
-    struct stat st;
+    const std::string& path = buildError(error, _server);
+    std::string content = "";
 
-    int res = checkStat(st);
-    if (res != 0)
+    if (isFileInError(R_OK, path) == 0)
     {
-        return res;
+        content = getFileContent(path);
     }
 
-    if (S_ISDIR(st.st_mode))
-    {
-            return 404;
-    }
+    return content;
+}
 
-    if (access(_absolute_path.c_str(), R_OK) == -1)
+void StaticHandler::fillErrorResponse(int error, Response& response) const
+{
+    switch (error) 
     {
-        return 403;
+        case 301: response.setResponseData(301, "Moved Permanently", getErrorBody(301));
+            break ;
+        case 403: response.setResponseData(403, "Forbidden", getErrorBody(403));
+            break ;
+        case 404: response.setResponseData(404, "Not Found", getErrorBody(404));
+            break ;
+        case 405: response.setResponseData(405, "Method Not Allowed", getErrorBody(405));
+            break ;
+        case 500: response.setResponseData(500, "Internal Server Error", getErrorBody(500));
+            break ;
     }
-
-    return 0;
 }
 
 void StaticHandler::handleRequest(Response& response)
 {
+    response.setVersion(_request.getVersion());
+
     if (!isMethodAuthorized())
     {
-        response.setError(405);
-        print_msg(RED "Method authorized." RESET, DEBUG);
+        fillErrorResponse(405, response);
         return ;
     }
-    print_msg(GREEN "Method authorized." RESET, DEBUG);
 
     int res = resolveAbsolutePath();
     if (res != 0)
     {
-        print_msg(RED "Path error." RESET, DEBUG);
-        response.setError(res);
+        fillErrorResponse(res, response);
         return ;
     }
-    print_msg(std::string(GREEN) + "Absolute path resolved: " + _absolute_path + RESET, DEBUG);
 
     std::string methods[] =
     {
@@ -194,23 +242,34 @@ void StaticHandler::handleGET(Response& response) const
 {
     print_msg(GREEN "The request will be resolved as a static GET." RESET, DEBUG);
 
-    int res = isFileInError();
+    int res = isFileInError(R_OK, _absolute_path);
     if (res != 0)
     {
-        response.setError(res);
+        fillErrorResponse(res, response);
         return ;
     }
+
+    std::string content = getFileContent(_absolute_path);
+    response.setResponseData(200, "OK", content);
 }
 
 void StaticHandler::handlePOST(Response& response) const
 {
     print_msg(GREEN "The request will be resolved as a static POST." RESET, DEBUG);
-    (void)response;
+    handleGET(response);
 }
 
 void StaticHandler::handleDELETE(Response& response) const
 {
     print_msg(GREEN "The request will be resolved as a static DELETE." RESET, DEBUG);
-    (void)response;
+    int res = isFileInError(F_OK, _absolute_path); 
+    if (res != 0)
+    {
+        fillErrorResponse(res, response);
+        return ;
+    }
+
+    std::remove(_absolute_path.c_str());
+    response.setResponseData(204, "No Content", "");
 }
 

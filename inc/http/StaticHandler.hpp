@@ -19,14 +19,14 @@ class StaticHandler : public HttpHandler
     StaticHandler(const StaticHandler& other);
     StaticHandler& operator=(const StaticHandler& other);
 
-    bool      isMethodAuthorized() const;
-    int       resolveDirectory();
-    int       resolveAbsolutePath();
-    int       isFileInError() const;
-    int       checkStat(struct stat& st) const;
-    void      handleGET(Response& response) const;
-    void      handlePOST(Response& response) const;
-    void      handleDELETE(Response& response) const;
+    bool  isMethodAuthorized() const;
+    int   resolveDirectory();
+    int   resolveAbsolutePath();
+    void  handleGET(Response& response) const;
+    void  handlePOST(Response& response) const;
+    void  handleDELETE(Response& response) const;
+    void  fillErrorResponse(int error, Response& response) const;
+    std::string getErrorBody(int error) const;
 
     std::string _absolute_path;
 };
