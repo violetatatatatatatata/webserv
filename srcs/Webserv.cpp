@@ -30,7 +30,7 @@ int main(int argc, char **argv){
 	}
 	else
 		return (print_msg("mu mal :(", DEBUG));
-	/*       
+	       
 	Request request(8080);
 	Response response;
 	const ServerConfig& server = Router::findMatchingServer(request, parser);
@@ -45,5 +45,5 @@ int main(int argc, char **argv){
 
 	delete(handler);
 	(void)handler;
-	*/
+
 }

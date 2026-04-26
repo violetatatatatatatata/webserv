@@ -30,5 +30,5 @@ void Response::fillBody()
 // Setters
 void Response::setError(int error_code)
 {
-  error_code = error_code;
+	_error_code = error_code;
 }

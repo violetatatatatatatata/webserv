@@ -110,7 +110,6 @@ void Cluster::acceptClient(int serverFd) {
 		
 		this->_clientsFds[clientFd] = Client(clientFd);
 
-		// 3. Le decimos a poll() que empiece a vigilarle
 		struct pollfd pfd;
 		pfd.fd = clientFd;
 		pfd.events = POLLIN;
@@ -136,12 +135,12 @@ void Cluster::run() {
 			int currentFd = this->_fds[i].fd;
 
 			//SERVIDOR
-			if (this->_serverFds.count(currentFd) > 0) {
+			if (this->_serverFds.find(currentFd) != this->_serverFds.end()) {
 				this->acceptClient(currentFd);
 			}
 			// CLIENTE
 			else {
-				char buffer[10000] = {0};
+				char buffer[10000] = {0}; //TODO SIZE limit
 				int bytes_read = recv(currentFd, buffer, sizeof(buffer) - 1, 0);
 
 				if (bytes_read > 0) {

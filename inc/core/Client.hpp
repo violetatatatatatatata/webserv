@@ -13,13 +13,12 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# include <string>
-# include <iostream>
+#include <Webserv.hpp>
 
 class Client {
 	private:
-		int         _fd;            // 
-		std::string _requestBuffer; //
+		int         _fd;            
+		std::string _requestBuffer;
 
 	public:
 		//
