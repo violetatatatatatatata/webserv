@@ -24,32 +24,30 @@ const ServerConfig& Router::findMatchingServer(const Request& request, const std
 		}
 	}
 
-  //assert(!specificPortServerList.empty());
-	
   // If no match, return default server
 	return servers.at(0);
 }
 
 const Location* Router::findMatchingLocation(const Request& request, const ServerConfig& server)
 {
-  const Location* location = NULL;
-  std::string curr_location_path;
-  std::string prev_location_path;
-  std::vector<Location>::const_iterator locations_it = server.getLocations().begin();
+    const Location* best = NULL;
+    size_t best_len = 0;
 
-  for (; locations_it < server.getLocations().end(); locations_it++)
-  {
-    curr_location_path = locations_it->getPath();
+    const std::vector<Location>& locations = server.getLocations();
 
-    if (!request.getURI().compare(0, curr_location_path.size(), curr_location_path))
+    for (size_t i = 0; i < locations.size(); i++)
     {
-      if (curr_location_path.size() > prev_location_path.size())
-      {
-        location = &(*locations_it);
-      }
+        const std::string& path = locations[i].getPath();
+
+        if (request.getURI().compare(0, path.size(), path) == 0)
+        {
+            if (path.size() > best_len)
+            {
+                best = &locations[i];
+                best_len = path.size();
+            }
+        }
     }
-    prev_location_path = curr_location_path;
-  }
-  
-  return location;
+
+    return best;
 }

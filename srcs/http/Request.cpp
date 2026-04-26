@@ -12,17 +12,6 @@ Request::Request(const std::string& raw)
 
 Request::~Request() {}
 
-Request::Request(int i)
-{
-    _port = i;
-    _socketFd = i;
-    _method = "DELETE";
-    _httpVersion = "HTTP/1.0";
-    _URI = "/example/file.txt";
-    _body = "";
-    _headers["host"] = "localhost";
-}
-
 Request::Request(const Request& other)
 {
   *this = other;
@@ -60,11 +49,6 @@ static const std::string& normalizeHeaderName(std::string& headerName)
 }
 
 // Getters
-int Request::getPort() const
-{
-  return _port;
-}
-
 int Request::getSocketFd() const
 {
   return _socketFd;
@@ -101,11 +85,6 @@ std::string Request::getHeader(const std::string& header) const
 }
 
 // Setters
-void Request::setPort(int port)
-{
-  _port = port;
-}
-
 void Request::setSocketFd(int socketFd)
 {
   _socketFd = socketFd;

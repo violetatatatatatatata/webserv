@@ -22,13 +22,11 @@ int main(int argc, char **argv){
 	
 	Config parser;
 	if (parser.parseFile(argv[1]) == 0) {
-		print_msg("todo bien! :)", DEBUG);
-	
+		//print_msg("todo bien! :)", DEBUG);
+		
 		Cluster cluster(parser.getServers()); 
 		cluster.run();
-	
 	}
 	else
 		return (print_msg("mu mal :(", DEBUG));
-	    
 }

@@ -7,7 +7,6 @@ class Request
 {
     public:
 
-        Request(int i);
         Request(const std::string& raw);
         Request(const Request& other);
         ~Request();
@@ -17,7 +16,6 @@ class Request
 
         // Getters
         int                 getSocketFd() const;
-        int                 getPort() const;
         const std::string&  getMethod() const;
         const std::string&  getVersion() const;
         const std::string&  getURI() const;
@@ -37,7 +35,6 @@ class Request
 
         void parse(const std::string& raw);
 
-        int                                 _port;
         int                                 _socketFd;
         std::string                         _method;
         std::string                         _httpVersion;

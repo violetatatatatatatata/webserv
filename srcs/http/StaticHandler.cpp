@@ -133,7 +133,7 @@ int StaticHandler::resolveDirectory()
         return 404;
     }
 
-    _absolute_path += index;
+    _absolute_path += '/' + index;
 
     return 0;
 }

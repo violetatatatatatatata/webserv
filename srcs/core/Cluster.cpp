@@ -158,16 +158,18 @@ void Cluster::run() {
 
     						const ServerConfig& server = Router::findMatchingServer(request, _serverFds.find(_clientsFds.find(currentFd)->second.getServerFd())->second);
     						const Location* location = Router::findMatchingLocation(request, server);
-
+							
     						HttpHandler* const handler = HandlerFactory::create(request, location, server);
-    
-    						if (handler)
-       				 			handler->handleRequest(response);
-   				 			else
-       				 			std::cout << "NULL" << std::endl;
-    						//std::cout << response.buildResponse() << std::endl;
+							
+    						std::cout << "Request: " << buffer << std::endl;
 
+    						if (handler)
+							handler->handleRequest(response);
+							else
+								std::cout << "NULL" << std::endl;
+							
 							std::string msg = response.buildResponse();
+							std::cout << msg << std::endl;
 							send(currentFd, msg.c_str(), msg.size(), 0);
 						}
 						close(currentFd);
