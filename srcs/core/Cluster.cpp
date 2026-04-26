@@ -39,7 +39,7 @@ Cluster & Cluster::operator=(const Cluster & other) {
 	if (this != &other) {
 		this->_fds = other._fds;
 		this->_serverFds = other._serverFds;
-		//this->_clientsFds = other._clientsFds;
+		this->_clientsFds = other._clientsFds;
 	}
 	return *this;
 }
@@ -72,6 +72,7 @@ void Cluster::init() {
 		addr.sin_port = htons(port);
 
 		if (bind(serverFd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+			std::cout << errno << std::endl;
 			print_msg("Bind failed", FATAL); 
 			close(serverFd);
 			return;
@@ -108,7 +109,7 @@ void Cluster::acceptClient(int serverFd) {
 		
 		fcntl(clientFd, F_SETFL, O_NONBLOCK);
 		
-		this->_clientsFds[clientFd] = Client(clientFd);
+		this->_clientsFds[clientFd] = Client(clientFd, serverFd);
 
 		struct pollfd pfd;
 		pfd.fd = clientFd;
@@ -150,12 +151,25 @@ void Cluster::run() {
 					if (this->_clientsFds[currentFd].isHeaderComplete()) {
 						std::cout << "\n PETICION RECIBIDA \n";
 
-						// ***  HTTP *** 
-						
-						// Respuesta test.
-						std::string msg = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nTEST, mensaje revibido!\r\n";
-						send(currentFd, msg.c_str(), msg.size(), 0);
-						
+						if (_clientsFds.find(currentFd)->second.isHeaderComplete())
+						{
+    						Request request(_clientsFds.find(currentFd)->second.getBuffer());
+    						Response response;
+
+    						const ServerConfig& server = Router::findMatchingServer(request, _serverFds.find(_clientsFds.find(currentFd)->second.getServerFd())->second);
+    						const Location* location = Router::findMatchingLocation(request, server);
+
+    						HttpHandler* const handler = HandlerFactory::create(request, location, server);
+    
+    						if (handler)
+       				 			handler->handleRequest(response);
+   				 			else
+       				 			std::cout << "NULL" << std::endl;
+    						//std::cout << response.buildResponse() << std::endl;
+
+							std::string msg = response.buildResponse();
+							send(currentFd, msg.c_str(), msg.size(), 0);
+						}
 						close(currentFd);
 						this->_fds[i].fd = -1;
 						this->_clientsFds.erase(currentFd);

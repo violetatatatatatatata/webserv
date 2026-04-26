@@ -19,6 +19,7 @@ class Client {
 	private:
 		int         _fd;            
 		std::string _requestBuffer;
+		int			_serverFd;
 
 	public:
 		//
@@ -27,9 +28,10 @@ class Client {
 		Client& operator=(const Client& other);
 		~Client();
 
-		Client(int fd);
+		Client(int fd, int serverFd);
 
 		int getFd() const;
+		int getServerFd() const;
 		const std::string& getBuffer() const;
 
 

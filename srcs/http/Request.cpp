@@ -46,15 +46,17 @@ Request& Request::operator=(const Request& other)
 // Functions
 static char toLowerChar(char c)
 {
-  return std::tolower(static_cast<unsigned char>(c));
+    return std::tolower(static_cast<unsigned char>(c));
 }
 
 static const std::string& normalizeHeaderName(std::string& headerName)
 {
-  std::string normalizedHeaderName;
+    std::transform(headerName.begin(),
+                   headerName.end(),
+                   headerName.begin(),
+                   toLowerChar);
 
-  std::transform(headerName.begin(), headerName.end(), normalizedHeaderName.begin(), toLowerChar);
-  return headerName;
+    return headerName;
 }
 
 // Getters
@@ -194,5 +196,5 @@ void Request::parse(const std::string& raw)
         body.erase(body.size() - 1);
 
     setBody(body);
-    setPort(8080); //LA FUNCION DEBE RECIBIR EL SOCKET
+    // setPort(8080); LA FUNCION DEBE RECIBIR EL SOCKET
 }

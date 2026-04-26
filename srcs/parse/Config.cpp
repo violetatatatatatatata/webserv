@@ -72,24 +72,6 @@ int Config::parseFile(const char *f)
     return EXIT_SUCCESS;
 }
 
-const ServerConfig& Config::findSpecificServer(const int port, const std::string& host) const
-{
-	const std::vector<ServerConfig>& specificPortServerList = _servers.find(port)->second;
-	
-	std::vector<ServerConfig>::const_iterator it;
-	for (it = specificPortServerList.begin(); it < specificPortServerList.end(); it++)
-	{
-		if (it->hasServerName(host))
-		{
-			return *it;
-		}
-	}
-
-	//assert(!specificPortServerList.empty());
-	// If no match, return default server
-	return specificPortServerList.at(0);
-}
-
 // OCF
 Config::Config() {}
 Config::~Config() {}

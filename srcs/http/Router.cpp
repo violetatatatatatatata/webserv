@@ -1,15 +1,13 @@
 #include "Router.hpp"
 #include "Location.hpp"
 #include "Request.hpp"
-#include "Config.hpp"
 #include "ServerConfig.hpp"
 
 Router::Router() {}
 Router::~Router() {}
 
-const ServerConfig& Router::findMatchingServer(const Request& request, const Config& config)
+const ServerConfig& Router::findMatchingServer(const Request& request, const std::vector<ServerConfig>& servers)
 {
-  int port = request.getPort();
   std::string host = request.getHeader("host");
 
   if (host.empty())
@@ -17,7 +15,19 @@ const ServerConfig& Router::findMatchingServer(const Request& request, const Con
     host = "default";
   }
 
-  return (config.findSpecificServer(port, host));
+	std::vector<ServerConfig>::const_iterator it;
+	for (it = servers.begin(); it != servers.end(); it++)
+	{
+		if (it->hasServerName(host))
+		{
+			return *it;
+		}
+	}
+
+  //assert(!specificPortServerList.empty());
+	
+  // If no match, return default server
+	return servers.at(0);
 }
 
 const Location* Router::findMatchingLocation(const Request& request, const ServerConfig& server)
