@@ -22,6 +22,7 @@
 # include <string>
 # include <limits>
 # include <cstdio>
+# include <cstring>
 
 // CPP containers
 # include <map>
@@ -45,6 +46,7 @@
 # include <errno.h>
 # include <dirent.h>
 # include <ctime>
+# include <poll.h>
 
 // C System
 # include <sys/types.h>
@@ -71,13 +73,13 @@ typedef std::vector<std::string> fileVector;
 #include <Request.hpp>
 #include <Router.hpp>
 #include <Response.hpp>
+#include <ServerConfig.hpp>
 #include <Client.hpp>
 #include <Cluster.hpp>
 #include <Server.hpp>
 #include <Config.hpp>
 #include <Location.hpp>
 #include <Reader.hpp>
-#include <ServerConfig.hpp>
 #include <Webserv.hpp>
 
 /*	GLOBAL DEFINITIONS

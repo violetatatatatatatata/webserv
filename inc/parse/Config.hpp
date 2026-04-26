@@ -38,9 +38,7 @@ class Config {
         Config &operator=(Config const &src);
 
         int parseFile(const char *f);
-        const ServerConfig& findSpecificServer(const int port, const std::string& host) const;
-
-		    std::map<int, std::vector<ServerConfig> > getServers() const { return _servers; };
+		std::map<int, std::vector<ServerConfig> > getServers() const { return _servers; }; // TODO -> const &
 };
 
 #endif
