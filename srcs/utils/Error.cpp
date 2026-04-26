@@ -27,13 +27,13 @@ int HttpException::getStatusCode() const {
 
 /*	mira si el usuario definió una página de error en el .conf y si no, usar las propias
  * */
-void buildError(int code, ServerConfig config)
+std::string buildError(int code, const ServerConfig& config)
 {
     std::string html_path;
-    if (config.getErrorPages().count(code) > 0) {
+    if (config.getErrorPages().count(code) > 0)
         html_path = config.getErrorPages().at(code);
-    }
-    else {
+    else
+    {
         switch (code) {
             case 400: html_path = "www/client_error/400bad_request.html";
 					  break;
@@ -57,4 +57,6 @@ void buildError(int code, ServerConfig config)
 					  break;
         }
     }
+
+    return html_path;
 }

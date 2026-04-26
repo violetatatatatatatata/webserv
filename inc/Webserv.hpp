@@ -123,7 +123,6 @@ enum e_module {
 /*	FUNCTION DEFINITIONS
  * */
 int			print_msg(std::string msg, int status);
-void		buildError(int code, ServerConfig config);
 std::string	getDirectiveValue(size_t &pos, const fileVector &file, const std::string &directiveName);
 
 #endif
