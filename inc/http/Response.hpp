@@ -15,9 +15,8 @@ class Response
 
         // Methods
         void fillHeaders();
-        std::string buildResponse();
-        void printResponse();
-        
+        std::string findMIME(const std::string& path) const;
+        std::string buildResponse();        
 
         // Setters
         void setSocketFd(int socket_Fd);

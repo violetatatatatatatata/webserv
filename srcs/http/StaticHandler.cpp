@@ -240,8 +240,6 @@ void StaticHandler::handleRequest(Response& response)
 
 void StaticHandler::handleGET(Response& response) const
 {
-    print_msg(GREEN "The request will be resolved as a static GET." RESET, DEBUG);
-
     int res = isFileInError(R_OK, _absolute_path);
     if (res != 0)
     {
@@ -251,17 +249,16 @@ void StaticHandler::handleGET(Response& response) const
 
     std::string content = getFileContent(_absolute_path);
     response.setResponseData(200, "OK", content);
+    response.setHeader("Content-Type", response.findMIME(_absolute_path)); 
 }
 
 void StaticHandler::handlePOST(Response& response) const
 {
-    print_msg(GREEN "The request will be resolved as a static POST." RESET, DEBUG);
     handleGET(response);
 }
 
 void StaticHandler::handleDELETE(Response& response) const
 {
-    print_msg(GREEN "The request will be resolved as a static DELETE." RESET, DEBUG);
     int res = isFileInError(F_OK, _absolute_path); 
     if (res != 0)
     {
@@ -272,4 +269,3 @@ void StaticHandler::handleDELETE(Response& response) const
     std::remove(_absolute_path.c_str());
     response.setResponseData(204, "No Content", "");
 }
-
