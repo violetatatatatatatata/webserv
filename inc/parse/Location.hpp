@@ -30,13 +30,6 @@ enum LocDir {
 	LOC_UNEXPECTED
 };
 
-enum LocType {
-	STATIC_TYPE,
-	CGI_TYPE,
-	REDIRECT_TYPE,
-	AUTOINDEX_TYPE
-};
-
 class ServerConfig;
 
 /*	_autoindex: booleano que activa o desactiva el listado de directorios si no hay un index
@@ -71,12 +64,11 @@ class ServerConfig;
 class Location {
 		private:
 			bool																_autoindex;
-			std::string													_index;
+			std::string													_index; //TODO puede tener varios index
 			std::string													_path;
 			std::string													_root;
 			std::string													_upload_store;
 			std::string                         _redirect;
-			LocType		  												_locType;
 			std::vector<std::string>						_methods;
 			std::map<std::string, std::string>	_cgi_info;
 
@@ -88,7 +80,6 @@ class Location {
 		
 			// getters
 			bool																			getAutoindex() const;
-			LocType														      getLocType() const;
 			const std::string&												getPath() const;
 			const std::string&												getRoot() const;
 			const std::string&												getIndex() const;
@@ -109,7 +100,6 @@ class Location {
 
 			bool parseLocation(size_t &pos, const fileVector &file,
 					ServerConfig &s, Location &loc);
-			void resolveLocType();
 };
 
 #endif

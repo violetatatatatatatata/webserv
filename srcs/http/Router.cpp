@@ -1,6 +1,4 @@
 #include "Router.hpp"
-#include "Location.hpp"
-#include "Request.hpp"
 #include "ServerConfig.hpp"
 
 Router::Router() {}

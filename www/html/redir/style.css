@@ -9,13 +9,13 @@
 body {
     font-family: 'Arial', Helvetica, sans-serif;
     background: linear-gradient(180deg, #fff7e6, #ffe9d6);
-    color: #2b2b2b;
+    color: #2b2b2a;
     line-height: 1.6;
 }
 
 /* HERO */
 .hero {
-    background: linear-gradient(135deg, #c62828, #ff7043, #ffb74d);
+    background: linear-gradient(#5782E6, #c62828, #ff7043, #ffb74d);
     color: white;
     text-align: center;
     padding: 70px 20px;

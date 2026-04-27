@@ -9,7 +9,7 @@ class StaticHandler : public HttpHandler
 {
   public:
     
-    StaticHandler(const Request& request, const Location* location, const ServerConfig& server);
+    StaticHandler(const Request& request, const Location* location, const ServerConfig& server, const std::string& absolute_path);
     ~StaticHandler();
 
     void handleRequest(Response& response);

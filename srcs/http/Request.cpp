@@ -1,9 +1,6 @@
 #include "Request.hpp"
 #include <algorithm>
 #include <sstream>
-#include <string>
-#include <map>
-#include <stdexcept>
 
 Request::Request(const std::string& raw)
 {

@@ -1,28 +1,167 @@
 #include "HandlerFactory.hpp"
 #include "ServerConfig.hpp"
-#include "Location.hpp"
 #include "StaticHandler.hpp"
-#include "CGIHandler.hpp"
-#include "RedirectHandler.hpp"
-#include "AutoIndexHandler.hpp"
 
-HttpHandler* HandlerFactory::create(const Request& request, const Location* location, const ServerConfig& server)
+/*static bool isCgiRequest(const Request& req, const Location* loc)
 {
-  HttpHandler* handler = NULL;
-  
-  if (!location && !server.getRoot().empty())
-    return new StaticHandler(request, location, server); // Corregir -> podria ser Redirection o Autoindex
-  
-  if (location)
-  {
-    switch (location->getLocType())
-    {
-      case STATIC_TYPE: return new StaticHandler(request, location, server);
-      case CGI_TYPE: return new CGIHandler(request, location, server);
-      case REDIRECT_TYPE: return new RedirectHandler(request, location, server);
-      case AUTOINDEX_TYPE: return new AutoIndexHandler(request, location, server);
-    }
-  }
+    if (!loc)
+        return false;
 
-  return handler;
+    std::string path = req.getPath();
+
+    // cas 1 : règle explicite dans location (ex: cgi-bin)
+    if (!loc->getCgiPath().empty())
+    {
+        if (path.find(loc->getCgiPath()) == 0)
+            return true;
+    }
+
+    // cas 2 : extension CGI
+    std::string::size_type dot = path.find_last_of('.');
+    if (dot != std::string::npos)
+    {
+        std::string ext = path.substr(dot);
+
+        const std::vector<std::string>& cgiExt = loc->getCgiExtensions();
+        for (size_t i = 0; i < cgiExt.size(); i++)
+        {
+            if (cgiExt[i] == ext)
+                return true;
+        }
+    }
+
+    return false;
+}*/
+
+static const std::string& getCorrectIndex(const Location* location, const ServerConfig& server)
+{
+    if (location->getIndex().empty())
+        return server.getIndex();
+    else
+        return location->getIndex();
+}
+
+//Version multi index
+/*static const std::vector<std::string>& getCorrectIndex(const Location* location, const ServerConfig& server)
+{
+    if (location->getIndex().empty())
+        return server->getIndex();
+    else
+        return location->getIndex();
+}*/
+
+static bool isRegularFile(const std::string& path)
+{
+    struct stat s;
+
+    if (stat(path.c_str(), &s) != 0)
+        return false;
+
+    return S_ISREG(s.st_mode);
+}
+
+static std::string joinPath(const std::string& dir, const std::string& file)
+{
+    if (dir.empty())
+        return file;
+    if (file.empty())
+        return dir;
+
+    if (dir[dir.size() - 1] == '/')
+        return dir + file;
+
+    return dir + "/" + file;
+}
+
+// Multi index Version
+/*
+static std::string getIndexFile(
+    const std::string& dirPath,
+    const std::vector<std::string>& indexList)
+{
+    if (indexList.empty())
+        return "";
+
+    for (size_t i = 0; i < indexList.size(); i++)
+    {
+        std::string fullPath = joinPath(dirPath, indexList[i]);
+
+        if (isRegularFile(fullPath))
+            return indexList[i];
+    }
+
+    return "";
+}*/
+
+static std::string getIndexPath(
+    const std::string& dirPath,
+    const std::string& indexList)
+{
+    if (indexList.empty())
+        return "";
+
+    std::string fullPath = joinPath(dirPath, indexList);
+
+    if (isRegularFile(fullPath))
+            return fullPath;
+
+    return "";
+}
+
+static bool isDirectory(const std::string& path)
+{
+    struct stat s;
+
+    if (stat(path.c_str(), &s) != 0)
+        return false;
+
+    return S_ISDIR(s.st_mode);
+}
+
+static std::string resolvePath(
+    const Request& request,
+    const Location* location,
+    const ServerConfig& server)
+{
+    if (!location || location->getRoot().empty())
+        return server.getRoot() + request.getURI();
+
+    return location->getRoot() + request.getURI();
+}
+
+HttpHandler* HandlerFactory::create(
+    const Request& request,
+    const Location* location,
+    const ServerConfig& server)
+{
+    // 1. REDIRECT
+    if (location && !location->getRedirect().empty())
+        return new RedirectHandler(request, location, server);
+
+    // 2. CGI
+    //if (location && isCgiRequest(request, location))
+    //    return new CGIHandler(request, location, server);
+
+    // 3. FILE or DIRECTORY
+    std::string path = resolvePath(request, location, server);
+    if (isDirectory(path))
+    {
+        std::string indexPath = getIndexPath(path, getCorrectIndex(location, server));
+
+        if (!indexPath.empty())
+            return new StaticHandler(request, location, server, indexPath);
+
+        if (location && location->getAutoindex())
+            return new AutoIndexHandler(request, location, server, path);
+
+        //return new ErrorHandler(403);
+        return NULL;
+    }
+
+    // 4. FILE normal
+    if (isRegularFile(path))
+        return new StaticHandler(request, location, server, path);
+
+    //return new ErrorHandler(404);
+    return NULL;
 }

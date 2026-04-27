@@ -1,17 +1,8 @@
 #include "StaticHandler.hpp"
-#include "ServerConfig.hpp"
-#include "Location.hpp"
-#include "Request.hpp"
-#include "Response.hpp"
 #include "Error.hpp"
-#include <sstream>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <errno.h>
-#include <cstdio>
 
-StaticHandler::StaticHandler(const Request& request, const Location* location, const ServerConfig& server) :
-HttpHandler(request, location, server)
+StaticHandler::StaticHandler(const Request& request, const Location* location, const ServerConfig& server, const std::string& absolute_path) :
+HttpHandler(request, location, server), _absolute_path(absolute_path)
 {
 }
 
@@ -33,9 +24,7 @@ bool StaticHandler::isMethodAuthorized() const
     if (_location == NULL || _location->getMethods().empty())
     {
         if (_request.getMethod() == "GET")
-        {
             return true;
-        }
     }
     else
     {
@@ -43,9 +32,7 @@ bool StaticHandler::isMethodAuthorized() const
         for(it = _location->getMethods().begin(); it < _location->getMethods().end(); it++)
         {
             if (*it == _request.getMethod())
-            {
                 return true;
-            }
         }
     }
     return false;
@@ -75,34 +62,15 @@ static int isFileInError(int mode, const std::string file)
 
     int res = checkStat(st, file);
     if (res != 0)
-    {
         return res;
-    }
 
     if (S_ISDIR(st.st_mode))
-    {
             return 404;
-    }
 
     if (access(file.c_str(), mode) == -1)
-    {
         return 403;
-    }
 
     return 0;
-}
-
-// Return empty string if no indexes
-static const std::string& getCorrectIndex(const std::string& location_index, const std::string& server_index)
-{
-    if (location_index.empty())
-    {
-        return server_index;
-    }
-    else
-    {
-        return location_index;
-    }
 }
 
 static std::string getFileContent(std::string path)
@@ -121,51 +89,6 @@ static std::string getFileContent(std::string path)
     return content;
 }
 
-// Resolve the directory path
-int StaticHandler::resolveDirectory()
-{
-    // No vector de index en Location y ServerConfig?
-    //const std::vector<std::string>& index = getCorrectIndex(_location->getIndex(), _server.getIndex());
-    const std::string& index = getCorrectIndex(_location->getIndex(), _server.getIndex());
-
-    if (index.empty())
-    {
-        return 404;
-    }
-
-    _absolute_path += '/' + index;
-
-    return 0;
-}
-
-int StaticHandler::resolveAbsolutePath()
-{
-    // If no location bloc or no root in location bloc -> take the root from server
-    if (_location == NULL || _location->getRoot().empty())
-    {
-        _absolute_path = _server.getRoot() + _request.getURI();
-    }
-    else
-    {
-        _absolute_path = _location->getRoot() + _request.getURI();
-    }
-
-    struct stat st;
-
-    int res = checkStat(st, _absolute_path);
-    if (res != 0)
-    {
-        return res;
-    }
-
-    if (S_ISDIR(st.st_mode) && resolveDirectory() == 404)
-    {
-        return 404;
-    }
-
-    return 0;
-}
-
 std::string buildError(int code, const ServerConfig& config);
 std::string StaticHandler::getErrorBody(int error) const
 {
@@ -173,9 +96,7 @@ std::string StaticHandler::getErrorBody(int error) const
     std::string content = "";
 
     if (isFileInError(R_OK, path) == 0)
-    {
         content = getFileContent(path);
-    }
 
     return content;
 }
@@ -207,13 +128,6 @@ void StaticHandler::handleRequest(Response& response)
         return ;
     }
 
-    int res = resolveAbsolutePath();
-    if (res != 0)
-    {
-        fillErrorResponse(res, response);
-        return ;
-    }
-
     std::string methods[] =
     {
         "GET",
@@ -231,9 +145,7 @@ void StaticHandler::handleRequest(Response& response)
     for (int i = 0; i < 3; i++)
     {
         if (_request.getMethod() == methods[i])
-        {
             (this->*methodFunctions[i])(response);
-        }
     }
 
 }

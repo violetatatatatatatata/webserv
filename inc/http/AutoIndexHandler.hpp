@@ -1,12 +1,13 @@
 #pragma once
 
 #include "HttpHandler.hpp"
+#include <string>
 
 class AutoIndexHandler : public HttpHandler
 {
   public:
     
-    AutoIndexHandler(const Request& request, const Location* location, const ServerConfig& server);
+    AutoIndexHandler(const Request& request, const Location* location, const ServerConfig& server, const std::string& directory);
     ~AutoIndexHandler();
     
     // Methods
@@ -16,5 +17,7 @@ class AutoIndexHandler : public HttpHandler
   
     AutoIndexHandler& operator=(const AutoIndexHandler& other);
     AutoIndexHandler(const AutoIndexHandler& other);
+
+    std::string _directory;
     
 };

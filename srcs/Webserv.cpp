@@ -11,9 +11,6 @@
 /* ************************************************************************** */
 
 #include "Webserv.hpp"
-#include "Config.hpp"
-#include "Location.hpp"
-#include <iostream>
 
 int main(int argc, char **argv){
 
