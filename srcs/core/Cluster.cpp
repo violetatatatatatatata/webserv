@@ -161,17 +161,19 @@ void Cluster::run() {
 							
     						HttpHandler* const handler = HandlerFactory::create(request, location, server);
 							
-    						std::cout << "Request: " << buffer << std::endl;
+    						//std::cout << "Request: " << buffer << std::endl;
 
     						if (handler)
-							handler->handleRequest(response);
-							else
-								std::cout << "NULL" << std::endl;
-							
-							std::string msg = response.buildResponse();
-							std::cout << msg << std::endl;
-							send(currentFd, msg.c_str(), msg.size(), 0);
+								{
+									handler->handleRequest(response);
+									std::string msg = response.buildResponse();
+									std::cout << msg << std::endl;
+									send(currentFd, msg.c_str(), msg.size(), 0);
+								}
+								else
+									std::cout << "NULL" << std::endl;
 						}
+
 						close(currentFd);
 						this->_fds[i].fd = -1;
 						this->_clientsFds.erase(currentFd);

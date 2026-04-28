@@ -35,7 +35,7 @@
 
 static const std::string& getCorrectIndex(const Location* location, const ServerConfig& server)
 {
-    if (location->getIndex().empty())
+    if (!location || location->getIndex().empty())
         return server.getIndex();
     else
         return location->getIndex();
@@ -95,12 +95,12 @@ static std::string getIndexFile(
 
 static std::string getIndexPath(
     const std::string& dirPath,
-    const std::string& indexList)
+    const std::string& index)
 {
-    if (indexList.empty())
+    if (index.empty())
         return "";
 
-    std::string fullPath = joinPath(dirPath, indexList);
+    std::string fullPath = joinPath(dirPath, index);
 
     if (isRegularFile(fullPath))
             return fullPath;
@@ -146,7 +146,8 @@ HttpHandler* HandlerFactory::create(
     std::string path = resolvePath(request, location, server);
     if (isDirectory(path))
     {
-        std::string indexPath = getIndexPath(path, getCorrectIndex(location, server));
+        std::string index = getCorrectIndex(location, server);
+        std::string indexPath = getIndexPath(path, index);
 
         if (!indexPath.empty())
             return new StaticHandler(request, location, server, indexPath);
@@ -155,6 +156,7 @@ HttpHandler* HandlerFactory::create(
             return new AutoIndexHandler(request, location, server, path);
 
         //return new ErrorHandler(403);
+        std::cout << "Error response" << std::endl;
         return NULL;
     }
 
@@ -163,5 +165,6 @@ HttpHandler* HandlerFactory::create(
         return new StaticHandler(request, location, server, path);
 
     //return new ErrorHandler(404);
+    std::cout << "Error response" << std::endl;
     return NULL;
 }
