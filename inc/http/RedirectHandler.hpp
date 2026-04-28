@@ -13,6 +13,5 @@ class RedirectHandler : public HttpHandler
     
   private:
   
-    RedirectHandler& operator=(const RedirectHandler& other);
     RedirectHandler(const RedirectHandler& other);
 };

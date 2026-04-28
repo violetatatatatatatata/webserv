@@ -1,7 +1,6 @@
 #pragma once
 
 #include "HttpHandler.hpp"
-#include <string>
 
 class AutoIndexHandler : public HttpHandler
 {
@@ -15,7 +14,6 @@ class AutoIndexHandler : public HttpHandler
 
   private:
   
-    AutoIndexHandler& operator=(const AutoIndexHandler& other);
     AutoIndexHandler(const AutoIndexHandler& other);
 
     std::string _directory;

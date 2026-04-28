@@ -1,5 +1,9 @@
 #include "StaticHandler.hpp"
-#include "Error.hpp"
+#include "Response.hpp"
+#include "Request.hpp"
+#include "Location.hpp"
+#include <fcntl.h>
+#include <cstdio>
 
 StaticHandler::StaticHandler(const Request& request, const Location* location, const ServerConfig& server, const std::string& absolute_path) :
 HttpHandler(request, location, server), _absolute_path(absolute_path)
@@ -7,14 +11,6 @@ HttpHandler(request, location, server), _absolute_path(absolute_path)
 }
 
 StaticHandler::~StaticHandler() {}
-
-StaticHandler& StaticHandler::operator=(const StaticHandler& other)
-{
-    if (this != &other) {
-
-    }
-    return *this;
-}
 
 // Methods
 bool StaticHandler::isMethodAuthorized() const
@@ -38,58 +34,8 @@ bool StaticHandler::isMethodAuthorized() const
     return false;
 }
 
-static int checkStat(struct stat& st, const std::string& file)
-{
-    if (stat(file.c_str(), &st) == -1)
-    {
-        switch(errno)
-        {
-            case ENOENT:
-            case ENOTDIR:
-                return 404;
-            case EACCES:
-                return 403;
-            default:
-                return 500;
-        }
-    }
-    return 0;
-}
+/*std::string buildError(int code, const ServerConfig& config);
 
-static int isFileInError(int mode, const std::string file)
-{
-    struct stat st;
-
-    int res = checkStat(st, file);
-    if (res != 0)
-        return res;
-
-    if (S_ISDIR(st.st_mode))
-            return 404;
-
-    if (access(file.c_str(), mode) == -1)
-        return 403;
-
-    return 0;
-}
-
-static std::string getFileContent(std::string path)
-{
-    int fd = open(path.c_str(), O_RDONLY);
-    char buffer[4096];
-    std::string content;
-    ssize_t bytes;
-    std::stringstream ss;
-
-    while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
-    {
-        content.append(buffer, bytes);
-    }
-    
-    return content;
-}
-
-std::string buildError(int code, const ServerConfig& config);
 std::string StaticHandler::getErrorBody(int error) const
 {
     const std::string& path = buildError(error, _server);
@@ -116,7 +62,7 @@ void StaticHandler::fillErrorResponse(int error, Response& response) const
         case 500: response.setResponseData(500, "Internal Server Error", getErrorBody(500));
             break ;
     }
-}
+}*/
 
 void StaticHandler::handleRequest(Response& response)
 {
@@ -124,7 +70,7 @@ void StaticHandler::handleRequest(Response& response)
 
     if (!isMethodAuthorized())
     {
-        fillErrorResponse(405, response);
+        //fillErrorResponse(405, response); FILL ERROR
         return ;
     }
 
@@ -150,12 +96,14 @@ void StaticHandler::handleRequest(Response& response)
 
 }
 
+std::string getFileContent(std::string path);
+
 void StaticHandler::handleGET(Response& response) const
 {
     int res = isFileInError(R_OK, _absolute_path);
     if (res != 0)
     {
-        fillErrorResponse(res, response);
+        //fillErrorResponse(res, response); FILL ERROR
         return ;
     }
 
@@ -174,7 +122,7 @@ void StaticHandler::handleDELETE(Response& response) const
     int res = isFileInError(F_OK, _absolute_path); 
     if (res != 0)
     {
-        fillErrorResponse(res, response);
+        //fillErrorResponse(res, response); FILL ERROR
         return ;
     }
 

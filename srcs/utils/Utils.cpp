@@ -89,3 +89,19 @@ std::string getDirectiveValue(size_t &pos, const fileVector &file, const std::st
 
     return (value);
 }
+
+std::string getFileContent(std::string path)
+{
+    int fd = open(path.c_str(), O_RDONLY);
+    char buffer[4096];
+    std::string content;
+    ssize_t bytes;
+    std::stringstream ss;
+
+    while ((bytes = read(fd, buffer, sizeof(buffer))) > 0)
+    {
+        content.append(buffer, bytes);
+    }
+    
+    return content;
+}

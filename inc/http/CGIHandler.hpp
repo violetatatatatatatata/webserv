@@ -16,6 +16,5 @@ class CGIHandler : public HttpHandler
   private:
   
     CGIHandler(const CGIHandler& other);
-    CGIHandler& operator=(const CGIHandler& other);
     
 };

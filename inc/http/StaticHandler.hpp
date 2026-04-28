@@ -1,7 +1,6 @@
 #pragma once
 
 #include "HttpHandler.hpp"
-#include <string>
 
 class Response;
 
@@ -17,7 +16,6 @@ class StaticHandler : public HttpHandler
   private:
     
     StaticHandler(const StaticHandler& other);
-    StaticHandler& operator=(const StaticHandler& other);
 
     bool  isMethodAuthorized() const;
     int   resolveDirectory();

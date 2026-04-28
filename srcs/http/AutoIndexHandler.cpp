@@ -15,12 +15,8 @@ AutoIndexHandler::AutoIndexHandler(
 
 AutoIndexHandler::~AutoIndexHandler() {}
 
-AutoIndexHandler& AutoIndexHandler::operator=(const AutoIndexHandler& other)
+AutoIndexHandler::AutoIndexHandler(const AutoIndexHandler& other) : HttpHandler(other)
 {
-    if (this != &other) {
-
-    }
-    return *this;
 }
 
 // Methods
@@ -41,7 +37,7 @@ void AutoIndexHandler::handleRequest(Response& response)
     html << "<head>\n";
     html << "\t<title>Index of " << _request.getURI() << "</title>\n";  // <h1> retiré du title
     html << "</head>\n";
-    html << "<body>\n";
+    html << "<body style=\"background-color: rgb(238, 225, 200)\">\n";
     html << "\t<h1>Index of " << _request.getURI() << "</h1>\n";
     html << "\t<hr>\n";
     html << "\t<ul>\n";

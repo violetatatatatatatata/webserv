@@ -10,14 +10,6 @@ CGIHandler::~CGIHandler()
 {
 }
 
-CGIHandler& CGIHandler::operator=(const CGIHandler& other)
-{
-    if (this != &other) {
-
-    }
-    return *this;
-}
-
 // Methods
 void CGIHandler::handleRequest(Response& response)
 {
