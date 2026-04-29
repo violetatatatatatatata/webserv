@@ -1,4 +1,5 @@
 #include "StaticHandler.hpp"
+#include "ErrorHandler.hpp"
 #include "Response.hpp"
 #include "Request.hpp"
 #include "Location.hpp"
@@ -34,43 +35,13 @@ bool StaticHandler::isMethodAuthorized() const
     return false;
 }
 
-/*std::string buildError(int code, const ServerConfig& config);
-
-std::string StaticHandler::getErrorBody(int error) const
-{
-    const std::string& path = buildError(error, _server);
-    std::string content = "";
-
-    if (isFileInError(R_OK, path) == 0)
-        content = getFileContent(path);
-
-    return content;
-}
-
-void StaticHandler::fillErrorResponse(int error, Response& response) const
-{
-    switch (error) 
-    {
-        case 301: response.setResponseData(301, "Moved Permanently", getErrorBody(301));
-            break ;
-        case 403: response.setResponseData(403, "Forbidden", getErrorBody(403));
-            break ;
-        case 404: response.setResponseData(404, "Not Found", getErrorBody(404));
-            break ;
-        case 405: response.setResponseData(405, "Method Not Allowed", getErrorBody(405));
-            break ;
-        case 500: response.setResponseData(500, "Internal Server Error", getErrorBody(500));
-            break ;
-    }
-}*/
-
 void StaticHandler::handleRequest(Response& response)
 {
     response.setVersion(_request.getVersion());
 
     if (!isMethodAuthorized())
     {
-        //fillErrorResponse(405, response); FILL ERROR
+        ErrorHandler errorResponse(405, _request, _server, response);
         return ;
     }
 
@@ -103,7 +74,7 @@ void StaticHandler::handleGET(Response& response) const
     int res = isFileInError(R_OK, _absolute_path);
     if (res != 0)
     {
-        //fillErrorResponse(res, response); FILL ERROR
+        ErrorHandler errorResponse(res, _request, _server, response);
         return ;
     }
 
@@ -122,7 +93,7 @@ void StaticHandler::handleDELETE(Response& response) const
     int res = isFileInError(F_OK, _absolute_path); 
     if (res != 0)
     {
-        //fillErrorResponse(res, response); FILL ERROR
+        ErrorHandler errorResponse(res, _request, _server, response);
         return ;
     }
 

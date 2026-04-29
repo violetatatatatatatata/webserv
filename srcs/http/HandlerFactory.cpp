@@ -1,6 +1,7 @@
 #include "HandlerFactory.hpp"
 #include "ServerConfig.hpp"
 #include "StaticHandler.hpp"
+#include "ErrorHandler.hpp"
 
 /*static bool isCgiRequest(const Request& req, const Location* loc)
 {
@@ -132,7 +133,8 @@ static std::string resolvePath(
 HttpHandler* HandlerFactory::create(
     const Request& request,
     const Location* location,
-    const ServerConfig& server)
+    const ServerConfig& server,
+    Response& response)
 {
     // 1. REDIRECT
     if (location && !location->getRedirect().empty())
@@ -155,16 +157,12 @@ HttpHandler* HandlerFactory::create(
         if (location && location->getAutoindex())
             return new AutoIndexHandler(request, location, server, path);
 
-        //return new ErrorHandler(403);
-        std::cout << "Error response" << std::endl;
-        return NULL;
+        return new ErrorHandler(403, request, server, response);
     }
 
-    // 4. FILE normal
+    // 4. STATIC
     if (isRegularFile(path))
         return new StaticHandler(request, location, server, path);
 
-    //return new ErrorHandler(404);
-    std::cout << "Error response" << std::endl;
-    return NULL;
+    return new ErrorHandler(404, request, server, response);
 }

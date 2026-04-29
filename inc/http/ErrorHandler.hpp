@@ -8,12 +8,16 @@ class ErrorHandler : public HttpHandler
 {
   public:
 
-    ErrorHandler(const Request& request, const Location* location, const ServerConfig& server);
+    ErrorHandler(int error, const Request& request, const ServerConfig& server, Response& response);
     ErrorHandler(const ErrorHandler& other);
     ~ErrorHandler();
     
-    void fillErrorResponse(int error, Response& response) const;
+    void fillErrorResponse(Response& response) const;
 
   private:
-    std::string getErrorBody(int error) const;
+
+    void handleRequest(Response& response);
+    std::string getErrorBody() const;
+    
+    int _error;
 };

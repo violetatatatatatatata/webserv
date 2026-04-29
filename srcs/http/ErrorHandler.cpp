@@ -1,10 +1,12 @@
 #include "ErrorHandler.hpp"
 #include "Response.hpp"
+#include "Request.hpp"
 #include <unistd.h>
 
-ErrorHandler::ErrorHandler(const Request& request, const Location* location, const ServerConfig& server) :
-HttpHandler(request, location, server)
+ErrorHandler::ErrorHandler(int error, const Request& request, const ServerConfig& server, Response& response) :
+HttpHandler(request, NULL, server), _error(error)
 {
+    handleRequest(response);
 }
 
 ErrorHandler::ErrorHandler(const ErrorHandler& other) : HttpHandler(other)
@@ -18,9 +20,9 @@ ErrorHandler::~ErrorHandler() {}
 std::string buildError(int code, const ServerConfig& config);
 std::string getFileContent(std::string path);
 
-std::string ErrorHandler::getErrorBody(int error) const
+std::string ErrorHandler::getErrorBody() const
 {
-    const std::string& path = buildError(error, _server);
+    const std::string& path = buildError(_error, _server);
     std::string content = "";
 
     if (HttpHandler::isFileInError(R_OK, path) == 0)
@@ -29,17 +31,26 @@ std::string ErrorHandler::getErrorBody(int error) const
     return content;
 }
 
-void ErrorHandler::fillErrorResponse(int error, Response& response) const
+void ErrorHandler::fillErrorResponse(Response& response) const
 {
-    switch (error) 
+    response.setVersion(_request.getVersion());
+
+    switch (_error) 
     {
-        case 403: response.setResponseData(403, "Forbidden", getErrorBody(403));
+        case 403: response.setResponseData(403, "Forbidden", getErrorBody());
             break ;
-        case 404: response.setResponseData(404, "Not Found", getErrorBody(404));
+        case 404: response.setResponseData(404, "Not Found", getErrorBody());
             break ;
-        case 405: response.setResponseData(405, "Method Not Allowed", getErrorBody(405));
+        case 405: response.setResponseData(405, "Method Not Allowed", getErrorBody());
             break ;
-        case 500: response.setResponseData(500, "Internal Server Error", getErrorBody(500));
+        case 500: response.setResponseData(500, "Internal Server Error", getErrorBody());
             break ;
     }
+}
+
+// Methods
+void ErrorHandler::handleRequest(Response& response)
+{
+    std::cout << "ERROR !" << std::endl;
+    fillErrorResponse(response);
 }

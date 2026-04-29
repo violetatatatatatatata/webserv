@@ -14,7 +14,6 @@
 # define SERVERCONFIG_HPP
 
 # include <Webserv.hpp>
-# include <Location.hpp>
 
 enum Serv {
 	LISTEN,

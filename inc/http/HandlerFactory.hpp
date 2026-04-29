@@ -4,10 +4,11 @@ class HttpHandler;
 class Location;
 class ServerConfig;
 class Request;
+class Response;
 
 class HandlerFactory
 {
   public:
   
-    static HttpHandler* create(const Request& request, const Location* location, const ServerConfig& server);
+    static HttpHandler* create(const Request& request, const Location* location, const ServerConfig& server, Response& response);
 };
