@@ -4,6 +4,7 @@
 #include <vector>
 
 class ServerConfig;
+class Response;
 
 class CGIHandler : public HttpHandler
 {
@@ -18,14 +19,16 @@ class CGIHandler : public HttpHandler
   
     CGIHandler(const CGIHandler& other);
 
-    void    internalError(const std::string& msg) const;
-    char**  buildBinary();
-    char**  buildEnv();
+    void    internalError(const std::string& msg, Response& response) const;
     void    findExtention();
+    void    executeCGI() const;
+    char**  buildArgv() const;
+    char**  castEnv() const;
+    std::string   getDir() const; 
+    std::vector<std::string> buildEnv() const;
 
-    std::vector<std::string>  _argv;
-    std::vector<std::string>  _env;
-    std::string               _binPath;
-    std::string               _binName;
-    std::string               _ext;
+    std::string _scriptPath;
+    std::string _binPath;
+    std::string _binName;
+    std::string _ext;
 };

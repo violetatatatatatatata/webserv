@@ -4,21 +4,19 @@
 #include "ErrorHandler.hpp"
 
 // Functions
-/*static bool isCgiRequest(const Request& req, const Location* loc)
+static bool isCgiRequest(const Request& req, const Location* loc, const std::string& path)
 {
     if (!loc)
         return false;
 
-    std::string path = req.getPath();
-
-    // cas 1 : règle explicite dans location (ex: cgi-bin)
-    if (!loc->getCgiInfo()).empty())
+    // case 1 : check the cgi info in Location (cgi-bin)
+    /*if (!loc->getCgiInfo().empty())
     {
         if (path.find(loc->getCgiInfo()) == 0)
             return true;
     }
 
-    // cas 2 : extension CGI
+    // case 2 : CGI extension
     std::string::size_type dot = path.find_last_of('.');
     if (dot != std::string::npos)
     {
@@ -30,10 +28,11 @@
             if (cgiExt[i] == ext)
                 return true;
         }
-    }
-
+    }*/
+    (void)path;
+    (void)req;
     return false;
-}*/
+}
 
 static bool isRegularFile(const std::string& path)
 {
@@ -140,12 +139,14 @@ HttpHandler* HandlerFactory::create(
     if (location && !location->getRedirect().empty())
         return new RedirectHandler(request, location, server);
 
+    std::string path = resolvePath(request, location, server); // directory traversal attack!!
+    
     // 2. CGI
-    //if (location && isCgiRequest(request, location)
-    //    return new CGIHandler(request, location, server);
+    if (location && isCgiRequest(request, location, path))
+        return new CGIHandler(request, location, server, path);
+    return new CGIHandler(request, location, server, path);
 
     // 3. FILE or DIRECTORY
-    std::string path = resolvePath(request, location, server); // directory traversal attack!!
     if (isDirectory(path))
     {
         std::string index = getCorrectIndex(location, server);
@@ -160,7 +161,7 @@ HttpHandler* HandlerFactory::create(
         return new ErrorHandler(403, request, server, response);
     }
 
-    // 4. STATIC
+    // 4. REGULAR FILE
     if (isRegularFile(path))
         return new StaticHandler(request, location, server, path);
 
