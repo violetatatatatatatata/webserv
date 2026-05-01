@@ -17,9 +17,13 @@
 
 class Client {
 	private:
-		int         _fd;            
-		std::string _requestBuffer;
+		int         _fd;
 		int			_serverFd;
+
+		std::string _requestBuffer;
+
+		std::string	_responseBuffer;
+		size_t		_responseOffset;
 
 	public:
 		//
@@ -38,6 +42,12 @@ class Client {
 		void appendData(const char* buffer, ssize_t bytesRead);
 		bool isHeaderComplete() const;
 
+		void		setResponse(const std::string& response);
+		bool 		hasDataToSend() const;
+		const char*	getWritePtr() const;
+		size_t		getWriteRemaining() const;
+		void		advanceWriteOffset(size_t bytes);
+		bool		isResponseFullySent() const;
 };
 
 #endif
