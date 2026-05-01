@@ -6,18 +6,21 @@
 #include <unistd.h>
 #include <stdio.h>
 
-CGIHandler::CGIHandler(const Request& request, const Location* location, const ServerConfig& server) :
-HttpHandler(request, location, server)
+CGIHandler::CGIHandler(const Request& request, const Location* location, const ServerConfig& server, const std::string& extention) :
+HttpHandler(request, location, server), _ext(extension)
 {
-    _env.push_back("REQUEST_METHOD=" + _request.getMethod());
-    _env.push_back("QUERY_STRING=");
-    _env.push_back("CONTENT_LENGTH=");
-    _env.push_back("SCRIPT_FILENAME=");
+    if (_ext == ".php")
+    {
+        _binPath = "/usr/bin/php-cgi";
+        _binName = "php-cgi";
+    }
 
-        (char *)"REQUEST_METHOD=GET",
-        (char *)"QUERY_STRING=",
-        (char *)"CONTENT_LENGTH=0",
-        (char *)"SCRIPT_FILENAME=/var/www/test.php",
+    if (_ext == ".py")
+    {
+        _binPath = "/usr/bin/python3";
+        _binName = "python3";
+    }
+
 }
 
 CGIHandler::~CGIHandler() {}
@@ -32,13 +35,10 @@ char** CGIHandler::buildBinary()
 
 char** CGIHandler::buildEnv()
 {
-    char** env = {
-        (char *)"REQUEST_METHOD=GET",
-        (char *)"QUERY_STRING=",
-        (char *)"CONTENT_LENGTH=0",
-        (char *)"SCRIPT_FILENAME=/var/www/test.php",
-        NULL
-    };
+    _env.push_back("REQUEST_METHOD=" + std::to_string(_request.getMethod()));
+    _env.push_back("QUERY_STRING=");
+    _env.push_back("CONTENT_LENGTH=" + std::to_string(_request.getBody().size()));
+    _env.push_back("SCRIPT_FILENAME=");
 
     return NULL;
 }
@@ -67,8 +67,8 @@ static void receiveCgiData()
 void CGIHandler::handleRequest(Response& response)
 {
     std::cout << "CGI request !" << std::endl;
-    int fd[2];
 
+    int fd[2];
     if (pipe(fd) == -1)
     {
         internalError("pipe");
