@@ -19,26 +19,28 @@ class Client;
 
 class Cluster {
 	private:
-	std::map<int, std::vector<ServerConfig> >	_configs;    
-		std::vector<struct pollfd>					_fds;        
-		std::map<int, std::vector<ServerConfig> >	_serverFds;  
-		std::map<int, Client>						_clientsFds; 
-	
-	public:
+		std::vector<Server*> _servers;
+		std::vector<struct pollfd> _fds;
+		std::map<int, Client>      _clientsFds;
 
+	public:
 		Cluster();
-		Cluster(const Cluster & other);
+		Cluster(const Cluster& other);
 		~Cluster();
-		Cluster & operator=(const Cluster & other);
-		
-		Cluster(const std::map<int, std::vector<ServerConfig> >& servers);
+		Cluster& operator=(const Cluster& other);
+
+		Cluster(const std::map<int, std::vector<ServerConfig> >& configs);
 
 		void run();
 
 	private:
-		void init();
-		void acceptClient(int serverFd);
-		//void handleClient(Client& client);
-		void disconnectClient(int fd);
+		void    init(const std::map<int, std::vector<ServerConfig> >& configs);
+
+		Server* findServer(int fd);
+
+		void    acceptClient(int serverFd);
+		void    handleClientData(int clientFd, size_t pollIndex);
+		void    processHttpRequest(Client& client, int clientFd, size_t pollIndex);
+		void    disconnectClient(int clientFd, size_t pollIndex);
 };
 #endif

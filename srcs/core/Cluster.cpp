@@ -12,180 +12,231 @@
 
 #include <Webserv.hpp>
 
-//Orthodox Canonical Form
+Cluster::Cluster(const std::map<int, std::vector<ServerConfig> >& configs) {
 
-Cluster::Cluster(const std::map<int, std::vector<ServerConfig> >& servers) : _configs(servers) {
-	print_msg("Initializing cluster", DEBUG);
-	init();
+	init(configs);
 }
 
-Cluster::Cluster(const Cluster & other) : _configs(other._configs) {
+Cluster::Cluster(const Cluster& other) {
+
 	*this = other;
 }
 
-
 Cluster::~Cluster() {
-    
-    for (size_t i = 0; i < this->_fds.size(); ++i) {
-        if (this->_fds[i].fd >= 0) {
-            close(this->_fds[i].fd);
-        //print_msg(); Puertos cerrados?
-		}
-    }
-    this->_fds.clear();
+
+	for (size_t i = 0; i < _servers.size(); i++) {
+		delete _servers[i];
+	}
+
+	this->_servers.clear();
+	
+	this->_fds.clear();
 }
 
-Cluster & Cluster::operator=(const Cluster & other) {
+Cluster& Cluster::operator=(const Cluster& other) {
+
 	if (this != &other) {
-		this->_fds = other._fds;
-		this->_serverFds = other._serverFds;
-		this->_clientsFds = other._clientsFds;
+		_servers    = other._servers;
+		_fds        = other._fds;
+		_clientsFds = other._clientsFds;
 	}
 	return *this;
 }
 
+void Cluster::init(const std::map<int, std::vector<ServerConfig> >& configs) {
 
-void Cluster::init() {
-	
 	std::map<int, std::vector<ServerConfig> >::const_iterator it;
+	for (it = configs.begin(); it != configs.end(); ++it) {
+		Server* newServer = new Server(it->first, it->second);
 
-	for (it = _configs.begin(); it != _configs.end(); ++it) {
-		int port = it->first;
-
-		int serverFd = socket(AF_INET, SOCK_STREAM, 0);
-		if (serverFd < 0) {
-			print_msg("Failed to create socket", FATAL);
-			return; 
+		if (!newServer->init()) {
+			delete newServer;
+			continue;
 		}
-
-		fcntl(serverFd, F_SETFL, O_NONBLOCK); //socket no bloqueante
-
-		int opt = 1;
-		if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-			print_msg("Failed to set SO_REUSEADDR", WARN);
-		}
-		
-		struct sockaddr_in addr;
-		std::memset(&addr, 0, sizeof(addr)); 
-		addr.sin_family = AF_INET;
-		addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		addr.sin_port = htons(port);
-
-		if (bind(serverFd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-			std::cout << errno << std::endl;
-			print_msg("Bind failed", FATAL); 
-			close(serverFd);
-			return;
-		}
-
-		if (listen(serverFd, SOMAXCONN) < 0) {
-			print_msg("Listen failed", FATAL);
-			close(serverFd);
-			return;
-		}
-
-		this->_serverFds[serverFd] = it->second;
 
 		struct pollfd pfd;
-		pfd.fd = serverFd;
-		pfd.events = POLLIN;
+		pfd.fd      = newServer->getFd();
+		pfd.events  = POLLIN;
 		pfd.revents = 0;
-		
 		this->_fds.push_back(pfd);
-
-		std::ostringstream oss;
-		oss << "Listening on port " << port;
-		print_msg(oss.str(), SUCCESS);
+		
+		this->_servers.push_back(newServer);
 	}
+
+	std::ostringstream oss;
+	oss << "Total server sockets: " << _servers.size();
+	print_msg(oss.str(), DEBUG);
 }
 
-void Cluster::acceptClient(int serverFd) {
-	struct sockaddr_in clientAddr;
-	socklen_t clientLen = sizeof(clientAddr);
-	int clientFd = accept(serverFd, (struct sockaddr*)&clientAddr, &clientLen);
+Server* Cluster::findServer(int fd) {
 
-	if (clientFd >= 0) {
-		print_msg("Client accepted", SUCCESS);
-		
-		fcntl(clientFd, F_SETFL, O_NONBLOCK);
-		
-		this->_clientsFds[clientFd] = Client(clientFd, serverFd);
-
-		struct pollfd pfd;
-		pfd.fd = clientFd;
-		pfd.events = POLLIN;
-		pfd.revents = 0;
-		this->_fds.push_back(pfd);
+	for (size_t i = 0; i < _servers.size(); i++) {
+		if (this->_servers[i]->getFd() == fd)
+			return _servers[i];
 	}
+	return NULL;
 }
 
 void Cluster::run() {
 
+	std::ostringstream start;
+	start << "Server running with " << _servers.size() << " sockets";
+	print_msg(start.str(), START);
+
 	while (true) {
-		int poll_count = poll(&this->_fds[0], this->_fds.size(), -1);
+		int poll_count = poll(&_fds[0], _fds.size(), -1);
 		if (poll_count < 0) {
-			print_msg("Poll error", FATAL);
+			std::ostringstream oss;
+			oss << "poll() failed errno=" << errno;
+			print_msg(oss.str(), FATAL);
 			break;
 		}
 
-		for (size_t i = 0; i < this->_fds.size(); ++i) {
-			
-			if (!(this->_fds[i].revents & POLLIN)) 
-				continue; 
-				
-			int currentFd = this->_fds[i].fd;
+		size_t currentSize = _fds.size();
 
-			//SERVIDOR
-			if (this->_serverFds.find(currentFd) != this->_serverFds.end()) {
-				this->acceptClient(currentFd);
-			}
-			// CLIENTE
-			else {
-				char buffer[10000] = {0}; //TODO SIZE limit
-				int bytes_read = recv(currentFd, buffer, sizeof(buffer) - 1, 0);
+		for (size_t i = 0; i < currentSize; i++) {
+			if (!(_fds[i].revents & POLLIN))
+				continue;
 
-				if (bytes_read > 0) {
+			int currentFd = _fds[i].fd;
 
-					this->_clientsFds[currentFd].appendData(buffer, bytes_read);
+			std::ostringstream oss;
+			oss << "Activity fd=" << currentFd << " index=" << i;
+			print_msg(oss.str(), DEBUG);
 
-					if (this->_clientsFds[currentFd].isHeaderComplete()) {
-						std::cout << "\n PETICION RECIBIDA \n";
-
-						if (_clientsFds.find(currentFd)->second.isHeaderComplete())
-						{
-    						Request request(_clientsFds.find(currentFd)->second.getBuffer());
-    						Response response;
-
-    						const ServerConfig& server = Router::findMatchingServer(request, _serverFds.find(_clientsFds.find(currentFd)->second.getServerFd())->second);
-    						const Location* location = Router::findMatchingLocation(request, server);
-							
-    						HttpHandler* const handler = HandlerFactory::create(request, location, server, response);
-							
-    						//std::cout << "Request: " << buffer << std::endl;
-
-    						if (handler)
-								{
-									handler->handleRequest(response);
-									std::string msg = response.buildResponse();
-									std::cout << msg << std::endl;
-									send(currentFd, msg.c_str(), msg.size(), 0);
-								}
-								else
-									std::cout << "NULL" << std::endl;
-						}
-
-						close(currentFd);
-						this->_fds[i].fd = -1;
-						this->_clientsFds.erase(currentFd);
-					}
-				} 
-				else if (bytes_read == 0) {
-
-					close(currentFd);
-					this->_fds[i].fd = -1;
-					this->_clientsFds.erase(currentFd);
-				}
-			}
+			if (findServer(currentFd))
+				acceptClient(currentFd);
+			else
+				handleClientData(currentFd, i);
 		}
 	}
+}
+
+
+void Cluster::acceptClient(int serverFd) {
+	
+	struct sockaddr_in clientAddr;
+	socklen_t clientLen = sizeof(clientAddr);
+
+	int clientFd = accept(serverFd,
+						 (struct sockaddr*)&clientAddr,
+						 &clientLen);
+	if (clientFd < 0) {
+		std::ostringstream oss;
+		oss << "accept() failed serverFd=" << serverFd;
+		print_msg(oss.str(), ERR);
+		return;
+	}
+
+	fcntl(clientFd, F_SETFL, O_NONBLOCK);
+
+	_clientsFds[clientFd] = Client(clientFd, serverFd);
+
+	struct pollfd pfd;
+	pfd.fd      = clientFd;
+	pfd.events  = POLLIN;
+	pfd.revents = 0;
+	_fds.push_back(pfd);
+
+	std::ostringstream oss;
+	oss << "Client connected clientFd=" << clientFd
+		<< " serverFd=" << serverFd
+		<< " total_clients=" << _clientsFds.size();
+	print_msg(oss.str(), CONN);
+}
+
+void Cluster::handleClientData(int clientFd, size_t pollIndex) {
+	
+	char buffer[10000] = {0};
+	int  bytes_read    = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
+
+	if (bytes_read > 0) {
+		std::ostringstream oss;
+		oss << "recv() clientFd=" << clientFd
+			<< " bytes=" << bytes_read;
+		print_msg(oss.str(), DEBUG);
+
+		Client& client = _clientsFds[clientFd];
+		client.appendData(buffer, bytes_read);
+
+		if (client.isHeaderComplete()) {
+			std::ostringstream req;
+			req << "Request complete clientFd=" << clientFd;
+			print_msg(req.str(), REQ);
+			processHttpRequest(client, clientFd, pollIndex);
+		}
+	}
+	else if (bytes_read == 0) {
+		std::ostringstream oss;
+		oss << "Client closed connection clientFd=" << clientFd;
+		print_msg(oss.str(), DISC);
+		disconnectClient(clientFd, pollIndex);
+	}
+	else {
+		std::ostringstream oss;
+		oss << "recv() error clientFd=" << clientFd
+			<< " errno=" << errno;
+		print_msg(oss.str(), ERR);
+		disconnectClient(clientFd, pollIndex);
+	}
+}
+
+
+void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex) {
+	
+	std::ostringstream start;
+	start << "Processing request clientFd=" << clientFd
+		  << " serverFd=" << client.getServerFd();
+	print_msg(start.str(), DEBUG);
+
+	Server* server = findServer(client.getServerFd());
+	if (!server) {
+		print_msg("Server not found for client", ERR);
+		disconnectClient(clientFd, pollIndex);
+		return;
+	}
+
+	Request  request(client.getBuffer());
+	Response response;
+
+	const ServerConfig& serverConfig = Router::findMatchingServer(
+		request, server->getConfigs());
+	const Location* location = Router::findMatchingLocation(
+		request, serverConfig);
+
+	HttpHandler* const handler = HandlerFactory::create(
+		request, location, serverConfig, response);
+
+	if (handler) {
+		handler->handleRequest(response);
+		std::string msg = response.buildResponse();
+
+		ssize_t sent = send(clientFd, msg.c_str(), msg.size(), 0);
+
+		std::ostringstream oss;
+		oss << "Response sent clientFd=" << clientFd
+			<< " bytes=" << sent;
+		print_msg(oss.str(), RES);
+
+		delete handler;
+	}
+	else {
+		std::ostringstream oss;
+		oss << "Handler NULL clientFd=" << clientFd;
+		print_msg(oss.str(), ERR);
+	}
+
+	disconnectClient(clientFd, pollIndex);
+}
+
+
+void Cluster::disconnectClient(int clientFd, size_t pollIndex) {
+	
+	close(clientFd);
+	_fds[pollIndex].fd = -1;
+	_clientsFds.erase(clientFd);
+
+	std::ostringstream oss;
+	oss << "Client disconnected clientFd=" << clientFd;
+	print_msg(oss.str(), DISC);
 }

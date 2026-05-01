@@ -74,9 +74,9 @@ typedef std::vector<std::string> fileVector;
 #include <Router.hpp>
 #include <Response.hpp>
 #include <ServerConfig.hpp>
+#include <Server.hpp>
 #include <Client.hpp>
 #include <Cluster.hpp>
-#include <Server.hpp>
 #include <Config.hpp>
 #include <Location.hpp>
 #include <Reader.hpp>
@@ -101,7 +101,7 @@ typedef std::vector<std::string> fileVector;
 /* ENUM
  * */
 enum e_level {
-    INFO,		// general message
+	INFO,		// general message
 	SUCCESS,
 	ERR,		// recoverable error
 	FATAL,		// non recoverable error, exit
@@ -116,7 +116,7 @@ enum e_level {
 };
 
 enum e_module {
-    PARSER,
+	PARSER,
 	CORE,
 	HTTP,
 	CGI
