@@ -26,10 +26,6 @@ void AutoIndexHandler::handleRequest(Response& response)
 
     response.setVersion(_request.getVersion());
     DIR* dir = opendir(_directory.c_str());
-    if (!dir)
-    {
-        return ; //error TODO
-    }
 
     std::stringstream html;
 

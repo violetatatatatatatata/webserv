@@ -64,7 +64,7 @@ class ServerConfig;
 class Location {
 		private:
 			bool																_autoindex;
-			std::string													_index; //TODO puede tener varios index
+			std::string													_index;
 			std::string													_path;
 			std::string													_root;
 			std::string													_upload_store;
@@ -86,7 +86,8 @@ class Location {
 			const std::string& 												getUploadStore() const;
 			const std::string&  											getRedirect() const;
 			const std::vector<std::string>& 					getMethods() const;
-			const std::map<std::string, std::string>&	getCgiInfo() const;
+			const std::map<std::string, std::string>& getCgiInfo() const;
+			std::string																getCgiInfo(const std::string& ext) const;
 			
 			// setters
 			void setPath(const std::string& path);

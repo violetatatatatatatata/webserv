@@ -163,7 +163,7 @@ void Cluster::run() {
 							
     						//std::cout << "Request: " << buffer << std::endl;
 
-    						if (handler)
+    						if (handler) //If ErrorHandler should not enter
 								{
 									handler->handleRequest(response);
 									std::string msg = response.buildResponse();

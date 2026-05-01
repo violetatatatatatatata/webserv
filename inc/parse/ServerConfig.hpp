@@ -63,7 +63,7 @@ class ServerConfig {
 			size_t									    _max_body_size;
 			std::string							    _host;
 			std::string									_root;
-			std::string									_index; //TODO puede tener varios index
+			std::string									_index; // TODO puede tener varios index
 																					//falta redirection, methods
 			std::vector<std::string>		_server_names;
 			std::map<int, std::string>  _error_pages;

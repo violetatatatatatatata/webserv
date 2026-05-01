@@ -229,6 +229,16 @@ const std::map<std::string, std::string>& Location::getCgiInfo() const {
     return _cgi_info;
 }
 
+std::string Location::getCgiInfo(const std::string& ext) const {
+    
+    std::map<std::string, std::string>::const_iterator it = _cgi_info.find(ext);
+
+    if (it != _cgi_info.end())
+        return it->second;
+    else
+        return std::string();
+}
+
 // setters
 
 void Location::setPath(const std::string& path) {

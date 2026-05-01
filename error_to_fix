@@ -1,0 +1,9 @@
+config sin cerrar la } no da error
+
+no hay 'methods' no 'return' en root
+
+deberia ser posible un config sin bloque location -> da error
+
+eventualment multiindex index posible
+
+eventualmente corregir el problema de seguridad : directory traversal attack

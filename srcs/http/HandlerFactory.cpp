@@ -3,6 +3,7 @@
 #include "StaticHandler.hpp"
 #include "ErrorHandler.hpp"
 
+// Functions
 /*static bool isCgiRequest(const Request& req, const Location* loc)
 {
     if (!loc)
@@ -11,9 +12,9 @@
     std::string path = req.getPath();
 
     // cas 1 : règle explicite dans location (ex: cgi-bin)
-    if (!loc->getCgiPath().empty())
+    if (!loc->getCgiInfo()).empty())
     {
-        if (path.find(loc->getCgiPath()) == 0)
+        if (path.find(loc->getCgiInfo()) == 0)
             return true;
     }
 
@@ -32,23 +33,6 @@
     }
 
     return false;
-}*/
-
-static const std::string& getCorrectIndex(const Location* location, const ServerConfig& server)
-{
-    if (!location || location->getIndex().empty())
-        return server.getIndex();
-    else
-        return location->getIndex();
-}
-
-//Version multi index
-/*static const std::vector<std::string>& getCorrectIndex(const Location* location, const ServerConfig& server)
-{
-    if (location->getIndex().empty())
-        return server->getIndex();
-    else
-        return location->getIndex();
 }*/
 
 static bool isRegularFile(const std::string& path)
@@ -75,7 +59,14 @@ static std::string joinPath(const std::string& dir, const std::string& file)
 }
 
 // Multi index Version
-/*
+/*static const std::vector<std::string>& getCorrectIndex(const Location* location, const ServerConfig& server)
+{
+    if (location->getIndex().empty())
+        return server->getIndex();
+    else
+        return location->getIndex();
+}
+
 static std::string getIndexFile(
     const std::string& dirPath,
     const std::vector<std::string>& indexList)
@@ -93,6 +84,14 @@ static std::string getIndexFile(
 
     return "";
 }*/
+
+static const std::string& getCorrectIndex(const Location* location, const ServerConfig& server)
+{
+    if (!location || location->getIndex().empty())
+        return server.getIndex();
+    else
+        return location->getIndex();
+}
 
 static std::string getIndexPath(
     const std::string& dirPath,
@@ -130,6 +129,7 @@ static std::string resolvePath(
     return location->getRoot() + request.getURI();
 }
 
+// Methods
 HttpHandler* HandlerFactory::create(
     const Request& request,
     const Location* location,
@@ -141,11 +141,11 @@ HttpHandler* HandlerFactory::create(
         return new RedirectHandler(request, location, server);
 
     // 2. CGI
-    //if (location && isCgiRequest(request, location))
+    //if (location && isCgiRequest(request, location)
     //    return new CGIHandler(request, location, server);
 
     // 3. FILE or DIRECTORY
-    std::string path = resolvePath(request, location, server);
+    std::string path = resolvePath(request, location, server); // directory traversal attack!!
     if (isDirectory(path))
     {
         std::string index = getCorrectIndex(location, server);
