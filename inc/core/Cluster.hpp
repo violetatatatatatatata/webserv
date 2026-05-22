@@ -1,0 +1,65 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Cluster.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: datienza <datienza@student.42barcelo>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/21 23:14:09 by datienza          #+#    #+#             */
+/*   Updated: 2026/04/21 23:14:11 by datienza         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#ifndef CLUSTER_HPP
+# define CLUSTER_HPP
+
+ # include <Webserv.hpp>
+ # include <Server.hpp>
+ # include <Client.hpp>
+ # include <Router.hpp>
+ # include <Response.hpp>
+ # include <ServerParser.hpp>
+ # include <HandlerFactory.hpp>
+ # include <ErrorHandler.hpp>
+
+class Server;
+class Client;
+class Response;
+class Request;
+
+class Cluster {
+	private:
+		std::vector<Server*> _servers;
+		std::vector<struct pollfd> _fds;
+		std::map<int, Client>      _clientsFds;
+		bool _needsCompaction;
+
+	public:
+		Cluster();
+		Cluster(const Cluster& other);
+		~Cluster();
+		Cluster& operator=(const Cluster& other);
+
+		Cluster(const std::map<int, std::vector<ServerParser> >& configs);
+
+		void run();
+
+	private:
+		void	init(const std::map<int, std::vector<ServerParser> >& configs);
+
+		Server* findServer(int fd);
+
+		void	acceptClient(int serverFd);
+		void	handleClientData(int clientFd, size_t pollIndex);
+		void	processHttpRequest(Client& client, int clientFd, size_t pollIndex);
+		void	disconnectClient(int clientFd, size_t pollIndex);
+
+		void handleClientWrite(int clientFd, size_t pollIndex);
+		void setPollEvents(int fd, short events);
+		void queueResponse(Client& client, int clientFd, Response& response);
+		bool handleClientError(int fd, size_t pollIndex, short revents);
+		void compactPollFds();
+
+		void checkInactiveClients();
+};
+#endif
