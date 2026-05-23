@@ -42,6 +42,8 @@ class Client {
 		size_t _expectedBodySize;
 		bool _bodyTooLarge;
 
+		size_t _maxBodySize;
+
 		time_t _lastActivity;
 
 	public:
@@ -73,6 +75,8 @@ class Client {
 
 		time_t getLastActivity() const;
 		void updateActivity();
+
+		void setMaxBodySize(size_t size);
 
 	private:
 		void processHeaders();

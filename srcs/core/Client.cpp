@@ -17,7 +17,8 @@ Client::Client()
 	_requestBuffer(""),
 	_responseBuffer(""), _responseOffset(0),
 	_parseState(READING_HEADERS), _headerEndPos(0),
-	_expectedBodySize(0), _bodyTooLarge(false), _lastActivity(time(NULL)) {}
+	_expectedBodySize(0), _bodyTooLarge(false), 
+	_maxBodySize(0), _lastActivity(time(NULL)) {}
 
 Client::Client(int fd, int serverFd)
 	: _fd(fd), _serverFd(serverFd),
@@ -25,7 +26,7 @@ Client::Client(int fd, int serverFd)
 	_responseBuffer(""), _responseOffset(0),
 	_parseState(READING_HEADERS), _headerEndPos(0),
 	_expectedBodySize(0), _bodyTooLarge(false),
-	_lastActivity(time(NULL)) {}
+	_maxBodySize(0), _lastActivity(time(NULL)) {}
 
 Client::Client(const Client& other) {
 
@@ -45,6 +46,7 @@ Client& Client::operator=(const Client& other) {
 		this->_expectedBodySize = other._expectedBodySize;
 		this->_bodyTooLarge = other._bodyTooLarge;
 		this->_lastActivity = other._lastActivity;
+		this->_maxBodySize = other._maxBodySize;
 	}
 	return *this;
 }
@@ -88,7 +90,7 @@ void Client::processHeaders() {
 	_headerEndPos = pos + 4;
 	extractContentLength();
 
-	size_t maxBodySize = 100; // TODO: serverConfig.getMaxBodySize()
+	size_t maxBodySize = _maxBodySize;
 
 	if (_expectedBodySize > maxBodySize) {
 		_bodyTooLarge = true;
@@ -125,6 +127,11 @@ void Client::setResponse(const std::string& response) {
 
 	this->_responseBuffer = response;
 	this->_responseOffset = 0;
+}
+
+void Client::setMaxBodySize(size_t size) { 
+	
+	_maxBodySize = size; 
 }
 
 bool Client::hasDataToSend() const {
