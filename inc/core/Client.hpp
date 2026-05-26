@@ -25,6 +25,7 @@ class Client {
 	enum ParseState {
 		READING_HEADERS,
 		READING_BODY,
+		READING_CHUNKED,
 		READY
 	};
 
@@ -43,6 +44,8 @@ class Client {
 		bool _bodyTooLarge;
 
 		size_t _maxBodySize;
+
+		bool _isChunked;
 
 		time_t _lastActivity;
 
@@ -78,10 +81,13 @@ class Client {
 
 		void setMaxBodySize(size_t size);
 
+		bool isChunked() const;
+
 	private:
 		void processHeaders();
 		void extractContentLength();
 		void processBody();
+		void processChunkedBody();
 };
 
 #endif

@@ -18,7 +18,7 @@ Client::Client()
 	_responseBuffer(""), _responseOffset(0),
 	_parseState(READING_HEADERS), _headerEndPos(0),
 	_expectedBodySize(0), _bodyTooLarge(false), 
-	_maxBodySize(0), _lastActivity(time(NULL)) {}
+	_maxBodySize(0), _isChunked(false), _lastActivity(time(NULL)) {}
 
 Client::Client(int fd, int serverFd)
 	: _fd(fd), _serverFd(serverFd),
@@ -26,7 +26,7 @@ Client::Client(int fd, int serverFd)
 	_responseBuffer(""), _responseOffset(0),
 	_parseState(READING_HEADERS), _headerEndPos(0),
 	_expectedBodySize(0), _bodyTooLarge(false),
-	_maxBodySize(0), _lastActivity(time(NULL)) {}
+	_maxBodySize(0), _isChunked(false), _lastActivity(time(NULL)) {}
 
 Client::Client(const Client& other) {
 
@@ -47,6 +47,7 @@ Client& Client::operator=(const Client& other) {
 		this->_bodyTooLarge = other._bodyTooLarge;
 		this->_lastActivity = other._lastActivity;
 		this->_maxBodySize = other._maxBodySize;
+		this->_isChunked = other._isChunked;
 	}
 	return *this;
 }
@@ -90,6 +91,13 @@ void Client::processHeaders() {
 	_headerEndPos = pos + 4;
 	extractContentLength();
 
+	size_t tePos = _requestBuffer.find("Transfer-Encoding: chunked");
+	if (tePos != std::string::npos && tePos < _headerEndPos) {
+		_isChunked  = true;
+		_parseState = READING_CHUNKED;
+		return;
+	}
+
 	size_t maxBodySize = _maxBodySize;
 
 	if (_expectedBodySize > maxBodySize) {
@@ -112,15 +120,24 @@ void Client::processBody() {
 		_parseState = READY;
 }
 
+void Client::processChunkedBody() {
+
+    if (_requestBuffer.find("0\r\n\r\n") != std::string::npos)
+        _parseState = READY;
+}
+
 bool Client::isRequestComplete() {
 
-	if (_parseState == READING_HEADERS)
-		processHeaders();
+    if (_parseState == READING_HEADERS)
+        processHeaders();
 
-	if (_parseState == READING_BODY)
-		processBody();
+    if (_parseState == READING_BODY)
+        processBody();
 
-	return _parseState == READY;
+    if (_parseState == READING_CHUNKED)
+        processChunkedBody();
+
+    return _parseState == READY;
 }
 
 void Client::setResponse(const std::string& response) {
@@ -172,6 +189,11 @@ time_t Client::getLastActivity() const {
 	return _lastActivity;
 }
 
+bool Client::isChunked() const {
+	return _isChunked;
+}
+
 void Client::updateActivity() {
 	_lastActivity = time(NULL);
 }
+
