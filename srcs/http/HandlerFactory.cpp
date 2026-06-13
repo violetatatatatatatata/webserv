@@ -4,33 +4,27 @@
 #include "ErrorHandler.hpp"
 
 // Functions
-static bool isCgiRequest(const Request& req, const LocationParser* loc, const std::string& path)
+static bool isCgiRequest(const LocationParser* loc, const std::string& path, std::string& ext)
 {
     if (!loc)
         return false;
 
-    // case 1 : check the cgi info in LocationParser (cgi-bin)
-    /*if (!loc->getCgiInfo().empty())
-    {
-        if (path.find(loc->getCgiInfo()) == 0)
-            return true;
-    }
-
-    // case 2 : CGI extension
     std::string::size_type dot = path.find_last_of('.');
     if (dot != std::string::npos)
     {
-        std::string ext = path.substr(dot);
+        std::string tmp_ext = path.substr(dot);
+        const std::vector<std::string>& cgiExt = loc->getCgiExt();
 
-        const std::vector<std::string>& cgiExt = loc->getCgiExtensions();
-        for (size_t i = 0; i < cgiExt.size(); i++)
+        for (std::vector<std::string>::const_iterator it = cgiExt.begin(); it != cgiExt.end(); it++)
         {
-            if (cgiExt[i] == ext)
+            if (tmp_ext == *it)
+            {
+                ext = tmp_ext;
                 return true;
+            }
         }
-    }*/
-    (void)path;
-    (void)req;
+    }
+
     return false;
 }
 
@@ -122,10 +116,18 @@ static std::string resolvePath(
     const LocationParser* location,
     const ServerParser& server)
 {
-    if (!location || location->getRoot().empty())
-        return server.getRoot() + request.getURI();
+    const std::string& uri = request.getURI();
 
-    return location->getRoot() + request.getURI();
+    if (!location || location->getRoot().empty())
+        return server.getRoot() + uri;
+
+    std::string relativePath = uri;
+    const std::string& locationPath = location->getPath();
+
+    if (relativePath.compare(0, locationPath.size(), locationPath) == 0)
+        relativePath.erase(0, locationPath.size());
+
+    return location->getRoot() + relativePath;
 }
 
 // Methods
@@ -140,11 +142,11 @@ HttpHandler* HandlerFactory::create(
         return new RedirectHandler(request, location, server);
 
     std::string path = resolvePath(request, location, server); // directory traversal attack!!
-    
+    std::string ext;
+
     // 2. CGI
-    if (location && isCgiRequest(request, location, path))
-        return new CGIHandler(request, location, server, path, ".py");
-    //return new CGIHandler(request, location, server, path, ".py");
+    if (location && isCgiRequest(location, path, ext))
+        return new CGIHandler(request, location, server, path, ext);
 
     // 3. FILE or DIRECTORY
     if (isDirectory(path))
