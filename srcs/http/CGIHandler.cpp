@@ -14,29 +14,40 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#define TIMEOUT 5
+
+//Functions
+static size_t findCgiIndex(const LocationParser* location, const std::string& extension)
+{
+    const std::vector<std::string>& exts = location->getCgiExt();
+
+    for (size_t i = 0; i < exts.size(); ++i)
+    {
+        if (exts[i] == extension)
+            return i;
+    }
+    return std::string::npos;
+}
+
 CGIHandler::CGIHandler(const Request& request, const LocationParser* location, const ServerParser& server, const std::string& url, const std::string& extension) :
 HttpHandler(request, location, server), _url(url), _ext(extension)
 {
+    const std::vector<std::string>& bins = location->getCgiPath();
 
-    std::map<std::string, std::string> cgi = _location->getCgiInfo();
-    std::cout << "Cgi: " << std::endl;
+    size_t idx = findCgiIndex(location, extension);
 
-for (std::map<std::string, std::string>::iterator it = cgi.begin(); it != cgi.end(); ++it)
-{
-    std::cout << it->first << " -> " << it->second << std::endl;
-}
+    if (idx == std::string::npos || idx >= bins.size())
+        throw std::runtime_error("No CGI handler for extension");
 
-    if (_ext == ".php")
-    {
-        _binPath = "/home/corentin/Escola42/webserver/www/cgi-bin/cgi_tester"; //CGI path dans location
-        _binName = "cgi_tester";
-    }
+    _binPath = bins[idx];
 
-    if (_ext == ".py")
-    {
-        _binPath = "/usr/bin/python3"; //CGI path dans location
-        _binName = "python3";
-    }
+    size_t slash = _binPath.find_last_of('/');
+    if (slash != std::string::npos)
+        _binName = _binPath.substr(slash + 1);
+    else
+        _binName = _binPath;
+
+    std::cout << "Path name: " << _binPath << "  Bin name: " << _binName << std::endl; 
 }
 
 CGIHandler::~CGIHandler() {}
@@ -194,6 +205,8 @@ void CGIHandler::handleRequest(Response& response)
 {
     std::cout << "CGI request !" << std::endl;
 
+    response.setVersion(_request.getVersion());
+    
     int fd[2];
     if (pipe(fd) == -1)
         internalError("pipe", response);
@@ -207,19 +220,77 @@ void CGIHandler::handleRequest(Response& response)
         handleFd(fd, response);   
         executeCGI();
     }
-    else
-    {
-        close(fd[1]);
-        char buf[1024];
-        ssize_t n;
-        
-        // Receive the cgi data
-        while ((n = read(fd[0], buf, sizeof(buf))) > 0) continue;
-        close(fd[0]);
+    
+    close(fd[1]);
+    
+    time_t start = std::time(NULL);
+    char buf[1024];
+    std::string data;
+    ssize_t n;
 
-        int status;
-        waitpid(pid, &status, 0);
-        response.setVersion(_request.getVersion());
-        response.setResponseData(200, "OK", buf);
+    fcntl(fd[0], F_SETFL, O_NONBLOCK);
+
+    std::cout << "Path: " << _url << std::endl;
+    /*while(true)
+    {
+        if (std::time(NULL) - start > TIMEOUT)
+        {
+            kill(pid, SIGKILL);
+            waitpid(pid, NULL, 0);
+            close(fd[0]);
+            ErrorHandler(504, _request, _server, response);
+            return;
+        }
+
+        n = read(fd[0], buf, sizeof(buf));
+        
+        if (n > 0)
+            data.append(buf, n);
+        //else if (errno == EAGAIN || errno == EWOULDBLOCK)
+        //    continue;
+        else
+            break;
+    }*/
+
+    while (true)
+    {
+        if (std::time(NULL) - start > TIMEOUT)
+        {
+            kill(pid, SIGKILL);
+            waitpid(pid, NULL, 0);
+            close(fd[0]);
+            ErrorHandler(504, _request, _server, response);
+            return;
+        }
+
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(fd[0], &readfds);
+
+        struct timeval tv;
+        tv.tv_sec = 0;
+        tv.tv_usec = 10000;
+
+        int ret = select(fd[0] + 1, &readfds, NULL, NULL, &tv);
+
+        if (ret < 0)
+            break;
+        else if (ret == 0)
+            continue;
+    
+        n = read(fd[0], buf, sizeof(buf));
+        if (n > 0)
+            data.append(buf, n);
+        else
+            break;
     }
+
+    close(fd[0]);
+    int status;
+    waitpid(pid, &status, 0);
+
+    if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+        ErrorHandler(500, _request, _server, response);
+    else
+        response.setResponseData(200, "OK", data);
 }
