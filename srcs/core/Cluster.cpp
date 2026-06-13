@@ -151,6 +151,11 @@ void Cluster::acceptClient(int serverFd) {
 
 	_clientsFds[clientFd] = Client(clientFd, serverFd);
 
+	Server* server = findServer(serverFd);
+	if (server && !server->getConfigs().empty()) {
+		_clientsFds[clientFd].setMaxBodySize(server->getConfigs()[0].getMaxBodySize());
+	}
+
 	struct pollfd pfd;
 	pfd.fd      = clientFd;
 	pfd.events  = POLLIN;
