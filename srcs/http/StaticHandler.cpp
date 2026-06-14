@@ -74,6 +74,7 @@ void StaticHandler::handleGET(Response& response) const
     int res = isFileInError(R_OK, _absolute_path);
     if (res != 0)
     {
+    std::cout << "HERE in  GET" << std::endl;
         ErrorHandler errorResponse(res, _request, _server, response);
         return ;
     }

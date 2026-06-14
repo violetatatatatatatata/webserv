@@ -17,10 +17,10 @@ class HttpHandler
 
         // Methods
         virtual void handleRequest(Response& response) = 0;
+        static int isFileInError(int mode, const std::string file);
 
     protected:
 
-        int isFileInError(int mode, const std::string file) const;
 
         const Request&      _request;
         const LocationParser*     _location;

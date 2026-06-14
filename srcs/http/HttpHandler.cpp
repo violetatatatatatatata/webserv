@@ -20,6 +20,7 @@ static int checkStat(struct stat& st, const std::string& file)
 {
     if (stat(file.c_str(), &st) == -1)
     {
+    std::cerr << "stat(" << file << ") failed: " << strerror(errno) << std::endl;
         switch(errno)
         {
             case ENOENT:
@@ -31,14 +32,16 @@ static int checkStat(struct stat& st, const std::string& file)
                 return 500;
         }
     }
+
     return 0;
 }
 
-int HttpHandler::isFileInError(int mode, const std::string file) const
+int HttpHandler::isFileInError(int mode, const std::string file) 
 {
     struct stat st;
 
     int res = checkStat(st, file);
+    std::cout << "Stat: " << res << " File: " << file << std::endl;
     if (res != 0)
         return res;
 

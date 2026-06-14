@@ -29,6 +29,7 @@ int HttpException::getStatusCode() const {
  * */
 std::string buildError(int code)
 {
+    std::cout << "ERROR" << std::endl;
     std::string html_path;
     switch (code) {
         case 400: html_path = "www/client_error/400bad_request.html";
