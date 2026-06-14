@@ -6,7 +6,7 @@
 /*   By: avelandr <avelandr@student.42barcelon      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:01:18 by avelandr          #+#    #+#             */
-/*   Updated: 2026/04/09 12:07:37 by avelandr         ###   ########.fr       */
+/*   Updated: 2026/06/14 13:35:38 by cochatel         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@
  *	_root: default root directory at the server level
  *	_index: default file to be served if a directory is requested
  *	_server_names: list of domain names or virtual hosts associated with the server
- *	_error_pages: map associating HTTP status codes with custom error page paths
  *	_locations: vector containing all specific route configurations for the server
  *
  *	ServerParser: default constructor
@@ -40,7 +39,6 @@
  *	getRoot: returns the global root path
  *	getIndex: returns the global default index file
  *	getServerNames: returns the list of server domains
- *	getErrorPages: returns the custom error pages map
  *	getLocations: returns all nested location blocks
  *	addLocation: adds a newly parsed location block to the server's list
  * */
@@ -52,7 +50,6 @@ class ServerParser : public Parser {
 		std::string							_root;
 		std::string							_index;
 		std::vector<std::string>			_server_names;
-		std::map<int, std::string>			_error_pages;
 		std::vector<LocationParser>			_locations;
 
 	public:
@@ -73,7 +70,6 @@ class ServerParser : public Parser {
 		const std::string&					getRoot() const;
 		const std::string&					getIndex() const;
 		const std::vector<std::string>&		getServerNames() const;
-		const std::map<int, std::string>&	getErrorPages() const;
 		const std::vector<LocationParser>&	getLocations() const;
 
 		void addLocation(const LocationParser& location);

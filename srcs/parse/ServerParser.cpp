@@ -44,7 +44,6 @@ ServerParser &ServerParser::operator=(const ServerParser &obj) {
 		this->_index		  = obj._index;
 		this->_max_body_size  = obj._max_body_size;
 		this->_server_names   = obj._server_names;
-		this->_error_pages	  = obj._error_pages;
 		this->_locations	  = obj._locations;
 		this->_root           = obj._root;
 	}
@@ -61,7 +60,6 @@ void ServerParser::initMap()
 	registerAction("index", new SimpleAction<ServerParser, std::string>(&ServerParser::_index, "index"));
 	registerAction("client_max_body_size", new SimpleAction<ServerParser, size_t>(&ServerParser::_max_body_size, "client_max_body_size"));
 	registerAction("server_name", new VectorAction<ServerParser, std::string>(&ServerParser::_server_names, "server_name"));
-	registerAction("error_page", new MapAction<ServerParser, int, std::string>(&ServerParser::_error_pages, "error_page"));
 	registerAction("location", new LocationBlockAction());
 }
 
@@ -108,10 +106,6 @@ const std::string& ServerParser::getIndex() const {
 
 const std::vector<std::string>& ServerParser::getServerNames() const {
     return _server_names;
-}
-
-const std::map<int, std::string>& ServerParser::getErrorPages() const {
-    return _error_pages;
 }
 
 const std::vector<LocationParser>& ServerParser::getLocations() const {

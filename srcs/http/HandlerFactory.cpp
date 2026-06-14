@@ -131,11 +131,7 @@ static std::string resolvePath(
 }
 
 // Methods
-HttpHandler* HandlerFactory::create(
-    const Request& request,
-    const LocationParser* location,
-    const ServerParser& server,
-    Response& response)
+HttpHandler* HandlerFactory::create(const Request& request, const LocationParser* location, const ServerParser& server)
 {
     // 1. REDIRECT
     if (location && !location->getRedirect().empty())
@@ -145,7 +141,7 @@ HttpHandler* HandlerFactory::create(
     std::string ext;
 
     // 2. CGI
-    if (location && isCgiRequest(location, path, ext))
+    if (location && isCgiRequest(location, path, ext) && isRegularFile(path))
         return new CGIHandler(request, location, server, path, ext);
 
     // 3. FILE or DIRECTORY
@@ -160,12 +156,12 @@ HttpHandler* HandlerFactory::create(
         if (location && location->getAutoindex())
             return new AutoIndexHandler(request, location, server, path);
 
-        return new ErrorHandler(403, request, server, response);
+        return new ErrorHandler(403, request, server);
     }
 
     // 4. REGULAR FILE
     if (isRegularFile(path))
         return new StaticHandler(request, location, server, path);
 
-    return new ErrorHandler(404, request, server, response);
+    return new ErrorHandler(404, request, server);
 }

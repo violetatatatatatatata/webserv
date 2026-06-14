@@ -9,6 +9,7 @@ class ErrorHandler : public HttpHandler
   public:
 
     ErrorHandler(int error, const Request& request, const ServerParser& server, Response& response);
+    ErrorHandler(int error, const Request& request, const ServerParser& server);
     ErrorHandler(const ErrorHandler& other);
     ~ErrorHandler();
     
