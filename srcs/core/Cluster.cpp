@@ -83,6 +83,11 @@ Server* Cluster::findServer(int fd) {
 
 void Cluster::run() {
 
+	if (_servers.empty()) {
+		print_msg("No server socket could be initialized", FATAL);
+		return;
+	}
+
 	std::ostringstream start;
 	start << "Server running with " << _servers.size() << " sockets";
 	print_msg(start.str(), START);
