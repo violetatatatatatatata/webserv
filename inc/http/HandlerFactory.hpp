@@ -18,5 +18,5 @@ class HandlerFactory
 {
   public:
 
-    static HttpHandler* create(const Request& request, const LocationParser* location, const ServerParser& server, Response& response);
+    static HttpHandler* create(const Request& request, const LocationParser* location, const ServerParser& server);
 };

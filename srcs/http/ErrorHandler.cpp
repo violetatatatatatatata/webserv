@@ -9,17 +9,23 @@ HttpHandler(request, NULL, server), _error(error)
     handleRequest(response);
 }
 
+ErrorHandler::ErrorHandler(int error, const Request& request, const ServerParser& server) :
+HttpHandler(request, NULL, server), _error(error)
+{
+
+}
+
 ErrorHandler::ErrorHandler(const ErrorHandler& other) : HttpHandler(other) {}
 ErrorHandler::~ErrorHandler() {}
 
 // Methods
 
-std::string buildError(int code, const ServerParser& config);
+std::string buildError(int code);
 std::string getFileContent(std::string path);
 
 std::string ErrorHandler::getErrorBody() const
 {
-    const std::string& path = buildError(_error, _server);
+    const std::string& path = buildError(_error);
     std::string content = "";
 
     if (HttpHandler::isFileInError(R_OK, path) == 0)
@@ -42,9 +48,15 @@ void ErrorHandler::fillErrorResponse(Response& response) const
             break ;
         case 405: response.setResponseData(405, "Method Not Allowed", getErrorBody());
             break ;
-        case 413: response.setResponseData(413, "Method Not Allowed", getErrorBody());
+        case 413: response.setResponseData(413, "Payload Too Large", getErrorBody());
+            break ;
+        case 414: response.setResponseData(414, "URI too long", getErrorBody());
             break ;
         case 500: response.setResponseData(500, "Internal Server Error", getErrorBody());
+            break ;
+        case 504: response.setResponseData(504, "Gateway Timeout", getErrorBody());
+            break ;
+        case 505: response.setResponseData(505, "Version Not Supported", getErrorBody());
             break ;
     }
 }
@@ -52,6 +64,5 @@ void ErrorHandler::fillErrorResponse(Response& response) const
 // Methods
 void ErrorHandler::handleRequest(Response& response)
 {
-    std::cout << "ERROR !" << std::endl;
     fillErrorResponse(response);
 }

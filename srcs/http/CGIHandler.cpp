@@ -205,6 +205,14 @@ void CGIHandler::handleRequest(Response& response)
 {
     std::cout << "CGI request !" << std::endl;
 
+    int res = HttpHandler::isFileInError(R_OK, _url);
+    if (res != 0)
+    {
+        std::cout << "CGI fil in error" << std::endl;
+        ErrorHandler(res, _request, _server);
+        return ;
+    }
+
     response.setVersion(_request.getVersion());
     
     int fd[2];
@@ -229,28 +237,6 @@ void CGIHandler::handleRequest(Response& response)
     ssize_t n;
 
     fcntl(fd[0], F_SETFL, O_NONBLOCK);
-
-    std::cout << "Path: " << _url << std::endl;
-    /*while(true)
-    {
-        if (std::time(NULL) - start > TIMEOUT)
-        {
-            kill(pid, SIGKILL);
-            waitpid(pid, NULL, 0);
-            close(fd[0]);
-            ErrorHandler(504, _request, _server, response);
-            return;
-        }
-
-        n = read(fd[0], buf, sizeof(buf));
-        
-        if (n > 0)
-            data.append(buf, n);
-        //else if (errno == EAGAIN || errno == EWOULDBLOCK)
-        //    continue;
-        else
-            break;
-    }*/
 
     while (true)
     {

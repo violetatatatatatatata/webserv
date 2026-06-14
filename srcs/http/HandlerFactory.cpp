@@ -19,6 +19,7 @@ static bool isCgiRequest(const LocationParser* loc, const std::string& path, std
         {
             if (tmp_ext == *it)
             {
+
                 ext = tmp_ext;
                 return true;
             }
@@ -28,7 +29,7 @@ static bool isCgiRequest(const LocationParser* loc, const std::string& path, std
     return false;
 }
 
-static bool isRegularFile(const std::string& path)
+/*static bool isRegularFile(const std::string& path)
 {
     struct stat s;
 
@@ -36,6 +37,25 @@ static bool isRegularFile(const std::string& path)
         return false;
 
     return S_ISREG(s.st_mode);
+}*/
+
+static int isRegularFile(const std::string& path)
+{
+    struct stat s;
+
+    if (stat(path.c_str(), &s) != 0)
+    {
+        if (errno == EACCES)
+            return 403;
+        if (errno == ENOENT || errno == ENOTDIR)
+            return 404;
+        return 500;
+    }
+
+    if (!S_ISREG(s.st_mode))
+        return 403;
+
+    return 0;
 }
 
 static std::string joinPath(const std::string& dir, const std::string& file)
@@ -131,11 +151,7 @@ static std::string resolvePath(
 }
 
 // Methods
-HttpHandler* HandlerFactory::create(
-    const Request& request,
-    const LocationParser* location,
-    const ServerParser& server,
-    Response& response)
+HttpHandler* HandlerFactory::create(const Request& request, const LocationParser* location, const ServerParser& server)
 {
     // 1. REDIRECT
     if (location && !location->getRedirect().empty())
@@ -143,9 +159,11 @@ HttpHandler* HandlerFactory::create(
 
     std::string path = resolvePath(request, location, server); // directory traversal attack!!
     std::string ext;
-
+    int errorStatus = isRegularFile(path);
+    std::cout << "Path: " << path << std::endl;
+    
     // 2. CGI
-    if (location && isCgiRequest(location, path, ext))
+    if (location && isCgiRequest(location, path, ext) && errorStatus == 0)// && isRegularFile(path) == 0)
         return new CGIHandler(request, location, server, path, ext);
 
     // 3. FILE or DIRECTORY
@@ -160,12 +178,16 @@ HttpHandler* HandlerFactory::create(
         if (location && location->getAutoindex())
             return new AutoIndexHandler(request, location, server, path);
 
-        return new ErrorHandler(403, request, server, response);
+        return new ErrorHandler(403, request, server);
     }
 
     // 4. REGULAR FILE
     if (isRegularFile(path))
         return new StaticHandler(request, location, server, path);
-
-    return new ErrorHandler(404, request, server, response);
+   
+    std::cout << "Error: " << errorStatus << std::endl;
+    if (errorStatus == 0)
+        return new ErrorHandler(404, request, server);
+    else
+        return new ErrorHandler(errorStatus, request, server);
 }

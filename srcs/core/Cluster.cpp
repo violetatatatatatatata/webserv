@@ -83,6 +83,11 @@ Server* Cluster::findServer(int fd) {
 
 void Cluster::run() {
 
+	if (_servers.empty()) {
+		print_msg("No server socket could be initialized", FATAL);
+		return;
+	}
+
 	std::ostringstream start;
 	start << "Server running with " << _servers.size() << " sockets";
 	print_msg(start.str(), START);
@@ -235,13 +240,17 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 		queueResponse(client, clientFd, response);
 		return;
 	}
+	
+	if (request.getVersion() != "HTTP/1.0" && request.getVersion() != "HTTP/1.1") {
+		ErrorHandler(505, request, serverConfig, response);
+		queueResponse(client, clientFd, response);
+		return;
+	}
 
 	serverConfig = Router::findMatchingServer(request, server->getConfigs());
 
 	const LocationParser* location = Router::findMatchingLocation(request, serverConfig);
-
-	HttpHandler* const handler = HandlerFactory::create(
-		request, location, serverConfig, response);
+	HttpHandler* const handler = HandlerFactory::create(request, location, serverConfig);
 
 	if (handler) {
 		handler->handleRequest(response);
@@ -376,7 +385,7 @@ void Cluster::compactPollFds() {
 void Cluster::checkInactiveClients() {
 
 	time_t now    = time(NULL);
-	int    timeout = 60; // segundos
+	int    timeout = 60;
 
 	std::map<int, Client>::iterator it = _clientsFds.begin();
 	while (it != _clientsFds.end()) {
