@@ -68,6 +68,13 @@ bool ServerParser::parseServer(size_t &pos, const fileVector &file)
 	if (!this->parseBlock(pos, file))
 		return false;
 	this->_server_names.push_back(this->getHost());
+	if (this->_port > 65535) {
+		print_msg("Invalid argument.", ERR);
+		return false;
+	}   
+	if (this->_port > 0 && this->_port < 1024) {
+		print_msg("Attempting to connect to a reserved port.", WARN);
+	}   
 
 	return true;
 }
@@ -85,29 +92,29 @@ void ServerParser::addLocation(const LocationParser& location) {
 }
 
 int ServerParser::getPort() const {
-    return _port;
+	return _port;
 }
 
 size_t ServerParser::getMaxBodySize() const {
-    return _max_body_size;
+	return _max_body_size;
 }
 
 const std::string& ServerParser::getHost() const {
-    return _host;
+	return _host;
 }
 
 const std::string& ServerParser::getRoot() const {
-    return _root;
+	return _root;
 }
 
 const std::string& ServerParser::getIndex() const {
-    return _index;
+	return _index;
 }
 
 const std::vector<std::string>& ServerParser::getServerNames() const {
-    return _server_names;
+	return _server_names;
 }
 
 const std::vector<LocationParser>& ServerParser::getLocations() const {
-    return _locations;
+	return _locations;
 }
