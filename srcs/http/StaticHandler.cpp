@@ -71,31 +71,12 @@ std::string getFileContent(std::string path);
 
 void StaticHandler::handleGET(Response& response) const
 {
-    /*int res = isFileInError(R_OK, _absolute_path);
+    int res = isFileInError(R_OK, _absolute_path);
     if (res != 0 )
     {
-    std::cout << "HERE in  GET" << std::endl;
         ErrorHandler errorResponse(res, _request, _server, response);
         return ;
-    }*/
-
-    int fd = open(_absolute_path.c_str(), O_RDONLY);
-    if (fd < 0)
-    {
-        std::cout << "Get error, path: " << _absolute_path << std::endl;
-        if (errno == ENOENT || errno == ENOTDIR)
-        {
-            ErrorHandler errorResponse(404, _request, _server, response);
-            return;
-        }
-        if (errno == EACCES)
-        {
-            ErrorHandler errorResponse(403, _request, _server, response);
-            return;
-        }
-        ErrorHandler errorResponse(500, _request, _server, response);
-        return;
-    }
+    }   
 
     std::string content = getFileContent(_absolute_path);
 
@@ -110,13 +91,31 @@ void StaticHandler::handlePOST(Response& response) const
 
 void StaticHandler::handleDELETE(Response& response) const
 {
-    int res = isFileInError(F_OK, _absolute_path); 
-    if (res != 0)
-    {
-        ErrorHandler errorResponse(res, _request, _server, response);
-        return ;
-    }
+    int ret = std::remove(_absolute_path.c_str());
 
-    std::remove(_absolute_path.c_str());
-    response.setResponseData(204, "No Content", "");
+    if (ret == 0)
+        response.setResponseData(204, "No Content", "");
+    else
+    {
+        switch (errno)
+        {
+            case ENOENT:
+            {
+                ErrorHandler errorResponse(404, _request, _server, response);
+                break;
+            }
+            case EACCES:
+            case EPERM:
+            {
+                ErrorHandler errorResponse(403, _request, _server, response);
+                break;
+            }
+
+            default:
+            {
+                ErrorHandler errorResponse(500, _request, _server, response);
+                break;
+            }
+        }
+    }
 }

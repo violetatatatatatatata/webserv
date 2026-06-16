@@ -28,16 +28,6 @@ static bool isCgiRequest(const LocationParser* loc, const std::string& path, std
     return false;
 }
 
-/*static bool isRegularFile(const std::string& path)
-{
-    struct stat s;
-
-    if (stat(path.c_str(), &s) != 0)
-        return false;
-
-    return S_ISREG(s.st_mode);
-}*/
-
 static int isRegularFile(const std::string& path)
 {
     struct stat s;
@@ -158,8 +148,6 @@ HttpHandler* HandlerFactory::create(const Request& request, const LocationParser
 
     std::string path = resolvePath(request, location, server); // directory traversal attack!!
     std::string ext;
-    //int errorStatus = isRegularFile(path);
-    std::cout << "Path: " << path << std::endl;
     
     // 2. CGI
     if (location && isCgiRequest(location, path, ext))// && errorStatus == 0)// && isRegularFile(path) == 0)
@@ -180,10 +168,5 @@ HttpHandler* HandlerFactory::create(const Request& request, const LocationParser
         return new ErrorHandler(403, request, server);
     }
 
-    // 4. REGULAR FILE
-    //if (isRegularFile(path) == 0)
-        return new StaticHandler(request, location, server, path);
-   
-    //std::cout << "Error: " << isRegularFile(path) << std::endl;
-    //return new ErrorHandler(400, request, server);
+    return new StaticHandler(request, location, server, path);
 }

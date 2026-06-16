@@ -241,7 +241,7 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 		return;
 	}
 	
-	if (request.getVersion() != "HTTP/1.0" && request.getVersion() != "HTTP/1.1") {
+	if (request.getVersion() != "HTTP/1.0" && request.getVersion() != "HTTP/1.1" && request.getVersion() != "HTTP/0.9") {
 		ErrorHandler(505, request, serverConfig, response);
 		queueResponse(client, clientFd, response);
 		return;

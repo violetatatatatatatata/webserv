@@ -40,7 +40,6 @@ int HttpHandler::isFileInError(int mode, const std::string file)
     struct stat st;
 
     int res = checkStat(st, file);
-    std::cout << "Stat: " << res << " File: " << file << std::endl;
     if (res != 0)
         return res;
 

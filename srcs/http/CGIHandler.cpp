@@ -203,32 +203,13 @@ void CGIHandler::handleFd(int fd[2], Response& response) const
 
 void CGIHandler::handleRequest(Response& response)
 {
-    std::cout << "CGI request ! " << std::endl;
-
-    int fd_file = open(_url.c_str(), O_RDONLY);
-    if (fd_file < 0)
-    {
-        std::cout << "CGI error, path: " << _url << std::endl;
-        if (errno == ENOENT || errno == ENOTDIR)
-        {
-            ErrorHandler errorResponse(404, _request, _server, response);
-            return;
-        }
-        if (errno == EACCES)
-        {
-            ErrorHandler errorResponse(403, _request, _server, response);
-            return;
-        }
-        ErrorHandler errorResponse(500, _request, _server, response);
-        return;
-    }
-    /*int res = HttpHandler::isFileInError(R_OK, _url);
+    int res = HttpHandler::isFileInError(R_OK, _url);
     if (res != 0)
     {
-        std::cout << "CGI fil in error" << std::endl;
-        ErrorHandler(res, _request, _server);
+        std::cout << "CGI fil in error: " << res << std::endl;
+        ErrorHandler(res, _request, _server, response);
         return ;
-    }*/
+    }
 
     response.setVersion(_request.getVersion());
     
