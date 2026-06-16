@@ -71,15 +71,34 @@ std::string getFileContent(std::string path);
 
 void StaticHandler::handleGET(Response& response) const
 {
-    int res = isFileInError(R_OK, _absolute_path);
-    if (res != 0)
+    /*int res = isFileInError(R_OK, _absolute_path);
+    if (res != 0 )
     {
     std::cout << "HERE in  GET" << std::endl;
         ErrorHandler errorResponse(res, _request, _server, response);
         return ;
+    }*/
+
+    int fd = open(_absolute_path.c_str(), O_RDONLY);
+    if (fd < 0)
+    {
+        std::cout << "Get error, path: " << _absolute_path << std::endl;
+        if (errno == ENOENT || errno == ENOTDIR)
+        {
+            ErrorHandler errorResponse(404, _request, _server, response);
+            return;
+        }
+        if (errno == EACCES)
+        {
+            ErrorHandler errorResponse(403, _request, _server, response);
+            return;
+        }
+        ErrorHandler errorResponse(500, _request, _server, response);
+        return;
     }
 
     std::string content = getFileContent(_absolute_path);
+
     response.setResponseData(200, "OK", content);
     response.setHeader("Content-Type", response.findMIME(_absolute_path)); 
 }

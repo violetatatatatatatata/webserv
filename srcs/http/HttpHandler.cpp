@@ -20,7 +20,6 @@ static int checkStat(struct stat& st, const std::string& file)
 {
     if (stat(file.c_str(), &st) == -1)
     {
-    std::cerr << "stat(" << file << ") failed: " << strerror(errno) << std::endl;
         switch(errno)
         {
             case ENOENT:

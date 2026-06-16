@@ -26,7 +26,7 @@ std::string Response::findMIME(const std::string& path) const
     size_t pos = path.find_last_of('.');
     if (pos == std::string::npos)
     {
-        return "application/octet-stream";
+        return "text/plain";
     }
 
     std::string ext = path.substr(pos);
@@ -39,8 +39,8 @@ std::string Response::findMIME(const std::string& path) const
     if (ext == ".gif")  return "image/gif";
     if (ext == ".txt")  return "text/plain";
     if (ext == ".json") return "application/json";
-
-    return "application/octet-stream";
+    
+    return "text/plain";
 }
 
 void Response::fillHeaders()
