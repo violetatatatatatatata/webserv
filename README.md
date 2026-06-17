@@ -1,6 +1,5 @@
-*This project has been created as part of the 42 curriculum by cochatel, datienza and avelandr.*
-
 # Webserv
+*This project has been created as part of the 42 curriculum by cochatel, datienza and avelandr.*
 
 ![til](https://c.tenor.com/AD3f8wG7vFMAAAAC/tenor.gif)
 
