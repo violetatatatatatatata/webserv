@@ -18,8 +18,6 @@ HttpHandler(request, NULL, server), _error(error)
 ErrorHandler::ErrorHandler(const ErrorHandler& other) : HttpHandler(other) {}
 ErrorHandler::~ErrorHandler() {}
 
-// Methods
-
 std::string buildError(int code);
 std::string getFileContent(std::string path);
 
@@ -38,10 +36,10 @@ void ErrorHandler::fillErrorResponse(Response& response) const
 {
     response.setVersion(_request.getVersion());
 
-    switch (_error) 
+    switch (_error)
     {
         case 400: response.setResponseData(400, "Bad request", getErrorBody());
-            break ;   
+            break ;
         case 403: response.setResponseData(403, "Forbidden", getErrorBody());
             break ;
         case 404: response.setResponseData(404, "Not Found", getErrorBody());
@@ -61,7 +59,6 @@ void ErrorHandler::fillErrorResponse(Response& response) const
     }
 }
 
-// Methods
 void ErrorHandler::handleRequest(Response& response)
 {
     fillErrorResponse(response);

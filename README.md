@@ -1,13 +1,31 @@
-[http y sockets](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa)
-[artículo sobre webserver](https://m4nnb3ll.medium.com/webserv-building-a-non-blocking-web-server-in-c-98-a-42-project-04c7365e4ec7i)
+*This project has been created as part of the 42 curriculum by cochatel, datienza and avelandr.*
 
 # Webserv
+
+![til](https://c.tenor.com/AD3f8wG7vFMAAAAC/tenor.gif)
 
 ## Description
 Webserv is a non-blocking HTTP/1.1 server written in C++98. The main goal of the project is to understand the HTTP protocol in depth, network socket management, and Input/Output multiplexing using system calls such as `select`, `poll`, `epoll`, or `kqueue`, preventing any blocking behavior during read or write operations.
 
+## Instructions
+To compile the whole project use the rule:
+``` bash
+make
+```
+
+It creates the executable `webserv` you can run with a configuration file.
+``` bash
+./webserv [config file]
+```
+
+## Resources
+[HTTP and sockets](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa)
+[Webserver article](https://m4nnb3ll.medium.com/webserv-building-a-non-blocking-web-server-in-c-98-a-42-project-04c7365e4ec7i)
+AI Usage: AI tools (Gemini) were utilized during this project to help clarify complex networking concepts, assist in designing the configuration parser logic, and suggest testing approaches. Helped creating testing files (a.k.a. HTML test pages and configuration files to test the parsing) we used to validate the server's behavior and catch edge cases during its initialdevelopment, but replaced in the end of the project.
+
 ## Architecture
-The project is organized under a modular design inspired by an event-driven architecture with clear design patterns, dividing its responsibilities as follows:
+
+In global terms, the project is organized as follows:
 
 ![whole project explanation](.images/webserv.png)
 
@@ -19,7 +37,7 @@ The project is organized under a modular design inspired by an event-driven arch
 ![core diagram](.images/core.png)
 
 ### Parse (Configuration)
-* **Configuration (`Config.cpp`, `Parser.cpp`, `ServerParser.cpp`, `LocationParser.cpp`, `Reader.cpp`):** Module responsible for reading and validating a structured configuration file (with a syntax similar to Nginx). It extracts essential directives such as listening ports, server names (`server_name`), client body size limits (`client_max_body_size`), custom error pages, and specific routes (`location`).
+* **Configuration (`Config.cpp`, `Parser.cpp`, `ServerParser.cpp`, `LocationParser.cpp`, `Reader.cpp`):** Module responsible for reading and validating a structured configuration file (with a syntax similar to Nginx).
 
 ![parsing diagram](.images/parse.png)
 
@@ -36,11 +54,11 @@ The project is organized under a modular design inspired by an event-driven arch
 
 ![http diagram](.images/http.png)
 
-### Utility Tools
+#### Utility Tools
 * **Utils (`Utils.cpp`, `Error.cpp`):** Contains helper functions for string manipulation, data conversion, and error management.
 * **print_msg:** Centralized system for server log registration. It allows classifying and emitting log traces by clearly distinguishing importance levels and message types.
 
-## Structure
+### Structure
 ```text
 ├── Makefile
 ├── srcs
@@ -97,15 +115,4 @@ The project is organized under a modular design inspired by an event-driven arch
 │       └── ServerParser.hpp
 └── www
     └── index.html
-```
-
-## Compilation
-To compile the whole project use the rule
-``` bash
-make
-```
-
-It creates the executable `webserv`
-``` bash
-./webserv [config file]
 ```

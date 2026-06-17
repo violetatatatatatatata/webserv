@@ -92,9 +92,8 @@ int Request::parse(const std::string& raw)
     std::istringstream stream(raw);
     std::string line;
 
-    // 1. Request line
     if (!std::getline(stream, line))
-      return -1; //throw std::runtime_error("Empty request");
+      return -1;
 
     if (!line.empty() && line[line.size() - 1] == '\r')
         line.erase(line.size() - 1);
@@ -105,13 +104,12 @@ int Request::parse(const std::string& raw)
     reqLine >> method >> uri >> version;
 
     if (method.empty() || uri.empty() || version.empty())
-      return -1; //throw std::runtime_error("Malformed request line");
+      return -1;
 
     setMethod(method);
     setURI(uri);
     setVersion(version);
 
-    // 2. Headers
     while (std::getline(stream, line))
     {
         if (line == "\r" || line.empty())
@@ -122,23 +120,20 @@ int Request::parse(const std::string& raw)
 
         size_t pos = line.find(':');
         if (pos == std::string::npos)
-            continue; // Invalid header
+            continue;
 
         std::string key = line.substr(0, pos);
         std::string value = line.substr(pos + 1);
 
-        // trim left spaces
         while (!value.empty() && value[0] == ' ')
             value.erase(0, 1);
 
         setHeader(key, value);
     }
 
-    // Check if Content-Length header is present with POST
     if (getMethod() == "POST" && getHeader("Content-Length").empty())
       return -1;
 
-    // 3. Body
     std::string body;
     while (std::getline(stream, line))
     {
@@ -163,5 +158,4 @@ void Request::print()
         std::cout << it->first << " : " << it->second << std::endl;
     }
             		std::cout << _body << std::endl;
-
     }

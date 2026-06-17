@@ -66,10 +66,6 @@ void Cluster::init(const std::map<int, std::vector<ServerParser> >& configs) {
 
 		this->_servers.push_back(newServer);
 	}
-
-	std::ostringstream oss;
-	oss << "Total server sockets: " << _servers.size();
-	print_msg(oss.str(), DEBUG);
 }
 
 Server* Cluster::findServer(int fd) {
@@ -113,22 +109,13 @@ void Cluster::run() {
 				continue;
 
 			if (revents & POLLIN) {
-				std::ostringstream oss;
-				oss << "POLLIN fd=" << currentFd << " index=" << i;
-				print_msg(oss.str(), DEBUG);
-
 				if (findServer(currentFd))
 					acceptClient(currentFd);
 				else
 					handleClientData(currentFd, i);
 			}
-			else if (revents & POLLOUT) {
-				std::ostringstream oss;
-				oss << "POLLOUT fd=" << currentFd << " index=" << i;
-				print_msg(oss.str(), DEBUG);
-
+			else if (revents & POLLOUT)
 				handleClientWrite(currentFd, i);
-			}
 		}
 		if (_needsCompaction) {
 			compactPollFds();
@@ -180,11 +167,6 @@ void Cluster::handleClientData(int clientFd, size_t pollIndex) {
 	int  bytes_read    = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
 
 	if (bytes_read > 0) {
-		std::ostringstream oss;
-		oss << "recv() clientFd=" << clientFd
-			<< " bytes=" << bytes_read;
-		print_msg(oss.str(), DEBUG);
-
 		Client& client = _clientsFds[clientFd];
 		client.appendData(buffer, bytes_read);
 		client.updateActivity();
@@ -212,19 +194,12 @@ void Cluster::handleClientData(int clientFd, size_t pollIndex) {
 }
 
 void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex) {
-
-	std::ostringstream start;
-	start << "Processing request clientFd=" << clientFd
-		  << " serverFd=" << client.getServerFd();
-	print_msg(start.str(), DEBUG);
-
 	Server* server = findServer(client.getServerFd());
 	if (!server) {
 		print_msg("Server not found for client", ERR);
 		disconnectClient(clientFd, pollIndex);
 		return;
 	}
-
 	Request      request;
 	Response     response;
 	ServerParser serverConfig;
@@ -240,7 +215,6 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 		queueResponse(client, clientFd, response);
 		return;
 	}
-	
 	if (request.getVersion() != "HTTP/1.0" && request.getVersion() != "HTTP/1.1" && request.getVersion() != "HTTP/0.9") {
 		ErrorHandler(505, request, serverConfig, response);
 		queueResponse(client, clientFd, response);
@@ -276,14 +250,8 @@ void Cluster::handleClientWrite(int clientFd, size_t pollIndex) {
 
 	Client& client = it->second;
 
-	if (!client.hasDataToSend()) {
-		std::ostringstream oss;
-		oss << "POLLOUT fired but nothing to send clientFd=" << clientFd;
-		print_msg(oss.str(), DEBUG);
-		disconnectClient(clientFd, pollIndex);
+	if (!client.hasDataToSend())
 		return;
-	}
-
 	ssize_t sent = send(clientFd,
 						client.getWritePtr(),
 						client.getWriteRemaining(),
@@ -291,13 +259,6 @@ void Cluster::handleClientWrite(int clientFd, size_t pollIndex) {
 
 	if (sent > 0) {
 		client.advanceWriteOffset(static_cast<size_t>(sent));
-
-		std::ostringstream oss;
-		oss << "send() clientFd=" << clientFd
-			<< " bytes=" << sent
-			<< " remaining=" << client.getWriteRemaining();
-		print_msg(oss.str(), DEBUG);
-
 		if (client.isResponseFullySent()) {
 			std::ostringstream done;
 			done << "Response fully sent clientFd=" << clientFd;

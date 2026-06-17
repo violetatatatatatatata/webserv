@@ -19,7 +19,6 @@ AutoIndexHandler::AutoIndexHandler(const AutoIndexHandler& other) : HttpHandler(
 {
 }
 
-// Methods
 void AutoIndexHandler::handleRequest(Response& response)
 {
     std::cout << "Autoindex request !" << std::endl;
@@ -31,7 +30,7 @@ void AutoIndexHandler::handleRequest(Response& response)
 
     html << "<html>\n";
     html << "<head>\n";
-    html << "\t<title>Index of " << _request.getURI() << "</title>\n";  // <h1> retiré du title
+    html << "\t<title>Index of " << _request.getURI() << "</title>\n";
     html << "</head>\n";
     html << "<body style=\"background-color: rgb(238, 225, 200)\">\n";
     html << "\t<h1>Index of " << _request.getURI() << "</h1>\n";
@@ -55,5 +54,5 @@ void AutoIndexHandler::handleRequest(Response& response)
     html << "</html>";
 
     std::cout << html << std::endl;
-    response.setResponseData(200, "OK", html.str()); 
+    response.setResponseData(200, "OK", html.str());
 }

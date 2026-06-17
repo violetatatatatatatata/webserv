@@ -8,14 +8,13 @@ HttpHandler::HttpHandler(const Request& request, const LocationParser* location,
 {
 }
 
-HttpHandler::HttpHandler(const HttpHandler& other) : 
+HttpHandler::HttpHandler(const HttpHandler& other) :
 _request(other._request), _location(other._location), _server(other._server)
 {
 }
 
 HttpHandler::~HttpHandler(){}
 
-// Methods
 static int checkStat(struct stat& st, const std::string& file)
 {
     if (stat(file.c_str(), &st) == -1)
@@ -35,7 +34,7 @@ static int checkStat(struct stat& st, const std::string& file)
     return 0;
 }
 
-int HttpHandler::isFileInError(int mode, const std::string file) 
+int HttpHandler::isFileInError(int mode, const std::string file)
 {
     struct stat st;
 

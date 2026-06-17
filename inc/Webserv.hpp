@@ -36,6 +36,7 @@
 # include <unistd.h>
 # include <stdio.h>
 # include <stdlib.h>
+# include <csignal>
 # include <string.h>
 # include <cstdlib>
 # include <fcntl.h>

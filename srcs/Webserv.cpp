@@ -14,16 +14,15 @@
 #include <Config.hpp>
 #include <Cluster.hpp>
 
-int main(int argc, char **argv){
-
+int main(int argc, char **argv)
+{
 	if (argc != 2)
 		return (print_msg("Uso: ./webserv [archivo.config]", FATAL));
-
 	Config parser;
 	if (parser.parseFile(argv[1]) == 0) {
 		Cluster cluster(parser.getServers());
 		cluster.run();
 	}
 	else
-		return (print_msg("mu mal :(", DEBUG));
+		return (print_msg("Error parsing config file. Please check and try again!", ERR));
 }

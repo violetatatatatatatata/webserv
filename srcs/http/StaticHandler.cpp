@@ -13,11 +13,8 @@ HttpHandler(request, location, server), _absolute_path(absolute_path)
 
 StaticHandler::~StaticHandler() {}
 
-// Methods
 bool StaticHandler::isMethodAuthorized() const
 {
-    // If no methods defined in config -> only GET is authorized
-    //--> El methods fuera de location ne esta implementado
     if (_location == NULL || _location->getMethods().empty())
     {
         if (_request.getMethod() == "GET")
@@ -76,12 +73,12 @@ void StaticHandler::handleGET(Response& response) const
     {
         ErrorHandler errorResponse(res, _request, _server, response);
         return ;
-    }   
+    }
 
     std::string content = getFileContent(_absolute_path);
 
     response.setResponseData(200, "OK", content);
-    response.setHeader("Content-Type", response.findMIME(_absolute_path)); 
+    response.setHeader("Content-Type", response.findMIME(_absolute_path));
 }
 
 void StaticHandler::handlePOST(Response& response) const

@@ -21,7 +21,6 @@ const ServerParser& Router::findMatchingServer(const Request& request, const std
 		}
 	}
 
-  // If no match, return default server
 	return servers.at(0);
 }
 

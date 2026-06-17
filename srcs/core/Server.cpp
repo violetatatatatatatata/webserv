@@ -53,17 +53,13 @@ const std::vector<ServerParser>& Server::getConfigs() const {
 	return this->_configs;
 }
 
-bool Server::createSocket() {
-
+bool Server::createSocket()
+{
 	this->_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_fd < 0) {
 		print_msg("socket() failed", FATAL);
 		return false;
 	}
-
-	std::ostringstream oss;
-	oss << "Socket created fd=" << this->_fd << " port=" << this->_port;
-	print_msg(oss.str(), DEBUG);
 	return true;
 }
 

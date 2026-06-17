@@ -3,7 +3,6 @@
 #include "StaticHandler.hpp"
 #include "ErrorHandler.hpp"
 
-// Functions
 static bool isCgiRequest(const LocationParser* loc, const std::string& path, std::string& ext)
 {
     if (!loc)
@@ -60,33 +59,6 @@ static std::string joinPath(const std::string& dir, const std::string& file)
     return dir + "/" + file;
 }
 
-// Multi index Version
-/*static const std::vector<std::string>& getCorrectIndex(const LocationParser* location, const ServerParser& server)
-{
-    if (location->getIndex().empty())
-        return server->getIndex();
-    else
-        return location->getIndex();
-}
-
-static std::string getIndexFile(
-    const std::string& dirPath,
-    const std::vector<std::string>& indexList)
-{
-    if (indexList.empty())
-        return "";
-
-    for (size_t i = 0; i < indexList.size(); i++)
-    {
-        std::string fullPath = joinPath(dirPath, indexList[i]);
-
-        if (isRegularFile(fullPath))
-            return indexList[i];
-    }
-
-    return "";
-}*/
-
 static const std::string& getCorrectIndex(const LocationParser* location, const ServerParser& server)
 {
     if (!location || location->getIndex().empty())
@@ -139,21 +111,17 @@ static std::string resolvePath(
     return location->getRoot() + relativePath;
 }
 
-// Methods
 HttpHandler* HandlerFactory::create(const Request& request, const LocationParser* location, const ServerParser& server)
 {
-    // 1. REDIRECT
     if (location && !location->getRedirect().empty())
         return new RedirectHandler(request, location, server);
 
-    std::string path = resolvePath(request, location, server); // directory traversal attack!!
+    std::string path = resolvePath(request, location, server);
     std::string ext;
-    
-    // 2. CGI
-    if (location && isCgiRequest(location, path, ext))// && errorStatus == 0)// && isRegularFile(path) == 0)
+
+    if (location && isCgiRequest(location, path, ext))/
         return new CGIHandler(request, location, server, path, ext);
 
-    // 3. FILE or DIRECTORY
     if (isDirectory(path))
     {
         std::string index = getCorrectIndex(location, server);
