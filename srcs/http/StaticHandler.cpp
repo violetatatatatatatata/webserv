@@ -41,7 +41,7 @@ void StaticHandler::handleRequest(Response& response)
         ErrorHandler errorResponse(405, _request, _server, response);
         return ;
     }
-
+    
     std::string methods[] =
     {
         "GET",

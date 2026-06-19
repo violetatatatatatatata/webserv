@@ -27,25 +27,6 @@ static bool isCgiRequest(const LocationParser* loc, const std::string& path, std
     return false;
 }
 
-static int isRegularFile(const std::string& path)
-{
-    struct stat s;
-
-    if (stat(path.c_str(), &s) != 0)
-    {
-        if (errno == EACCES)
-            return 403;
-        if (errno == ENOENT || errno == ENOTDIR)
-            return 404;
-        return 500;
-    }
-
-    if (!S_ISREG(s.st_mode))
-        return 403;
-
-    return 0;
-}
-
 static std::string joinPath(const std::string& dir, const std::string& file)
 {
     if (dir.empty())
@@ -65,21 +46,6 @@ static const std::string& getCorrectIndex(const LocationParser* location, const 
         return server.getIndex();
     else
         return location->getIndex();
-}
-
-static std::string getIndexPath(
-    const std::string& dirPath,
-    const std::string& index)
-{
-    if (index.empty())
-        return "";
-
-    std::string fullPath = joinPath(dirPath, index);
-
-    if (isRegularFile(fullPath))
-            return fullPath;
-
-    return "";
 }
 
 static bool isDirectory(const std::string& path)
@@ -125,7 +91,7 @@ HttpHandler* HandlerFactory::create(const Request& request, const LocationParser
     if (isDirectory(path))
     {
         std::string index = getCorrectIndex(location, server);
-        std::string indexPath = getIndexPath(path, index);
+        std::string indexPath = joinPath(path, index);
 
         if (!indexPath.empty())
             return new StaticHandler(request, location, server, indexPath);
