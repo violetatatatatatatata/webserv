@@ -119,7 +119,7 @@ HttpHandler* HandlerFactory::create(const Request& request, const LocationParser
     std::string path = resolvePath(request, location, server);
     std::string ext;
 
-    if (location && isCgiRequest(location, path, ext))/
+    if (location && isCgiRequest(location, path, ext))
         return new CGIHandler(request, location, server, path, ext);
 
     if (isDirectory(path))

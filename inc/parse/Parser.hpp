@@ -70,7 +70,10 @@ class SimpleAction : public IAction {
 		std::string _name;
 	public:
 		SimpleAction(T C::*member, const std::string& name) : _member(member), _name(name) {}
-		virtual IAction* clone() const { return new SimpleAction<C, T>(_member, _name); }
+		virtual IAction* clone() const { 
+			return new SimpleAction<C, T>(_member, _name);
+		}
+
 		virtual bool parse(void* obj, size_t &pos, const fileVector &file) {
 			C* instance = static_cast<C*>(obj);
 			pos++;
@@ -107,7 +110,9 @@ class BoolAction : public IAction {
 		std::string _name;
 	public:
 		BoolAction(bool C::*member, const std::string& name) : _member(member), _name(name) {}
-		virtual IAction* clone() const { return new BoolAction<C>(_member, _name); }
+		virtual IAction* clone() const {
+			return new BoolAction<C>(_member, _name);
+		}
 		virtual bool parse(void* obj, size_t &pos, const fileVector &file) {
 			C* instance = static_cast<C*>(obj);
 			pos++;
@@ -115,14 +120,17 @@ class BoolAction : public IAction {
 				print_msg(_name + ": missing boolean value", ERR);
 				return false;
 			}
-			if (file[pos] == "on")       (instance->*_member) = true;
-			else if (file[pos] == "off") (instance->*_member) = false;
+			if (file[pos] == "on")
+				(instance->*_member) = true;
+			else if (file[pos] == "off")
+				(instance->*_member) = false;
 			else {
 				print_msg(_name + ": must be 'on' or 'off'", ERR);
 				return false;
 			}
 			pos++;
-			if (pos >= file.size() || file[pos] != ";") return false;
+			if (pos >= file.size() || file[pos] != ";")
+				return false;
 			return true;
 		}
 };
@@ -142,7 +150,9 @@ class VectorAction : public IAction {
 		std::string _name;
 	public:
 		VectorAction(std::vector<V> C::*member, const std::string& name) : _member(member), _name(name) {}
-		virtual IAction* clone() const { return new VectorAction<C, V>(_member, _name); }
+		virtual IAction* clone() const {
+			return new VectorAction<C, V>(_member, _name);
+		}
 		virtual bool parse(void* obj, size_t &pos, const fileVector &file) {
 			C* instance = static_cast<C*>(obj);
 			pos++;
