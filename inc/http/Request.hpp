@@ -15,7 +15,7 @@ class Request
 
         // Methods
         int parse(const std::string& raw);
-        void print();
+        //void print();
 
         // Getters
         int                 getSocketFd() const;

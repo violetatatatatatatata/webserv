@@ -15,7 +15,6 @@ RedirectHandler::~RedirectHandler()
 // Methods
 void RedirectHandler::handleRequest(Response& response)
 {
-    std::cout << "The request will be resolved as a Redirection." << std::endl;
     response.setVersion(_request.getVersion());
 
     int code;

@@ -147,9 +147,9 @@ int Request::parse(const std::string& raw)
     return (setBody(body), 0);
 }
 
-void Request::print()
-    {
-      		std::cout << _method << std::endl;
+/*void Request::print()
+{
+  	std::cout << _method << std::endl;
 
     for (std::map<std::string, std::string>::iterator it = _headers.begin();
          it != _headers.end();
@@ -159,3 +159,4 @@ void Request::print()
     }
             		std::cout << _body << std::endl;
     }
+*/
