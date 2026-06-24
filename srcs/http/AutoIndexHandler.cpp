@@ -21,8 +21,6 @@ AutoIndexHandler::AutoIndexHandler(const AutoIndexHandler& other) : HttpHandler(
 
 void AutoIndexHandler::handleRequest(Response& response)
 {
-    std::cout << "Autoindex request !" << std::endl;
-
     response.setVersion(_request.getVersion());
     DIR* dir = opendir(_directory.c_str());
 

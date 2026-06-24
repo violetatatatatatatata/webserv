@@ -46,8 +46,6 @@ HttpHandler(request, location, server), _url(url), _ext(extension)
         _binName = _binPath.substr(slash + 1);
     else
         _binName = _binPath;
-
-    std::cout << "Path name: " << _binPath << "  Bin name: " << _binName << std::endl; 
 }
 
 CGIHandler::~CGIHandler() {}
@@ -206,7 +204,6 @@ void CGIHandler::handleRequest(Response& response)
     int res = HttpHandler::isFileInError(R_OK, _url);
     if (res != 0)
     {
-        std::cout << "CGI fil in error: " << res << std::endl;
         ErrorHandler(res, _request, _server, response);
         return ;
     }
