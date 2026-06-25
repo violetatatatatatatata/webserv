@@ -1,6 +1,6 @@
 #include <Response.hpp>
 
-Response::Response() : _error_code(0) {}
+Response::Response() : _error_code(0), _pipeFd(-1) {}
 Response::~Response() {}
 
 Response::Response(const Response& other)
@@ -85,4 +85,15 @@ void Response::setResponseData(int error, const std::string& reasonPhrase, const
 void Response::setHeader(const std::string& header, const std::string& value)
 {
   _headers[header] = value;
+}
+
+void Response::setPipeFd(int pipeFd)
+{
+  _pipeFd = pipeFd;
+}
+
+// Getters
+int Response::getPipeFd() const
+{
+  return _pipeFd;
 }

@@ -22,6 +22,9 @@ bool StaticHandler::isMethodAuthorized() const
     }
     else
     {
+        if (_request.getMethod() == "POST")
+            return false;
+
         std::vector<std::string>::const_iterator it;
         for(it = _location->getMethods().begin(); it < _location->getMethods().end(); it++)
         {
@@ -45,14 +48,12 @@ void StaticHandler::handleRequest(Response& response)
     std::string methods[] =
     {
         "GET",
-        "POST",
         "DELETE"
     };
 
     void (StaticHandler::*methodFunctions[3])(Response&) const =
     {
         &StaticHandler::handleGET,
-        &StaticHandler::handlePOST,
         &StaticHandler::handleDELETE
     };
 
@@ -79,11 +80,6 @@ void StaticHandler::handleGET(Response& response) const
 
     response.setResponseData(200, "OK", content);
     response.setHeader("Content-Type", response.findMIME(_absolute_path));
-}
-
-void StaticHandler::handlePOST(Response& response) const
-{
-    handleGET(response);
 }
 
 void StaticHandler::handleDELETE(Response& response) const

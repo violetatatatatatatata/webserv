@@ -204,19 +204,23 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 	Response     response;
 	ServerParser serverConfig;
 
-	if (client.isBodyTooLarge()) {
-		ErrorHandler(413, request, serverConfig, response);
-		queueResponse(client, clientFd, response);
-		return;
-	}
-
 	if (request.parse(client.getBuffer()) != 0) {
+		response.setVersion("HTTP/1.1");
 		ErrorHandler(400, request, serverConfig, response);
 		queueResponse(client, clientFd, response);
 		return;
 	}
+	
 	if (request.getVersion() != "HTTP/1.0" && request.getVersion() != "HTTP/1.1" && request.getVersion() != "HTTP/0.9") {
+		response.setVersion("HTTP/1.1");
 		ErrorHandler(505, request, serverConfig, response);
+		queueResponse(client, clientFd, response);
+		return;
+	}
+	
+	response.setVersion(request.getVersion());
+	if (client.isBodyTooLarge()) {
+		ErrorHandler(413, request, serverConfig, response);
 		queueResponse(client, clientFd, response);
 		return;
 	}

@@ -36,6 +36,8 @@ void AutoIndexHandler::handleRequest(Response& response)
     html << "\t<ul>\n";
 
     struct dirent* file;
+    std::string uri = _request.getURI();
+
     while ((file = readdir(dir)) != NULL)
     {
         std::string name = file->d_name;
@@ -43,7 +45,10 @@ void AutoIndexHandler::handleRequest(Response& response)
         if (name == "." || name == "..")
             continue;
 
-        html << "\t\t<li><a href=\"" << _request.getURI() << '/' << name << "\">" << name << "</a></li>\n";
+        if (uri[uri.size() - 1] == '/')
+            html << "\t\t<li><a href=\"" << '/' << name << "\">" << name << "</a></li>\n";
+        else
+            html << "\t\t<li><a href=\"" << uri << '/' << name << "\">" << name << "</a></li>\n";
     }
 
     html << "\t</ul>\n";
@@ -51,6 +56,5 @@ void AutoIndexHandler::handleRequest(Response& response)
     html << "</body>\n";
     html << "</html>";
 
-    std::cout << html << std::endl;
     response.setResponseData(200, "OK", html.str());
 }

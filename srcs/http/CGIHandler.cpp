@@ -226,7 +226,9 @@ void CGIHandler::handleRequest(Response& response)
     
     close(fd[1]);
     
-    time_t start = std::time(NULL);
+    response.setPipeFd(fd[0]);
+
+    /*time_t start = std::time(NULL);
     char buf[1024];
     std::string data;
     ssize_t n;
@@ -273,5 +275,5 @@ void CGIHandler::handleRequest(Response& response)
     if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
         ErrorHandler(500, _request, _server, response);
     else
-        response.setResponseData(200, "OK", data);
+        response.setResponseData(200, "OK", data);*/
 }
