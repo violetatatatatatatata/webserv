@@ -226,7 +226,7 @@ void CGIHandler::handleRequest(Response& response)
     
     close(fd[1]);
     
-    response.setPipeFd(fd[0]);
+    response.setCGIState(pid, fd[0], _request.getSocketFd());
 
     /*time_t start = std::time(NULL);
     char buf[1024];

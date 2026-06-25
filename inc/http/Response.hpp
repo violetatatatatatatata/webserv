@@ -7,6 +7,14 @@
 #include <map>
 #include <iostream>
 
+struct CGIState
+{
+  bool isCgi;
+  pid_t cgiPid;
+  int pipeFd;
+  int socketFd;
+};
+
 class Response
 {
     public:
@@ -26,16 +34,15 @@ class Response
         void setVersion(const std::string& version);
         void setHeader(const std::string& header, const std::string& value);
         void setResponseData(int error, const std::string& reasonPhrase, const std::string& body);
-        void setPipeFd(int pipeFds);
+        void setCGIState(pid_t pid, int pipeFd, int socketFd);
 
         // Getters
-        int getPipeFd() const;
+        const CGIState& getCGIState() const;
 
     private:
 
-        int _error_code;
-        int _socket_Fd;
-        int _pipeFd;
+        int         _errorCode;
+        CGIState    _cgiState;
         std::string _version;
         std::string _body;
         std::string _reasonPhrase;

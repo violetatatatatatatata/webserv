@@ -22,7 +22,7 @@ class HttpHandler
     protected:
 
 
-        const Request&      _request;
-        const LocationParser*     _location;
-        const ServerParser& _server;
+        const Request&          _request;
+        const LocationParser*   _location;
+        const ServerParser&     _server;
 };

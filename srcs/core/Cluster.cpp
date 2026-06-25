@@ -232,7 +232,10 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 
 	if (handler) {
 		handler->handleRequest(response);
-		queueResponse(client, clientFd, response);
+		if (response.getCGIState().isCgi == true)
+			_cgiState.push_back(response.getCGIState());
+		else
+			queueResponse(client, clientFd, response);
 		delete handler;
 	}
 	else {

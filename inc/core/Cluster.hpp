@@ -29,10 +29,11 @@ class Request;
 
 class Cluster {
 	private:
-		std::vector<Server*> _servers;
-		std::vector<struct pollfd> _fds;
-		std::map<int, Client>      _clientsFds;
-		bool _needsCompaction;
+		std::vector<Server*>				_servers;
+		std::vector<struct pollfd>	_fds;
+		std::map<int, Client>      	_clientsFds;
+		std::vector<CGIState>				_cgiState;
+		bool												_needsCompaction;
 
 	public:
 		Cluster();

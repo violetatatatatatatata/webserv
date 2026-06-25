@@ -1,6 +1,6 @@
 #include <Response.hpp>
 
-Response::Response() : _error_code(0), _pipeFd(-1) {}
+Response::Response() : _errorCode(0) { _cgiState.isCgi = true;}
 Response::~Response() {}
 
 Response::Response(const Response& other)
@@ -13,8 +13,8 @@ Response& Response::operator=(const Response& other)
 {
     if (this != &other)
     {
-      _socket_Fd = other._socket_Fd;
-      _error_code = other._error_code;
+      _cgiState = other._cgiState;
+      _errorCode = other._errorCode;
     }
 
     return *this;
@@ -56,7 +56,7 @@ std::string Response::buildResponse()
   fillHeaders();
 
   std::ostringstream oss;
-  oss << _error_code;
+  oss << _errorCode;
   std::string responseString = _version + " " + oss.str() + " " + _reasonPhrase + "\r\n";
 
   std::map<std::string, std::string>::const_iterator it;
@@ -77,7 +77,7 @@ void Response::setVersion(const std::string& version)
 
 void Response::setResponseData(int error, const std::string& reasonPhrase, const std::string& body)
 {
-  _error_code = error;
+  _errorCode = error;
   _reasonPhrase = reasonPhrase;
   _body = body;
 }
@@ -87,13 +87,15 @@ void Response::setHeader(const std::string& header, const std::string& value)
   _headers[header] = value;
 }
 
-void Response::setPipeFd(int pipeFd)
+void Response::setCGIState(pid_t cgiPid, int pipeFd, int socketFd)
 {
-  _pipeFd = pipeFd;
+  _cgiState.cgiPid = cgiPid;
+  _cgiState.pipeFd = pipeFd;
+  _cgiState.socketFd = socketFd;
 }
 
 // Getters
-int Response::getPipeFd() const
+const CGIState& Response::getCGIState() const
 {
-  return _pipeFd;
+  return _cgiState;
 }
