@@ -12,7 +12,9 @@ struct CGIState
   bool isCgi;
   pid_t cgiPid;
   int pipeFd;
-  int socketFd;
+  int clientFd;
+  std::string version;
+  std::string output;
 };
 
 class Response
@@ -30,14 +32,15 @@ class Response
         std::string buildResponse();
 
         // Setters
-        void setSocketFd(int socket_Fd);
+        void setclientFd(int socket_Fd);
         void setVersion(const std::string& version);
         void setHeader(const std::string& header, const std::string& value);
         void setResponseData(int error, const std::string& reasonPhrase, const std::string& body);
-        void setCGIState(pid_t pid, int pipeFd, int socketFd);
+        void setCGIState(pid_t pid, int pipeFd, int clientFd);
 
         // Getters
         const CGIState& getCGIState() const;
+        const std::string& getVersion() const;
 
     private:
 

@@ -18,7 +18,7 @@ class Request
         //void print();
 
         // Getters
-        int                 getSocketFd() const;
+        int                 getclientFd() const;
         const std::string&  getMethod() const;
         const std::string&  getVersion() const;
         const std::string&  getURI() const;
@@ -26,7 +26,7 @@ class Request
         std::string  getHeader(const std::string& header) const;
 
         // Setters
-        void setSocketFd(int socketFd);
+        void setclientFd(int clientFd);
         void setPort(int port);
         void setMethod(const std::string& method);
         void setVersion(std::string& httpVersion);
@@ -39,7 +39,7 @@ class Request
         Request(const Request& other);
         Request& operator=(const Request& other);
 
-        int                                 _socketFd;
+        int                                 _clientFd;
         std::string                         _method;
         std::string                         _httpVersion;
         std::string                         _URI;

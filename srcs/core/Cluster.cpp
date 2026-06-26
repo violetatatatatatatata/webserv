@@ -45,6 +45,11 @@ Cluster& Cluster::operator=(const Cluster& other) {
 	return *this;
 }
 
+bool Cluster::isCGIPipe(int pipeFd) const
+{
+    return _cgiStates.find(pipeFd) != _cgiStates.end();
+}
+
 void Cluster::init(const std::map<int, std::vector<ServerParser> >& configs) {
 
 	signal(SIGPIPE, SIG_IGN);
@@ -75,6 +80,19 @@ Server* Cluster::findServer(int fd) {
 			return _servers[i];
 	}
 	return NULL;
+}
+
+bool Cluster::isCGIRequest(int fd) const
+{
+    for (std::map<int, CGIState>::const_iterator it = _cgiStates.begin();
+         it != _cgiStates.end();
+         ++it)
+    {
+			std::cout << "Fd: " << fd << " struct fd: " << it->second.clientFd << std::endl;
+        if (it->second.clientFd == fd)
+            return true;
+    }
+    return false;
 }
 
 void Cluster::run() {
@@ -108,11 +126,20 @@ void Cluster::run() {
 			if (handleClientError(currentFd, i, revents))
 				continue;
 
-			if (revents & POLLIN) {
-				if (findServer(currentFd))
+			if (isCGIPipe(currentFd)) {
+					std::cout << "CGI pipe: " << currentFd << std::endl;
+					handleCGI(currentFd);
+				}
+			else if (revents & POLLIN & !isCGIRequest(currentFd)) {
+				
+				if (findServer(currentFd)) {
+					std::cout << "AcceptClient: " << currentFd <<  std::endl;
 					acceptClient(currentFd);
-				else
+					}
+				else {
+					std::cout << "handleCLientData: " << currentFd <<  std::endl;
 					handleClientData(currentFd, i);
+					}
 			}
 			else if (revents & POLLOUT)
 				handleClientWrite(currentFd, i);
@@ -123,6 +150,92 @@ void Cluster::run() {
 	checkInactiveClients();
 	}
 }
+
+void Cluster::handleCGI(int pipeFd)
+{
+	std::map<int, CGIState>::iterator it = _cgiStates.find(pipeFd);
+  CGIState &cgi = it->second;
+
+  char buf[1024];
+  ssize_t n = read(pipeFd, buf, sizeof(buf));
+
+	std::cout << "Read nb: " << n << std::endl;
+	if (n == -1) {
+    printf("%d\n", errno);
+}
+
+int flags = fcntl(pipeFd, F_GETFL);
+printf("nonblock=%d\n", (flags & O_NONBLOCK) != 0);
+	if (n > 0)
+	{
+		cgi.output.append(buf, n);
+	}
+	else if (n == 0)
+	{
+		close(pipeFd);
+		waitpid(cgi.cgiPid, NULL, WNOHANG);
+		Response response;
+
+		std::map<int, Client>::iterator clientIt = _clientsFds.find(cgi.clientFd);
+    response.setVersion(cgi.version);
+		response.setResponseData(200, "OK", cgi.output);
+		queueResponse(clientIt->second, cgi.clientFd, response);
+		_cgiStates.erase(it);
+	}
+
+	return;
+}
+
+/*void Cluster::handleCGI(int pipeFd)
+{
+    std::map<int, CGIState>::iterator it = _cgiStates.find(pipeFd);
+    if (it == _cgiStates.end())
+        return;
+
+    CGIState &cgi = it->second;
+
+    char buf[1024];
+    ssize_t n;
+
+    while (true)
+    {
+        n = read(pipeFd, buf, sizeof(buf));
+
+        if (n > 0)
+        {
+            cgi.output.append(buf, n);
+        }
+        else if (n == 0)
+        {
+            close(pipeFd);
+
+            waitpid(cgi.cgiPid, NULL, WNOHANG);
+
+            std::map<int, Client>::iterator clientIt =
+                _clientsFds.find(cgi.clientFd);
+
+            if (clientIt == _clientsFds.end())
+                return;
+
+            Response response;
+            response.setVersion(cgi.version);
+            response.setResponseData(200, "OK", cgi.output);
+
+            queueResponse(clientIt->second, cgi.clientFd, response);
+
+            _cgiStates.erase(it);
+            return;
+        }
+        else
+        {
+            if (errno == EAGAIN)
+                return;
+
+            close(pipeFd);
+            return;
+        }
+    }
+}*/
 
 void Cluster::acceptClient(int serverFd) {
 
@@ -232,8 +345,19 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 
 	if (handler) {
 		handler->handleRequest(response);
-		if (response.getCGIState().isCgi == true)
-			_cgiState.push_back(response.getCGIState());
+		CGIState cgi = response.getCGIState();
+		if (cgi.isCgi == true)
+		{
+			cgi.clientFd = clientFd;
+			cgi.version = response.getVersion();
+			_cgiStates[cgi.pipeFd] = cgi;
+
+			struct pollfd pfd;
+			pfd.fd      = cgi.pipeFd;
+			pfd.events  = POLLIN;
+			pfd.revents = 0;
+			_fds.push_back(pfd);
+		}
 		else
 			queueResponse(client, clientFd, response);
 		delete handler;

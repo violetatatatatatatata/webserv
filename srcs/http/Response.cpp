@@ -1,6 +1,6 @@
 #include <Response.hpp>
 
-Response::Response() : _errorCode(0) { _cgiState.isCgi = true;}
+Response::Response() : _errorCode(0) { _cgiState.isCgi = false;}
 Response::~Response() {}
 
 Response::Response(const Response& other)
@@ -87,15 +87,21 @@ void Response::setHeader(const std::string& header, const std::string& value)
   _headers[header] = value;
 }
 
-void Response::setCGIState(pid_t cgiPid, int pipeFd, int socketFd)
+void Response::setCGIState(pid_t cgiPid, int pipeFd, int clientFd)
 {
+  _cgiState.isCgi = true;
   _cgiState.cgiPid = cgiPid;
   _cgiState.pipeFd = pipeFd;
-  _cgiState.socketFd = socketFd;
+  _cgiState.clientFd = clientFd;
 }
 
 // Getters
 const CGIState& Response::getCGIState() const
 {
   return _cgiState;
+}
+
+const std::string& Response::getVersion() const
+{
+  return _version;
 }

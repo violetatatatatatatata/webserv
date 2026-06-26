@@ -207,8 +207,6 @@ void CGIHandler::handleRequest(Response& response)
         ErrorHandler(res, _request, _server, response);
         return ;
     }
-
-    response.setVersion(_request.getVersion());
     
     int fd[2];
     if (pipe(fd) == -1)
@@ -225,8 +223,7 @@ void CGIHandler::handleRequest(Response& response)
     }
     
     close(fd[1]);
-    
-    response.setCGIState(pid, fd[0], _request.getSocketFd());
+    response.setCGIState(pid, fd[0], _request.getclientFd());
 
     /*time_t start = std::time(NULL);
     char buf[1024];

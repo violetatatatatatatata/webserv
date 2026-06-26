@@ -20,9 +20,9 @@ static const std::string& normalizeHeaderName(std::string& headerName)
 }*/
 
 // Getters
-int Request::getSocketFd() const
+int Request::getclientFd() const
 {
-  return _socketFd;
+  return _clientFd;
 }
 
 const std::string& Request::getMethod() const
@@ -56,9 +56,9 @@ std::string Request::getHeader(const std::string& header) const
 }
 
 // Setters
-void Request::setSocketFd(int socketFd)
+void Request::setclientFd(int clientFd)
 {
-  _socketFd = socketFd;
+  _clientFd = clientFd;
 }
 
 void Request::setMethod(const std::string& method)
