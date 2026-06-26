@@ -126,11 +126,11 @@ void Cluster::run() {
 			if (handleClientError(currentFd, i, revents))
 				continue;
 
-			if (isCGIPipe(currentFd)) {
+			if ((revents & POLLIN) && isCGIPipe(currentFd)) {
 					std::cout << "CGI pipe: " << currentFd << std::endl;
 					handleCGI(currentFd);
 				}
-			else if (revents & POLLIN & !isCGIRequest(currentFd)) {
+			else if ((revents & POLLIN) && !isCGIRequest(currentFd)) {
 				
 				if (findServer(currentFd)) {
 					std::cout << "AcceptClient: " << currentFd <<  std::endl;
@@ -177,7 +177,7 @@ printf("nonblock=%d\n", (flags & O_NONBLOCK) != 0);
 		Response response;
 
 		std::map<int, Client>::iterator clientIt = _clientsFds.find(cgi.clientFd);
-    response.setVersion(cgi.version);
+    	response.setVersion(cgi.version);
 		response.setResponseData(200, "OK", cgi.output);
 		queueResponse(clientIt->second, cgi.clientFd, response);
 		_cgiStates.erase(it);
