@@ -24,7 +24,6 @@ void RedirectHandler::handleRequest(Response& response)
     std::istringstream iss(input);
     iss >> code >> path;
 
-    std::cout << input << std::endl;
     response.setResponseData(code, "Moved Permanently", "");
     response.setHeader("Location", path);
 }

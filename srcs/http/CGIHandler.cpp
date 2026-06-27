@@ -14,8 +14,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#define TIMEOUT 5
-
 //Functions
 static size_t findCgiIndex(const LocationParser* location, const std::string& extension)
 {

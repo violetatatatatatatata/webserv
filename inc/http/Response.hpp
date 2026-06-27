@@ -15,6 +15,7 @@ struct CGIState
   int clientFd;
   std::string version;
   std::string output;
+  time_t start;
 };
 
 class Response

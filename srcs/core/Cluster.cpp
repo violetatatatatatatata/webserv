@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include <Cluster.hpp>
+#define TIMEOUT 4
 
 Cluster::Cluster(const std::map<int, std::vector<ServerParser> >& configs)
 	: _needsCompaction(false) {
@@ -82,19 +83,6 @@ Server* Cluster::findServer(int fd) {
 	return NULL;
 }
 
-bool Cluster::isCGIRequest(int fd) const
-{
-    for (std::map<int, CGIState>::const_iterator it = _cgiStates.begin();
-         it != _cgiStates.end();
-         ++it)
-    {
-			std::cout << "Fd: " << fd << " struct fd: " << it->second.clientFd << std::endl;
-        if (it->second.clientFd == fd)
-            return true;
-    }
-    return false;
-}
-
 void Cluster::run() {
 
 	if (_servers.empty()) {
@@ -122,24 +110,20 @@ void Cluster::run() {
 				continue;
 
 			short revents = _fds[i].revents;
-
+			
 			if (handleClientError(currentFd, i, revents))
 				continue;
 
-			if (isCGIPipe(currentFd)) {
-					std::cout << "CGI pipe: " << currentFd << std::endl;
-					handleCGI(currentFd);
-				}
-			else if (revents & POLLIN & !isCGIRequest(currentFd)) {
-				
-				if (findServer(currentFd)) {
-					std::cout << "AcceptClient: " << currentFd <<  std::endl;
+			if (isCGIPipe(currentFd))
+				checkCGITimeout(currentFd);
+			if (revents & (POLLIN | POLLHUP | POLLERR))
+			{
+				if (findServer(currentFd))
 					acceptClient(currentFd);
-					}
-				else {
-					std::cout << "handleCLientData: " << currentFd <<  std::endl;
+				else if (isCGIPipe(currentFd))
+					handleCGI(currentFd);
+				else
 					handleClientData(currentFd, i);
-					}
 			}
 			else if (revents & POLLOUT)
 				handleClientWrite(currentFd, i);
@@ -151,6 +135,39 @@ void Cluster::run() {
 	}
 }
 
+std::string buildError(int code);
+std::string getFileContent(std::string path);
+static std::string getErrorBody(int error)
+{
+    const std::string& path = buildError(error);
+    std::string content = "";
+
+    if (HttpHandler::isFileInError(R_OK, path) == 0)
+        content = getFileContent(path);
+
+		return content;
+}
+
+void Cluster::checkCGITimeout(int pipeFd)
+{
+	std::map<int, CGIState>::iterator it = _cgiStates.find(pipeFd);
+  CGIState &cgi = it->second;
+
+	if (std::time(NULL) - cgi.start > TIMEOUT)
+	{
+		close(pipeFd);
+		kill(cgi.cgiPid, SIGKILL);
+		waitpid(cgi.cgiPid, NULL, WNOHANG);
+		std::map<int, Client>::iterator clientIt = _clientsFds.find(cgi.clientFd);
+		
+		Response response;
+		response.setVersion(cgi.version);
+		response.setResponseData(504, "Gateway Timeout", getErrorBody(504));
+		queueResponse(clientIt->second, cgi.clientFd, response);
+		_cgiStates.erase(it);
+	}
+}
+
 void Cluster::handleCGI(int pipeFd)
 {
 	std::map<int, CGIState>::iterator it = _cgiStates.find(pipeFd);
@@ -159,13 +176,6 @@ void Cluster::handleCGI(int pipeFd)
   char buf[1024];
   ssize_t n = read(pipeFd, buf, sizeof(buf));
 
-	std::cout << "Read nb: " << n << std::endl;
-	if (n == -1) {
-    printf("%d\n", errno);
-}
-
-int flags = fcntl(pipeFd, F_GETFL);
-printf("nonblock=%d\n", (flags & O_NONBLOCK) != 0);
 	if (n > 0)
 	{
 		cgi.output.append(buf, n);
@@ -173,69 +183,22 @@ printf("nonblock=%d\n", (flags & O_NONBLOCK) != 0);
 	else if (n == 0)
 	{
 		close(pipeFd);
-		waitpid(cgi.cgiPid, NULL, WNOHANG);
+		int status;
+		waitpid(cgi.cgiPid, &status, WNOHANG);
 		Response response;
-
+		response.setVersion(cgi.version);
 		std::map<int, Client>::iterator clientIt = _clientsFds.find(cgi.clientFd);
     response.setVersion(cgi.version);
-		response.setResponseData(200, "OK", cgi.output);
+		if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+			response.setResponseData(500, "Gateway Timeout", getErrorBody(500));
+		else
+			response.setResponseData(200, "OK", cgi.output);
 		queueResponse(clientIt->second, cgi.clientFd, response);
 		_cgiStates.erase(it);
 	}
 
 	return;
 }
-
-/*void Cluster::handleCGI(int pipeFd)
-{
-    std::map<int, CGIState>::iterator it = _cgiStates.find(pipeFd);
-    if (it == _cgiStates.end())
-        return;
-
-    CGIState &cgi = it->second;
-
-    char buf[1024];
-    ssize_t n;
-
-    while (true)
-    {
-        n = read(pipeFd, buf, sizeof(buf));
-
-        if (n > 0)
-        {
-            cgi.output.append(buf, n);
-        }
-        else if (n == 0)
-        {
-            close(pipeFd);
-
-            waitpid(cgi.cgiPid, NULL, WNOHANG);
-
-            std::map<int, Client>::iterator clientIt =
-                _clientsFds.find(cgi.clientFd);
-
-            if (clientIt == _clientsFds.end())
-                return;
-
-            Response response;
-            response.setVersion(cgi.version);
-            response.setResponseData(200, "OK", cgi.output);
-
-            queueResponse(clientIt->second, cgi.clientFd, response);
-
-            _cgiStates.erase(it);
-            return;
-        }
-        else
-        {
-            if (errno == EAGAIN)
-                return;
-
-            close(pipeFd);
-            return;
-        }
-    }
-}*/
 
 void Cluster::acceptClient(int serverFd) {
 
@@ -349,12 +312,13 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 		if (cgi.isCgi == true)
 		{
 			cgi.clientFd = clientFd;
+			cgi.start = std::time(NULL);
 			cgi.version = response.getVersion();
 			_cgiStates[cgi.pipeFd] = cgi;
 
 			struct pollfd pfd;
 			pfd.fd      = cgi.pipeFd;
-			pfd.events  = POLLIN;
+			pfd.events  = POLLIN | POLLHUP;
 			pfd.revents = 0;
 			_fds.push_back(pfd);
 		}
@@ -449,6 +413,9 @@ bool Cluster::handleClientError(int fd, size_t pollIndex, short revents) {
 		return false;
 
 	if (findServer(fd))
+		return false;
+
+	if (isCGIPipe(fd))
 		return false;
 
 	std::ostringstream oss;
