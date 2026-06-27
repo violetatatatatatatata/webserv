@@ -119,14 +119,17 @@ void Cluster::run() {
 			if (revents & (POLLIN | POLLHUP | POLLERR))
 			{
 				if (findServer(currentFd))
-					acceptClient(currentFd);
-				else if (isCGIPipe(currentFd))
-					handleCGI(currentFd);
-				else
-					handleClientData(currentFd, i);
+        				acceptClient(currentFd);
+    				else if (isCGIPipe(currentFd))
+        				handleCGI(currentFd);
+    				else
+        				handleClientData(currentFd, i);
 			}
 			else if (revents & POLLOUT)
-				handleClientWrite(currentFd, i);
+    				handleClientWrite(currentFd, i);
+
+			if (isCGIPipe(currentFd))
+    				checkCGITimeout(currentFd);
 		}
 		if (_needsCompaction) {
 			compactPollFds();
@@ -150,54 +153,82 @@ static std::string getErrorBody(int error)
 
 void Cluster::checkCGITimeout(int pipeFd)
 {
-	std::map<int, CGIState>::iterator it = _cgiStates.find(pipeFd);
-  CGIState &cgi = it->second;
+    std::map<int, CGIState>::iterator it = _cgiStates.find(pipeFd);
+    if (it == _cgiStates.end())        // ← guarda primero
+        return;
 
-	if (std::time(NULL) - cgi.start > TIMEOUT)
-	{
-		close(pipeFd);
-		kill(cgi.cgiPid, SIGKILL);
-		waitpid(cgi.cgiPid, NULL, WNOHANG);
-		std::map<int, Client>::iterator clientIt = _clientsFds.find(cgi.clientFd);
-		
-		Response response;
-		response.setVersion(cgi.version);
-		response.setResponseData(504, "Gateway Timeout", getErrorBody(504));
-		queueResponse(clientIt->second, cgi.clientFd, response);
-		_cgiStates.erase(it);
-	}
+    CGIState &cgi = it->second;
+
+    if (std::time(NULL) - cgi.start <= TIMEOUT)
+        return;
+
+    kill(cgi.cgiPid, SIGKILL);
+    waitpid(cgi.cgiPid, NULL, 0);
+    close(pipeFd);
+
+    for (size_t i = 0; i < _fds.size(); i++) {   // ← marcar fd
+        if (_fds[i].fd == pipeFd) {
+            _fds[i].fd = -1;
+            break;
+        }
+    }
+    _needsCompaction = true;
+
+    std::map<int, Client>::iterator clientIt = _clientsFds.find(cgi.clientFd);
+    if (clientIt != _clientsFds.end()) {   // ← comprobar cliente
+        Response response;
+        response.setVersion(cgi.version);
+        response.setResponseData(504, "Gateway Timeout", getErrorBody(504));
+        queueResponse(clientIt->second, cgi.clientFd, response);
+    }
+
+    _cgiStates.erase(it);
 }
 
 void Cluster::handleCGI(int pipeFd)
 {
-	std::map<int, CGIState>::iterator it = _cgiStates.find(pipeFd);
-  CGIState &cgi = it->second;
+    std::map<int, CGIState>::iterator it = _cgiStates.find(pipeFd);
+    if (it == _cgiStates.end())
+        return;
 
-  char buf[1024];
-  ssize_t n = read(pipeFd, buf, sizeof(buf));
+    CGIState &cgi = it->second;
 
-	if (n > 0)
-	{
-		cgi.output.append(buf, n);
-	}
-	else if (n == 0)
-	{
-		close(pipeFd);
-		int status;
-		waitpid(cgi.cgiPid, &status, WNOHANG);
-		Response response;
-		response.setVersion(cgi.version);
-		std::map<int, Client>::iterator clientIt = _clientsFds.find(cgi.clientFd);
-    response.setVersion(cgi.version);
-		if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
-			response.setResponseData(500, "Gateway Timeout", getErrorBody(500));
-		else
-			response.setResponseData(200, "OK", cgi.output);
-		queueResponse(clientIt->second, cgi.clientFd, response);
-		_cgiStates.erase(it);
-	}
+    char    buf[1024];
+    ssize_t n = read(pipeFd, buf, sizeof(buf));
 
-	return;
+    if (n > 0) {
+        cgi.output.append(buf, n);
+        return;
+    }
+
+    if (n == -1 && errno == EAGAIN)
+        return;
+
+    close(pipeFd);
+
+    for (size_t i = 0; i < _fds.size(); i++) {
+        if (_fds[i].fd == pipeFd) {
+            _fds[i].fd = -1;
+            break;
+        }
+    }
+    _needsCompaction = true;
+
+    int status = 0;
+    waitpid(cgi.cgiPid, &status, 0);
+
+    std::map<int, Client>::iterator clientIt = _clientsFds.find(cgi.clientFd);
+    if (clientIt != _clientsFds.end()) {
+        Response response;
+        response.setVersion(cgi.version);
+        if (n == 0 && WIFEXITED(status) && WEXITSTATUS(status) == 0)
+            response.setResponseData(200, "OK", cgi.output);
+        else
+            response.setResponseData(500, "Internal Server Error", getErrorBody(500));
+        queueResponse(clientIt->second, cgi.clientFd, response);
+    }
+
+    _cgiStates.erase(it);
 }
 
 void Cluster::acceptClient(int serverFd) {
