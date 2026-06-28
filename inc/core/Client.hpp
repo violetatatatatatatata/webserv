@@ -75,7 +75,8 @@ class Client {
 		bool		isResponseFullySent() const;
 
 		bool isBodyTooLarge() const;
-
+	
+		size_t getMaxBodySize() const;
 		time_t getLastActivity() const;
 		void updateActivity();
 

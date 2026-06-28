@@ -101,6 +101,11 @@ const CGIState& Response::getCGIState() const
   return _cgiState;
 }
 
+int Response::getStatus() const 
+{
+  return _errorCode;
+}
+
 const std::string& Response::getVersion() const
 {
   return _version;

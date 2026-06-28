@@ -34,7 +34,7 @@ const LocationParser* Router::findMatchingLocation(const Request& request, const
     for (size_t i = 0; i < locations.size(); i++)
     {
         const std::string& path = locations[i].getPath();
-
+            
         if (request.getURI().compare(0, path.size(), path) == 0)
         {
             if (path.size() > best_len)
@@ -44,6 +44,6 @@ const LocationParser* Router::findMatchingLocation(const Request& request, const
             }
         }
     }
-
+    
     return best;
 }

@@ -42,6 +42,7 @@ class Response
         // Getters
         const CGIState& getCGIState() const;
         const std::string& getVersion() const;
+        int getStatus() const;
 
     private:
 

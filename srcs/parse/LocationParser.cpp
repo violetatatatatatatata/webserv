@@ -57,6 +57,32 @@ void LocationParser::initMap()
 	registerAction("cgi_path", new VectorAction<LocationParser, std::string>(&LocationParser::_cgi_path, "cgi_path"));
 }
 
+std::string normalizeLocation(std::string path)
+{
+    std::string result;
+    bool prev = false;
+
+    for (size_t i = 0; i < path.size(); i++)
+    {
+        if (path[i] == '/')
+        {
+            if (!prev)
+                result += '/';
+            prev = true;
+        }
+        else
+        {
+            result += path[i];
+            prev = false;
+        }
+    }
+
+    if (result.size() > 1 && result[result.size() - 1] == '/')
+        result.erase(result.size() - 1);
+
+    return result;
+}
+
 bool LocationParser::parseLocation(size_t &pos, const fileVector &file,
 		ServerParser &s)
 {
@@ -64,7 +90,8 @@ bool LocationParser::parseLocation(size_t &pos, const fileVector &file,
 		print_msg("Expected '{' after location path", ERR);
 		return false;
 	}
-	this->_path = file[pos + 1];
+	this->_path = normalizeLocation(file[pos + 1]);
+	//this->_path = file[pos + 1];
 	pos += 3;
 	if (!this->parseBlock(pos, file))
 		return false;

@@ -326,10 +326,20 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 	}
 	
 	response.setVersion(request.getVersion());
-	if (client.isBodyTooLarge()) {
-		ErrorHandler(413, request, serverConfig, response);
-		queueResponse(client, clientFd, response);
-		return;
+	std::string lenStr = request.getHeader("Content-Length");
+	size_t contentLength = std::strtoul(lenStr.c_str(), NULL, 10);
+	bool bodyTooLarge = false;
+
+	std::cout << "Request: " << request.getBody().size() << " Max: " << client.getMaxBodySize() << std::endl;
+
+	if (!request.getIsChunked())
+		bodyTooLarge = contentLength > client.getMaxBodySize();
+
+	if (client.isBodyTooLarge() || bodyTooLarge)
+	{
+			ErrorHandler(413, request, serverConfig, response);
+			queueResponse(client, clientFd, response);
+			return;
 	}
 
 	serverConfig = Router::findMatchingServer(request, server->getConfigs());
@@ -427,6 +437,7 @@ void Cluster::setPollEvents(int fd, short events) {
 
 void Cluster::queueResponse(Client& client, int clientFd, Response& response) {
 
+	std::cout << "Request erro: " << response.getStatus() << std::endl;
 	std::string msg = response.buildResponse();
 
 	client.setResponse(msg);

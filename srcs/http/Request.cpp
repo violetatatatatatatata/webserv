@@ -19,6 +19,28 @@ static const std::string& normalizeHeaderName(std::string& headerName)
     return headerName;
 }*/
 
+static std::string normalizeSlashes(std::string &path)
+{
+    std::string result;
+    bool prevSlash = false;
+
+    for (size_t i = 0; i < path.size(); i++)
+    {
+        if (path[i] == '/')
+        {
+            if (!prevSlash)
+                result += '/';
+            prevSlash = true;
+        }
+        else
+        {
+            result += path[i];
+            prevSlash = false;
+        }
+    }
+    return result;
+}
+
 // Getters
 int Request::getclientFd() const
 {
@@ -43,6 +65,11 @@ const std::string& Request::getURI() const
 const std::string& Request::getBody() const
 {
   return _body;
+}
+
+bool Request::getIsChunked() const
+{
+  return _isChunked;
 }
 
 std::string Request::getHeader(const std::string& header) const
@@ -71,7 +98,7 @@ void Request::setVersion(std::string& httpVersion)
   _httpVersion = httpVersion;
 }
 
-void Request::setURI(std::string& URI)
+void Request::setURI(const std::string& URI)
 {
   _URI = URI;
 }
@@ -87,6 +114,19 @@ void Request::setHeader(const std::string& header, const std::string& value)
 }
 
 // Methods
+bool Request::isChunked() const
+{
+    std::map<std::string, std::string>::const_iterator it =
+        _headers.find("Transfer-Encoding");
+
+    if (it == _headers.end())
+        return false;
+
+    const std::string &value = it->second;
+
+    return (value.find("chunked") != std::string::npos);
+}
+
 int Request::parse(const std::string& raw)
 {
     std::istringstream stream(raw);
@@ -107,7 +147,7 @@ int Request::parse(const std::string& raw)
       return -1;
 
     setMethod(method);
-    setURI(uri);
+    setURI(normalizeSlashes(uri));
     setVersion(version);
 
     while (std::getline(stream, line))
@@ -131,9 +171,16 @@ int Request::parse(const std::string& raw)
         setHeader(key, value);
     }
 
-    if (getMethod() == "POST" && getHeader("Content-Length").empty())
-      return -1;
+    if (isChunked())
+      _isChunked = true;
+    else
+      _isChunked = false;
 
+    if (getMethod() == "POST" && _headers.find("Content-Length") == _headers.end() && !_isChunked)
+      return -1;
+    if (getMethod() == "POST" && _headers.find("Content-Length") != _headers.end() && _isChunked)
+      return -1;
+    
     std::string body;
     while (std::getline(stream, line))
     {

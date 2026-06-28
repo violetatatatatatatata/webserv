@@ -14,6 +14,10 @@ static bool isCgiRequest(const LocationParser* loc, const std::string& path, std
         std::string tmp_ext = path.substr(dot);
         const std::vector<std::string>& cgiExt = loc->getCgiExt();
 
+        if (cgiExt.empty())
+            std::cout << "No ext:" << std::endl;
+        else
+            std::cout << tmp_ext << "CGE extention: " << cgiExt[0] << std::endl;
         for (std::vector<std::string>::const_iterator it = cgiExt.begin(); it != cgiExt.end(); it++)
         {
             if (tmp_ext == *it)
@@ -64,7 +68,7 @@ static std::string resolvePath(
     const ServerParser& server)
 {
     const std::string& uri = request.getURI();
-
+ 
     if (!location || location->getRoot().empty())
         return server.getRoot() + uri;
 
@@ -121,6 +125,7 @@ HttpHandler* HandlerFactory::create(const Request& request, const LocationParser
     std::string path = resolvePath(request, location, server);
     std::string ext;
 
+    std::cout << "PAth: " << path << std::endl;
     if (location && isCgiRequest(location, path, ext))
         return new CGIHandler(request, location, server, path, ext);
 
