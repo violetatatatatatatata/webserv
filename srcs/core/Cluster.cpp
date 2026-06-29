@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include <Cluster.hpp>
-#define TIMEOUT 4
+#define TIMEOUT 30
 
 Cluster::Cluster(const std::map<int, std::vector<ServerParser> >& configs)
 	: _needsCompaction(false) {
@@ -49,6 +49,17 @@ Cluster& Cluster::operator=(const Cluster& other) {
 bool Cluster::isCGIPipe(int pipeFd) const
 {
     return _cgiStates.find(pipeFd) != _cgiStates.end();
+}
+
+bool Cluster::hasPendingCGI(int clientFd) const
+{
+    std::map<int, CGIState>::const_iterator it;
+    for (it = _cgiStates.begin(); it != _cgiStates.end(); ++it)
+    {
+        if (it->second.clientFd == clientFd)
+            return true;
+    }
+    return false;
 }
 
 void Cluster::init(const std::map<int, std::vector<ServerParser> >& configs) {
@@ -116,7 +127,9 @@ void Cluster::run() {
 
 			if (isCGIPipe(currentFd))
 				checkCGITimeout(currentFd);
-			if (revents & (POLLIN | POLLHUP | POLLERR))
+			if ((revents & POLLOUT) && !findServer(currentFd) && !isCGIPipe(currentFd))
+				handleClientWrite(currentFd, i);
+			else if (revents & (POLLIN | POLLHUP | POLLERR))
 			{
 				if (findServer(currentFd))
         				acceptClient(currentFd);
@@ -125,8 +138,6 @@ void Cluster::run() {
     				else
         				handleClientData(currentFd, i);
 			}
-			else if (revents & POLLOUT)
-    				handleClientWrite(currentFd, i);
 
 			if (isCGIPipe(currentFd))
     				checkCGITimeout(currentFd);
@@ -154,7 +165,7 @@ static std::string getErrorBody(int error)
 void Cluster::checkCGITimeout(int pipeFd)
 {
     std::map<int, CGIState>::iterator it = _cgiStates.find(pipeFd);
-    if (it == _cgiStates.end())        // ← guarda primero
+    if (it == _cgiStates.end())
         return;
 
     CGIState &cgi = it->second;
@@ -166,7 +177,7 @@ void Cluster::checkCGITimeout(int pipeFd)
     waitpid(cgi.cgiPid, NULL, 0);
     close(pipeFd);
 
-    for (size_t i = 0; i < _fds.size(); i++) {   // ← marcar fd
+    for (size_t i = 0; i < _fds.size(); i++) {
         if (_fds[i].fd == pipeFd) {
             _fds[i].fd = -1;
             break;
@@ -175,7 +186,7 @@ void Cluster::checkCGITimeout(int pipeFd)
     _needsCompaction = true;
 
     std::map<int, Client>::iterator clientIt = _clientsFds.find(cgi.clientFd);
-    if (clientIt != _clientsFds.end()) {   // ← comprobar cliente
+    if (clientIt != _clientsFds.end()) {
         Response response;
         response.setVersion(cgi.version);
         response.setResponseData(504, "Gateway Timeout", getErrorBody(504));
@@ -193,7 +204,7 @@ void Cluster::handleCGI(int pipeFd)
 
     CGIState &cgi = it->second;
 
-    char    buf[1024];
+    char    buf[65536];
     ssize_t n = read(pipeFd, buf, sizeof(buf));
 
     if (n > 0) {
@@ -222,7 +233,66 @@ void Cluster::handleCGI(int pipeFd)
         Response response;
         response.setVersion(cgi.version);
         if (n == 0 && WIFEXITED(status) && WEXITSTATUS(status) == 0)
-            response.setResponseData(200, "OK", cgi.output);
+        {
+            int    statusCode = 200;
+            std::string statusMsg  = "OK";
+            std::string body;
+
+            size_t sep = cgi.output.find("\r\n\r\n");
+            if (sep == std::string::npos)
+                sep = cgi.output.find("\n\n");
+
+            if (sep != std::string::npos)
+            {
+                size_t sepLen = (cgi.output[sep] == '\r') ? 4 : 2;
+                std::string cgiHeaders = cgi.output.substr(0, sep);
+                body = cgi.output.substr(sep + sepLen);
+
+                size_t statusPos = cgiHeaders.find("Status:");
+                if (statusPos != std::string::npos)
+                {
+                    size_t eol = cgiHeaders.find('\n', statusPos);
+                    std::string sl = cgiHeaders.substr(statusPos + 7,
+                                        eol == std::string::npos ? std::string::npos : eol - statusPos - 7);
+                    size_t s = sl.find_first_not_of(" \t");
+                    if (s != std::string::npos)
+                    {
+                        statusCode = std::atoi(sl.c_str() + s);
+                        size_t sp = sl.find(' ', s);
+                        if (sp != std::string::npos)
+                        {
+                            statusMsg = sl.substr(sp + 1);
+                            size_t trim = statusMsg.find_last_not_of(" \t\r\n");
+                            if (trim != std::string::npos)
+                                statusMsg = statusMsg.substr(0, trim + 1);
+                        }
+                    }
+                }
+
+                size_t ctPos = cgiHeaders.find("Content-Type:");
+                if (ctPos != std::string::npos)
+                {
+                    size_t eol = cgiHeaders.find('\n', ctPos);
+                    std::string ct = cgiHeaders.substr(ctPos + 13,
+                                        eol == std::string::npos ? std::string::npos : eol - ctPos - 13);
+                    size_t s = ct.find_first_not_of(" \t");
+                    if (s != std::string::npos)
+                    {
+                        ct = ct.substr(s);
+                        size_t trim = ct.find_last_not_of(" \t\r\n");
+                        if (trim != std::string::npos)
+                            ct = ct.substr(0, trim + 1);
+                        response.setHeader("Content-Type", ct);
+                    }
+                }
+            }
+            else
+            {
+                body = cgi.output;
+            }
+
+            response.setResponseData(statusCode, statusMsg, body);
+        }
         else
             response.setResponseData(500, "Internal Server Error", getErrorBody(500));
         queueResponse(clientIt->second, cgi.clientFd, response);
@@ -270,8 +340,8 @@ void Cluster::acceptClient(int serverFd) {
 
 void Cluster::handleClientData(int clientFd, size_t pollIndex) {
 
-	char buffer[10000] = {0};
-	int  bytes_read    = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
+	char buffer[65536] = {0};
+	int  bytes_read    = recv(clientFd, buffer, sizeof(buffer), 0);
 
 	if (bytes_read > 0) {
 		Client& client = _clientsFds[clientFd];
@@ -286,10 +356,24 @@ void Cluster::handleClientData(int clientFd, size_t pollIndex) {
 		}
 	}
 	else if (bytes_read == 0) {
-		std::ostringstream oss;
-		oss << "Client closed connection clientFd=" << clientFd;
-		print_msg(oss.str(), DISC);
-		disconnectClient(clientFd, pollIndex);
+		if (hasPendingCGI(clientFd)) {
+			// Client half-closed (sent FIN); CGI still running.
+			// Remove from poll to avoid busy-loop on POLLHUP, keep fd open for response.
+			_fds[pollIndex].fd = -1;
+			_needsCompaction = true;
+		} else {
+			Client& cl = _clientsFds[clientFd];
+			if (cl.hasDataToSend()) {
+				// Half-closed: client done sending, but we still have a response queued.
+				// Attempt to send it now; poll POLLOUT will handle remaining chunks.
+				handleClientWrite(clientFd, pollIndex);
+			} else {
+				std::ostringstream oss;
+				oss << "Client closed connection clientFd=" << clientFd;
+				print_msg(oss.str(), DISC);
+				disconnectClient(clientFd, pollIndex);
+			}
+		}
 	}
 	else {
 		std::ostringstream oss;
@@ -330,8 +414,6 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 	size_t contentLength = std::strtoul(lenStr.c_str(), NULL, 10);
 	bool bodyTooLarge = false;
 
-	std::cout << "Request: " << request.getBody().size() << " Max: " << client.getMaxBodySize() << std::endl;
-
 	if (!request.getIsChunked())
 		bodyTooLarge = contentLength > client.getMaxBodySize();
 
@@ -345,6 +427,16 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 	serverConfig = Router::findMatchingServer(request, server->getConfigs());
 
 	const LocationParser* location = Router::findMatchingLocation(request, serverConfig);
+
+	// For chunked requests, use actual decoded body size; for others use Content-Length
+	size_t effectiveBodySize = request.getIsChunked() ? request.getBody().size() : contentLength;
+	if (location && location->getMaxBodySize() > 0 && effectiveBodySize > location->getMaxBodySize())
+	{
+		ErrorHandler(413, request, serverConfig, response);
+		queueResponse(client, clientFd, response);
+		return;
+	}
+
 	HttpHandler* const handler = HandlerFactory::create(request, location, serverConfig);
 
 	if (handler) {
@@ -388,6 +480,7 @@ void Cluster::handleClientWrite(int clientFd, size_t pollIndex) {
 
 	if (!client.hasDataToSend())
 		return;
+
 	ssize_t sent = send(clientFd,
 						client.getWritePtr(),
 						client.getWriteRemaining(),
@@ -395,6 +488,7 @@ void Cluster::handleClientWrite(int clientFd, size_t pollIndex) {
 
 	if (sent > 0) {
 		client.advanceWriteOffset(static_cast<size_t>(sent));
+		client.updateActivity();
 		if (client.isResponseFullySent()) {
 			std::ostringstream done;
 			done << "Response fully sent clientFd=" << clientFd;
@@ -437,11 +531,25 @@ void Cluster::setPollEvents(int fd, short events) {
 
 void Cluster::queueResponse(Client& client, int clientFd, Response& response) {
 
-	std::cout << "Request erro: " << response.getStatus() << std::endl;
 	std::string msg = response.buildResponse();
 
 	client.setResponse(msg);
-	setPollEvents(clientFd, POLLOUT);
+
+	bool found = false;
+	for (size_t i = 0; i < _fds.size(); i++) {
+		if (_fds[i].fd == clientFd) {
+			_fds[i].events = POLLOUT;
+			found = true;
+			break;
+		}
+	}
+	if (!found) {
+		struct pollfd pfd;
+		pfd.fd      = clientFd;
+		pfd.events  = POLLOUT;
+		pfd.revents = 0;
+		_fds.push_back(pfd);
+	}
 
 	std::ostringstream oss;
 	oss << "Response queued clientFd=" << clientFd
@@ -458,6 +566,11 @@ bool Cluster::handleClientError(int fd, size_t pollIndex, short revents) {
 		return false;
 
 	if (isCGIPipe(fd))
+		return false;
+
+	// Don't disconnect if there's a queued response to send (half-closed TCP)
+	std::map<int, Client>::iterator cit = _clientsFds.find(fd);
+	if (cit != _clientsFds.end() && cit->second.hasDataToSend())
 		return false;
 
 	std::ostringstream oss;

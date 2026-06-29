@@ -60,6 +60,7 @@ class LocationParser : public Parser {
 		std::map<std::string, std::string>	_cgi_info;
 		std::vector<std::string>			_cgi_ext;
 		std::vector<std::string>			_cgi_path;
+		size_t								_max_body_size;
 
 	public:
 		LocationParser();
@@ -82,6 +83,7 @@ class LocationParser : public Parser {
 		std::string									getCgiInfo(const std::string& ext) const;
 		const std::vector<std::string>&             getCgiExt() const;
 		const std::vector<std::string>& 			getCgiPath() const;
+		size_t										getMaxBodySize() const;
 };
 
 #endif

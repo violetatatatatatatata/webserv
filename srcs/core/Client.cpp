@@ -17,8 +17,8 @@ Client::Client()
 	_requestBuffer(""),
 	_responseBuffer(""), _responseOffset(0),
 	_parseState(READING_HEADERS), _headerEndPos(0),
-	_expectedBodySize(0), _bodyTooLarge(false), 
-	_maxBodySize(0), _isChunked(false), _lastActivity(time(NULL)) {}
+	_expectedBodySize(0), _bodyTooLarge(false),
+	_maxBodySize(0), _isChunked(false), _chunkedSearchPos(0), _lastActivity(time(NULL)) {}
 
 Client::Client(int fd, int serverFd)
 	: _fd(fd), _serverFd(serverFd),
@@ -26,7 +26,7 @@ Client::Client(int fd, int serverFd)
 	_responseBuffer(""), _responseOffset(0),
 	_parseState(READING_HEADERS), _headerEndPos(0),
 	_expectedBodySize(0), _bodyTooLarge(false),
-	_maxBodySize(0), _isChunked(false), _lastActivity(time(NULL)) {}
+	_maxBodySize(0), _isChunked(false), _chunkedSearchPos(0), _lastActivity(time(NULL)) {}
 
 Client::Client(const Client& other) {
 
@@ -48,6 +48,7 @@ Client& Client::operator=(const Client& other) {
 		this->_lastActivity = other._lastActivity;
 		this->_maxBodySize = other._maxBodySize;
 		this->_isChunked = other._isChunked;
+		this->_chunkedSearchPos = other._chunkedSearchPos;
 	}
 	return *this;
 }
@@ -123,8 +124,10 @@ void Client::processBody() {
 
 void Client::processChunkedBody() {
 
-    if (_requestBuffer.find("0\r\n\r\n") != std::string::npos)
+    size_t searchFrom = (_chunkedSearchPos > 4) ? (_chunkedSearchPos - 4) : 0;
+    if (_requestBuffer.find("0\r\n\r\n", searchFrom) != std::string::npos)
         _parseState = READY;
+    _chunkedSearchPos = _requestBuffer.size();
 }
 
 bool Client::isRequestComplete() {

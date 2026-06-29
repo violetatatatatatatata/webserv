@@ -46,6 +46,7 @@ class Client {
 		size_t _maxBodySize;
 
 		bool _isChunked;
+		size_t _chunkedSearchPos;
 
 		time_t _lastActivity;
 

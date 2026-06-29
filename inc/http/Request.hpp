@@ -27,6 +27,7 @@ class Request
         const std::string&  getURI() const;
         const std::string&  getBody() const;
         std::string  getHeader(const std::string& header) const;
+        const std::map<std::string, std::string>& getHeaders() const;
 
         // Setters
         void setclientFd(int clientFd);

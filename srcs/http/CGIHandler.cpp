@@ -13,6 +13,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <limits.h>
 
 //Functions
 static size_t findCgiIndex(const LocationParser* location, const std::string& extension)
@@ -122,15 +123,56 @@ char** CGIHandler::buildArgv(const std::string& script) const
     return argv;
 }
 
+static std::string toHttpEnvName(const std::string& header)
+{
+    std::string result = "HTTP_";
+    for (size_t i = 0; i < header.size(); ++i)
+    {
+        char c = header[i];
+        if (c == '-')
+            result += '_';
+        else
+            result += std::toupper(static_cast<unsigned char>(c));
+    }
+    return result;
+}
+
 std::vector<std::string> CGIHandler::buildEnv(const ParsedURL& urlInfo) const
 {
     std::vector<std::string> env;
-    
+
+    std::string pathInfo = urlInfo.path.empty() ? "/" : urlInfo.path;
+
     env.push_back("SERVER_PROTOCOL=" + _request.getVersion());
     env.push_back("REQUEST_METHOD=" + _request.getMethod());
     env.push_back("SCRIPT_FILENAME=" + urlInfo.script);
-    env.push_back("CONTENT_LENGTH=" + _request.getHeader("Content-Length"));
-    env.push_back("PATH_INFO=" + urlInfo.path);
+    std::string cl = _request.getHeader("Content-Length");
+    if (cl.empty())
+    {
+        std::ostringstream oss;
+        oss << _request.getBody().size();
+        cl = oss.str();
+    }
+    env.push_back("CONTENT_LENGTH=" + cl);
+    env.push_back("PATH_INFO=" + pathInfo);
+
+    // Pass HTTP request headers as HTTP_* env vars and special CGI vars
+    const std::map<std::string, std::string>& hdrs = _request.getHeaders();
+    for (std::map<std::string, std::string>::const_iterator it = hdrs.begin(); it != hdrs.end(); ++it)
+    {
+        const std::string& name = it->first;
+        if (name == "Content-Length")
+            continue; // already set as CONTENT_LENGTH
+        if (name == "Content-Type")
+        {
+            env.push_back("CONTENT_TYPE=" + it->second);
+            env.push_back("HTTP_CONTENT_TYPE=" + it->second);
+        }
+        else
+        {
+            env.push_back(toHttpEnvName(name) + "=" + it->second);
+        }
+    }
 
     return env;
 }
@@ -161,12 +203,18 @@ void CGIHandler::executeCGI() const
 {
     ParsedURL urlInfo = parseURL();
 
-    char* binPath = (char*)_binPath.c_str();
+    char resolvedBin[PATH_MAX];
+    std::string binStr;
+    if (realpath(_binPath.c_str(), resolvedBin) != NULL)
+        binStr = resolvedBin;
+    else
+        binStr = _binPath;
+
     char** argv = buildArgv(urlInfo.script);
     char** env = castEnv(urlInfo);
 
     chdir(urlInfo.directory.c_str());
-    execve(binPath, argv, env);
+    execve(binStr.c_str(), argv, env);
 
     perror("execve failed");
     exit(EXIT_FAILURE);
@@ -174,38 +222,49 @@ void CGIHandler::executeCGI() const
 
 void CGIHandler::handleFd(int fd[2], Response& response) const
 {
+    (void)response;
     close(fd[0]);
     dup2(fd[1], STDOUT_FILENO);
     close(fd[1]);
 
-    if (_request.getMethod() == "GET" || _request.getMethod() == "DELETE")
+    if (_request.getMethod() == "POST")
+    {
+        FILE* tmp = tmpfile();
+        if (!tmp) { perror("tmpfile"); exit(EXIT_FAILURE); }
+
+        const std::string& body = _request.getBody();
+        size_t written = 0;
+        while (written < body.size())
+        {
+            ssize_t ret = write(fileno(tmp), body.c_str() + written, body.size() - written);
+            if (ret <= 0) break;
+            written += (size_t)ret;
+        }
+        rewind(tmp);
+        dup2(fileno(tmp), STDIN_FILENO);
+        fclose(tmp);
+    }
+    else
     {
         int devNull = open("/dev/null", O_RDONLY);
-        dup2(devNull, STDIN_FILENO);
-        close(devNull);
-    }
-    else if (_request.getMethod() == "POST")
-    {
-        int stdin_fd[2];
-        if (pipe(stdin_fd) == -1)
-            internalError("pipe", response);
-            
-        write(stdin_fd[1], _request.getBody().c_str(), _request.getBody().size());
-        close(stdin_fd[1]);
-        dup2(stdin_fd[0], STDIN_FILENO);
-        close(stdin_fd[0]);
+        if (devNull != -1)
+        {
+            dup2(devNull, STDIN_FILENO);
+            close(devNull);
+        }
     }
 }
 
 void CGIHandler::handleRequest(Response& response)
 {
-    int res = HttpHandler::isFileInError(R_OK, _url);
+    // Only check that the CGI binary exists, not the script (the binary handles missing scripts)
+    int res = HttpHandler::isFileInError(X_OK, _binPath);
     if (res != 0)
     {
         ErrorHandler(res, _request, _server, response);
         return ;
     }
-    
+
     int fd[2];
     if (pipe(fd) == -1)
         internalError("pipe", response);

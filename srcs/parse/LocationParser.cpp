@@ -15,7 +15,7 @@
 
 LocationParser::LocationParser()
 	: Parser(), _autoindex(false), _index(""), _path(""), _root(""),
-	_upload_store(""), _redirect("")
+	_upload_store(""), _redirect(""), _max_body_size(0)
 {
 	initMap();
 }
@@ -27,16 +27,17 @@ LocationParser::LocationParser(const LocationParser &obj) : Parser(obj) {
 LocationParser &LocationParser::operator=(const LocationParser &obj) {
 	if (this != &obj) {
 		Parser::operator=(obj);
-		this->_path         = obj._path;
-		this->_root         = obj._root;
-		this->_index        = obj._index;
-		this->_autoindex    = obj._autoindex;
-		this->_methods      = obj._methods;
-		this->_upload_store = obj._upload_store;
-		this->_cgi_info     = obj._cgi_info;
-		this->_redirect     = obj._redirect;
-		this->_cgi_ext      = obj._cgi_ext;
-		this->_cgi_path     = obj._cgi_path;
+		this->_path          = obj._path;
+		this->_root          = obj._root;
+		this->_index         = obj._index;
+		this->_autoindex     = obj._autoindex;
+		this->_methods       = obj._methods;
+		this->_upload_store  = obj._upload_store;
+		this->_cgi_info      = obj._cgi_info;
+		this->_redirect      = obj._redirect;
+		this->_cgi_ext       = obj._cgi_ext;
+		this->_cgi_path      = obj._cgi_path;
+		this->_max_body_size = obj._max_body_size;
 	}
 	return *this;
 }
@@ -55,6 +56,7 @@ void LocationParser::initMap()
 	registerAction("return", new StringConcatAction<LocationParser>(&LocationParser::_redirect, "return"));
 	registerAction("cgi_ext", new VectorAction<LocationParser, std::string>(&LocationParser::_cgi_ext, "cgi_ext"));
 	registerAction("cgi_path", new VectorAction<LocationParser, std::string>(&LocationParser::_cgi_path, "cgi_path"));
+	registerAction("client_max_body_size", new SimpleAction<LocationParser, size_t>(&LocationParser::_max_body_size, "client_max_body_size"));
 }
 
 std::string normalizeLocation(std::string path)
@@ -139,4 +141,8 @@ const std::vector<std::string>& LocationParser::getCgiExt() const {
 
 const std::vector<std::string>& LocationParser::getCgiPath() const {
     return _cgi_path;
+}
+
+size_t LocationParser::getMaxBodySize() const {
+    return _max_body_size;
 }

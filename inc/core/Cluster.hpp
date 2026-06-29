@@ -64,6 +64,7 @@ class Cluster {
 
 		void	checkInactiveClients();
 		bool	isCGIPipe(int pipeFd) const;
+		bool	hasPendingCGI(int clientFd) const;
 		void  checkCGITimeout(int pipeFd);
 };
 #endif

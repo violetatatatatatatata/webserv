@@ -72,6 +72,11 @@ bool Request::getIsChunked() const
   return _isChunked;
 }
 
+const std::map<std::string, std::string>& Request::getHeaders() const
+{
+  return _headers;
+}
+
 std::string Request::getHeader(const std::string& header) const
 {
   std::map<std::string, std::string>::const_iterator it = _headers.find(header);
@@ -178,18 +183,53 @@ int Request::parse(const std::string& raw)
 
     if (getMethod() == "POST" && _headers.find("Content-Length") == _headers.end() && !_isChunked)
       return -1;
-    if (getMethod() == "POST" && _headers.find("Content-Length") != _headers.end() && _isChunked)
-      return -1;
-    
-    std::string body;
-    while (std::getline(stream, line))
-    {
-        body += line;
-        body += "\n";
-    }
 
-    if (!body.empty() && body[body.size() - 1] == '\n')
-        body.erase(body.size() - 1);
+    // Find body start in the raw buffer (after \r\n\r\n)
+    size_t hdrEnd = raw.find("\r\n\r\n");
+    if (hdrEnd == std::string::npos)
+    {
+        std::string empty;
+        return (setBody(empty), 0);
+    }
+    size_t bodyStart = hdrEnd + 4;
+
+    std::string body;
+
+    if (_isChunked)
+    {
+        // Decode chunked transfer encoding
+        size_t pos = bodyStart;
+        while (pos < raw.size())
+        {
+            size_t lineEnd = raw.find("\r\n", pos);
+            if (lineEnd == std::string::npos)
+                break;
+            std::string sizeLine = raw.substr(pos, lineEnd - pos);
+            // Strip chunk extensions (anything after ';')
+            size_t semi = sizeLine.find(';');
+            if (semi != std::string::npos)
+                sizeLine = sizeLine.substr(0, semi);
+            char *endptr;
+            size_t chunkSize = std::strtoul(sizeLine.c_str(), &endptr, 16);
+            if (endptr == sizeLine.c_str())
+                break;
+            pos = lineEnd + 2;
+            if (chunkSize == 0)
+                break;
+            if (pos + chunkSize > raw.size())
+                break;
+            body.append(raw, pos, chunkSize);
+            pos += chunkSize + 2; // skip chunk data + \r\n
+        }
+    }
+    else
+    {
+        // Use Content-Length to extract the exact body
+        std::string clStr = getHeader("Content-Length");
+        size_t contentLength = std::strtoul(clStr.c_str(), NULL, 10);
+        if (bodyStart < raw.size())
+            body = raw.substr(bodyStart, contentLength);
+    }
 
     return (setBody(body), 0);
 }
