@@ -156,13 +156,12 @@ std::vector<std::string> CGIHandler::buildEnv(const ParsedURL& urlInfo) const
     env.push_back("CONTENT_LENGTH=" + cl);
     env.push_back("PATH_INFO=" + pathInfo);
 
-    // Pass HTTP request headers as HTTP_* env vars and special CGI vars
     const std::map<std::string, std::string>& hdrs = _request.getHeaders();
     for (std::map<std::string, std::string>::const_iterator it = hdrs.begin(); it != hdrs.end(); ++it)
     {
         const std::string& name = it->first;
         if (name == "Content-Length")
-            continue; // already set as CONTENT_LENGTH
+            continue;
         if (name == "Content-Type")
         {
             env.push_back("CONTENT_TYPE=" + it->second);
@@ -220,54 +219,46 @@ void CGIHandler::executeCGI() const
     exit(EXIT_FAILURE);
 }
 
-void CGIHandler::handleFd(int fd[2], Response& response) const
+void CGIHandler::handleFd(int fd[2], int stdinFd[2]) const
 {
-    (void)response;
     close(fd[0]);
     dup2(fd[1], STDOUT_FILENO);
     close(fd[1]);
 
     if (_request.getMethod() == "POST")
     {
-        FILE* tmp = tmpfile();
-        if (!tmp) { perror("tmpfile"); exit(EXIT_FAILURE); }
-
-        const std::string& body = _request.getBody();
-        size_t written = 0;
-        while (written < body.size())
-        {
-            ssize_t ret = write(fileno(tmp), body.c_str() + written, body.size() - written);
-            if (ret <= 0) break;
-            written += (size_t)ret;
-        }
-        rewind(tmp);
-        dup2(fileno(tmp), STDIN_FILENO);
-        fclose(tmp);
+        close(stdinFd[1]);
+        dup2(stdinFd[0], STDIN_FILENO);
+        close(stdinFd[0]);
     }
     else
     {
         int devNull = open("/dev/null", O_RDONLY);
-        if (devNull != -1)
-        {
-            dup2(devNull, STDIN_FILENO);
-            close(devNull);
-        }
+        dup2(devNull, STDIN_FILENO);
+        close(devNull);
     }
 }
 
 void CGIHandler::handleRequest(Response& response)
 {
-    // Only check that the CGI binary exists, not the script (the binary handles missing scripts)
     int res = HttpHandler::isFileInError(X_OK, _binPath);
     if (res != 0)
     {
         ErrorHandler(res, _request, _server, response);
-        return ;
+        return;
     }
 
     int fd[2];
     if (pipe(fd) == -1)
         internalError("pipe", response);
+
+    int stdinFd[2] = {-1, -1};
+    if (_request.getMethod() == "POST")
+    {
+        if (pipe(stdinFd) == -1)
+            internalError("pipe", response);
+        fcntl(stdinFd[1], F_SETFL, O_NONBLOCK);
+    }
 
     pid_t pid = fork();
     if (pid == -1)
@@ -275,59 +266,15 @@ void CGIHandler::handleRequest(Response& response)
 
     if (pid == 0)
     {
-        handleFd(fd, response);   
+        handleFd(fd, stdinFd);
         executeCGI();
     }
-    
+
     close(fd[1]);
+    if (_request.getMethod() == "POST")
+        close(stdinFd[0]);
+
     response.setCGIState(pid, fd[0], _request.getclientFd());
-
-    /*time_t start = std::time(NULL);
-    char buf[1024];
-    std::string data;
-    ssize_t n;
-
-    fcntl(fd[0], F_SETFL, O_NONBLOCK);
-
-    while (true)
-    {
-        if (std::time(NULL) - start > TIMEOUT)
-        {
-            kill(pid, SIGKILL);
-            waitpid(pid, NULL, 0);
-            close(fd[0]);
-            ErrorHandler(504, _request, _server, response);
-            return;
-        }
-
-        fd_set readfds;
-        FD_ZERO(&readfds);
-        FD_SET(fd[0], &readfds);
-
-        struct timeval tv;
-        tv.tv_sec = 0;
-        tv.tv_usec = 10000;
-
-        int ret = select(fd[0] + 1, &readfds, NULL, NULL, &tv);
-
-        if (ret < 0)
-            break;
-        else if (ret == 0)
-            continue;
-    
-        n = read(fd[0], buf, sizeof(buf));
-        if (n > 0)
-            data.append(buf, n);
-        else
-            break;
-    }
-
-    close(fd[0]);
-    int status;
-    waitpid(pid, &status, 0);
-
-    if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
-        ErrorHandler(500, _request, _server, response);
-    else
-        response.setResponseData(200, "OK", data);*/
+    if (_request.getMethod() == "POST")
+        response.setCGIStdin(stdinFd[1]);
 }

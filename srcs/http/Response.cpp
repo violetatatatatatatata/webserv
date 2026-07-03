@@ -1,6 +1,7 @@
 #include <Response.hpp>
 
-Response::Response() : _errorCode(0) { _cgiState.isCgi = false;}
+Response::Response() : _errorCode(0), _cgiInFd(-1) { _cgiState.isCgi = false; }
+
 Response::~Response() {}
 
 Response::Response(const Response& other)
@@ -95,6 +96,11 @@ void Response::setCGIState(pid_t cgiPid, int pipeFd, int clientFd)
   _cgiState.clientFd = clientFd;
 }
 
+void Response::setCGIStdin(int inFd)
+{
+    _cgiInFd = inFd;
+}
+
 // Getters
 const CGIState& Response::getCGIState() const
 {
@@ -109,4 +115,9 @@ int Response::getStatus() const
 const std::string& Response::getVersion() const
 {
   return _version;
+}
+
+int Response::getCGIStdin() const
+{
+    return _cgiInFd;
 }

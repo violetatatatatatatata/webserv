@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include <Cluster.hpp>
-#define TIMEOUT 30
+#define TIMEOUT 120
 
 Cluster::Cluster(const std::map<int, std::vector<ServerParser> >& configs)
 	: _needsCompaction(false) {
@@ -49,6 +49,15 @@ Cluster& Cluster::operator=(const Cluster& other) {
 bool Cluster::isCGIPipe(int pipeFd) const
 {
     return _cgiStates.find(pipeFd) != _cgiStates.end();
+}
+
+bool Cluster::isCGIStdin(int fd) const
+{
+    std::map<int, CGIState>::const_iterator it;
+    for (it = _cgiStates.begin(); it != _cgiStates.end(); ++it)
+        if (it->second.stdinFd == fd)
+            return true;
+    return false;
 }
 
 bool Cluster::hasPendingCGI(int clientFd) const
@@ -125,18 +134,23 @@ void Cluster::run() {
 			if (handleClientError(currentFd, i, revents))
 				continue;
 
-			if (isCGIPipe(currentFd))
-				checkCGITimeout(currentFd);
-			if ((revents & POLLOUT) && !findServer(currentFd) && !isCGIPipe(currentFd))
-				handleClientWrite(currentFd, i);
-			else if (revents & (POLLIN | POLLHUP | POLLERR))
+			if (revents & (POLLIN | POLLHUP | POLLERR))
 			{
-				if (findServer(currentFd))
-        				acceptClient(currentFd);
-    				else if (isCGIPipe(currentFd))
-        				handleCGI(currentFd);
-    				else
-        				handleClientData(currentFd, i);
+					if (findServer(currentFd))
+							acceptClient(currentFd);
+					else if (isCGIPipe(currentFd))
+							handleCGI(currentFd);
+					else if (isCGIStdin(currentFd))
+							;
+					else
+							handleClientData(currentFd, i);
+			}
+			else if (revents & POLLOUT)
+			{
+					if (isCGIStdin(currentFd))
+							handleCGIStdin(currentFd);
+					else
+							handleClientWrite(currentFd, i);
 			}
 
 			if (isCGIPipe(currentFd))
@@ -194,6 +208,45 @@ void Cluster::checkCGITimeout(int pipeFd)
     }
 
     _cgiStates.erase(it);
+}
+
+void Cluster::handleCGIStdin(int stdinFd)
+{
+    std::map<int, CGIState>::iterator it;
+    for (it = _cgiStates.begin(); it != _cgiStates.end(); ++it)
+        if (it->second.stdinFd == stdinFd)
+            break;
+    if (it == _cgiStates.end())
+        return;
+
+    CGIState& cgi = it->second;
+
+    const size_t CHUNK_SIZE = 65536;
+    size_t remaining = cgi.stdinBody.size() - cgi.stdinOffset;
+    size_t toWrite   = (remaining < CHUNK_SIZE) ? remaining : CHUNK_SIZE;
+
+    ssize_t ret = write(stdinFd, cgi.stdinBody.c_str() + cgi.stdinOffset, toWrite);
+
+    if (ret > 0)
+        cgi.stdinOffset += static_cast<size_t>(ret);
+    else if (ret == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
+    {
+        close(stdinFd);
+        for (size_t i = 0; i < _fds.size(); i++)
+            if (_fds[i].fd == stdinFd) { _fds[i].fd = -1; break; }
+        cgi.stdinFd = -1;
+        _needsCompaction = true;
+        return;
+    }
+
+    if (cgi.stdinOffset >= cgi.stdinBody.size())
+    {
+        close(stdinFd);
+        for (size_t i = 0; i < _fds.size(); i++)
+            if (_fds[i].fd == stdinFd) { _fds[i].fd = -1; break; }
+        cgi.stdinFd = -1;
+        _needsCompaction = true;
+    }
 }
 
 void Cluster::handleCGI(int pipeFd)
@@ -357,17 +410,13 @@ void Cluster::handleClientData(int clientFd, size_t pollIndex) {
 	}
 	else if (bytes_read == 0) {
 		if (hasPendingCGI(clientFd)) {
-			// Client half-closed (sent FIN); CGI still running.
-			// Remove from poll to avoid busy-loop on POLLHUP, keep fd open for response.
 			_fds[pollIndex].fd = -1;
 			_needsCompaction = true;
 		} else {
 			Client& cl = _clientsFds[clientFd];
-			if (cl.hasDataToSend()) {
-				// Half-closed: client done sending, but we still have a response queued.
-				// Attempt to send it now; poll POLLOUT will handle remaining chunks.
+			if (cl.hasDataToSend())
 				handleClientWrite(clientFd, pollIndex);
-			} else {
+			else {
 				std::ostringstream oss;
 				oss << "Client closed connection clientFd=" << clientFd;
 				print_msg(oss.str(), DISC);
@@ -428,7 +477,6 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 
 	const LocationParser* location = Router::findMatchingLocation(request, serverConfig);
 
-	// For chunked requests, use actual decoded body size; for others use Content-Length
 	size_t effectiveBodySize = request.getIsChunked() ? request.getBody().size() : contentLength;
 	if (location && location->getMaxBodySize() > 0 && effectiveBodySize > location->getMaxBodySize())
 	{
@@ -444,16 +492,29 @@ void Cluster::processHttpRequest(Client& client, int clientFd, size_t pollIndex)
 		CGIState cgi = response.getCGIState();
 		if (cgi.isCgi == true)
 		{
-			cgi.clientFd = clientFd;
-			cgi.start = std::time(NULL);
-			cgi.version = response.getVersion();
-			_cgiStates[cgi.pipeFd] = cgi;
+				cgi.clientFd    = clientFd;
+				cgi.start       = std::time(NULL);
+				cgi.version     = response.getVersion();
+				cgi.stdinFd     = response.getCGIStdin();
+				cgi.stdinBody   = request.getBody();
+				cgi.stdinOffset = 0;
 
-			struct pollfd pfd;
-			pfd.fd      = cgi.pipeFd;
-			pfd.events  = POLLIN | POLLHUP;
-			pfd.revents = 0;
-			_fds.push_back(pfd);
+				_cgiStates[cgi.pipeFd] = cgi;
+
+				struct pollfd pfd;
+				pfd.fd      = cgi.pipeFd;
+				pfd.events  = POLLIN | POLLHUP;
+				pfd.revents = 0;
+				_fds.push_back(pfd);
+
+				if (cgi.stdinFd != -1)
+				{
+						struct pollfd spfd;
+						spfd.fd      = cgi.stdinFd;
+						spfd.events  = POLLOUT;
+						spfd.revents = 0;
+						_fds.push_back(spfd);
+				}
 		}
 		else
 			queueResponse(client, clientFd, response);
@@ -561,14 +622,13 @@ bool Cluster::handleClientError(int fd, size_t pollIndex, short revents) {
 
 	if (!(revents & (POLLERR | POLLHUP | POLLNVAL)))
 		return false;
-
 	if (findServer(fd))
 		return false;
-
 	if (isCGIPipe(fd))
 		return false;
+	if (isCGIStdin(fd))
+    return false;
 
-	// Don't disconnect if there's a queued response to send (half-closed TCP)
 	std::map<int, Client>::iterator cit = _clientsFds.find(fd);
 	if (cit != _clientsFds.end() && cit->second.hasDataToSend())
 		return false;
@@ -605,6 +665,11 @@ void Cluster::checkInactiveClients() {
 	while (it != _clientsFds.end()) {
 
 		Client& client = it->second;
+
+		if (hasPendingCGI(client.getFd())) {
+			++it;
+			continue;
+    }
 
 		if (now - client.getLastActivity() > timeout) {
 			std::ostringstream oss;

@@ -55,6 +55,7 @@ class Cluster {
 		void	processHttpRequest(Client& client, int clientFd, size_t pollIndex);
 		void	disconnectClient(int clientFd, size_t pollIndex);
 		void	handleCGI(int pipeFd);
+		void  handleCGIStdin(int stdinFd);
 
 		void	handleClientWrite(int clientFd, size_t pollIndex);
 		void	setPollEvents(int fd, short events);
@@ -65,6 +66,7 @@ class Cluster {
 		void	checkInactiveClients();
 		bool	isCGIPipe(int pipeFd) const;
 		bool	hasPendingCGI(int clientFd) const;
+		bool  isCGIStdin(int fd) const;
 		void  checkCGITimeout(int pipeFd);
 };
 #endif

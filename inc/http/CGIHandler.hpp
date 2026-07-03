@@ -34,7 +34,7 @@ class CGIHandler : public HttpHandler
     void        executeCGI() const;
     char**      buildArgv(const std::string& script) const;
     char**      castEnv(const ParsedURL& urlInfo) const;
-    void        handleFd(int fd[2], Response& response) const;
+    void        handleFd(int fd[2], int stdinFd[2]) const;
     std::string getDir() const; 
     std::vector<std::string> buildEnv(const ParsedURL& urlInfo) const;
 

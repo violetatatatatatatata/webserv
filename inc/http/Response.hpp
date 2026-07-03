@@ -9,13 +9,19 @@
 
 struct CGIState
 {
-  bool isCgi;
-  pid_t cgiPid;
-  int pipeFd;
-  int clientFd;
-  std::string version;
-  std::string output;
-  time_t start;
+  bool          isCgi;
+  pid_t         cgiPid;
+  int           pipeFd;
+  int           clientFd;
+  int           stdinFd;
+  std::string   stdinBody;
+  size_t        stdinOffset;
+  std::string   version;
+  std::string   output;
+  time_t        start;
+
+    CGIState() : isCgi(false), cgiPid(-1), pipeFd(-1), clientFd(-1),
+                 stdinFd(-1), stdinOffset(0), start(0) {}
 };
 
 class Response
@@ -38,15 +44,18 @@ class Response
         void setHeader(const std::string& header, const std::string& value);
         void setResponseData(int error, const std::string& reasonPhrase, const std::string& body);
         void setCGIState(pid_t pid, int pipeFd, int clientFd);
+        void setCGIStdin(int inFd);
 
         // Getters
         const CGIState& getCGIState() const;
+        int getCGIStdin() const;
         const std::string& getVersion() const;
         int getStatus() const;
 
     private:
 
         int         _errorCode;
+        int         _cgiInFd;
         CGIState    _cgiState;
         std::string _version;
         std::string _body;
