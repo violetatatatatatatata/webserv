@@ -101,7 +101,6 @@ void Client::processHeaders() {
 
 	size_t maxBodySize = _maxBodySize;
 
-	std::cout << "Exected: " << _expectedBodySize << " Max: " << maxBodySize << std::endl;
 	if (_expectedBodySize > maxBodySize) {
 		_bodyTooLarge = true;
 		_parseState   = READY;

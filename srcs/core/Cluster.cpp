@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include <Cluster.hpp>
-#define TIMEOUT 120
+#define TIMEOUT 10
 
 Cluster::Cluster(const std::map<int, std::vector<ServerParser> >& configs)
 	: _needsCompaction(false) {
