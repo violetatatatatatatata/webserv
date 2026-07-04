@@ -72,13 +72,14 @@ static std::string resolvePath(
     const std::string& locationPath = location->getPath();
 
     if (relativePath.compare(0, locationPath.size(), locationPath) == 0 &&
-     (relativePath.size() == locationPath.size() ||
-     relativePath[locationPath.size()] == '/'))
+        (relativePath.size() == locationPath.size() ||
+         locationPath[locationPath.size() - 1] == '/' ||
+         relativePath[locationPath.size()] == '/'))
     {
-    	relativePath.erase(0, locationPath.size());
+        relativePath.erase(0, locationPath.size());
     }
 
-    return location->getRoot() + relativePath;
+    return joinPath(location->getRoot(), relativePath);
 }
 
 static int checkStat(struct stat& st, const std::string& file)

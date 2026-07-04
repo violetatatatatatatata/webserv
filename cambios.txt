@@ -1,0 +1,130 @@
+INFORME DE CAMBIOS - webserv 42
+Fecha: 2026-07-04
+Rama: fixing_v2
+Commit de referencia: 08f80a0 Fixed location finding
+================================================================================
+
+CONTEXTO
+--------
+El tester (./tester http://localhost:8080) fallaba despues del commit 08f80a0.
+Se identificaron tres bugs introducidos o agravados por ese commit.
+Tras los tres arreglos, el tester pasa con exit code 0.
+
+================================================================================
+
+CAMBIO 1 — srcs/core/Cluster.cpp (linea 14)
+--------------------------------------------
+PROBLEMA:
+  El commit redujo TIMEOUT de 120 a 10 segundos. Esta constante controla
+  cuanto tiempo puede vivir un proceso CGI antes de ser matado por
+  checkCGITimeout() y devolver 504 Gateway Timeout.
+  Con 20 workers concurrentes enviando 100 MB cada uno, los procesos CGI
+  necesitan mas de 10 segundos para completarse.
+
+ANTES:
+  #define TIMEOUT 10
+
+DESPUES:
+  #define TIMEOUT 120
+
+================================================================================
+
+CAMBIO 2 — srcs/core/Cluster.cpp (linea 633)
+---------------------------------------------
+PROBLEMA:
+  handleClientError() se dispara cuando poll() reporta POLLERR, POLLHUP
+  o POLLNVAL en un file descriptor de cliente. La funcion decide si
+  desconectar al cliente segun si tiene datos pendientes de enviar.
+  Sin embargo, solo comprobaba hasDataToSend(). Si un CGI estaba todavia
+  ejecutandose (hasPendingCGI), el cliente aun no tenia datos encolados,
+  por lo que se le desconectaba prematuramente.
+  Cuando el CGI terminaba e intentaba escribir la respuesta, el cliente
+  ya no existia en _clientsFds, produciendo el error:
+  "Client not found in handleClientWrite" (aparecia 100 veces por run).
+
+ANTES:
+  if (cit != _clientsFds.end() && cit->second.hasDataToSend())
+      return false;
+
+DESPUES:
+  if (cit != _clientsFds.end() && (cit->second.hasDataToSend() || hasPendingCGI(fd)))
+      return false;
+
+================================================================================
+
+CAMBIO 3 — srcs/http/HandlerFactory.cpp (lineas 74-80)
+-------------------------------------------------------
+PROBLEMA:
+  El commit introdujo una comprobacion de frontera en resolvePath() para
+  evitar que un prefijo "/dir" coincidiera con "/directory". La nueva
+  condicion era:
+
+    relativePath[locationPath.size()] == '/'
+
+  Esto falla cuando locationPath termina en '/' (como "/directory/").
+  Ejemplo: locationPath="/directory/" (11 chars), URI="/directory/youpi.bla"
+    - El caracter en posicion 11 de la URI es 'y' (de "youpi"), no '/'.
+    - La condicion es false -> el prefijo NO se elimina.
+    - resolvePath devuelve "./YoupiBanane/directory/youpi.bla" (incorrecto).
+    - La ruta correcta es "./YoupiBanane/youpi.bla".
+
+  Esto rompia todos los accesos a la location /directory/:
+    GET /directory/youpi.bad_extension -> 404 en vez de 200
+    GET /directory/youpi.bla           -> 404 en vez de CGI
+    POST /directory/youpi.bla (100MB)  -> 404 en vez de CGI
+
+ANTES:
+  if (relativePath.compare(0, locationPath.size(), locationPath) == 0 &&
+   (relativePath.size() == locationPath.size() ||
+   relativePath[locationPath.size()] == '/'))
+  {
+      relativePath.erase(0, locationPath.size());
+  }
+
+DESPUES:
+  if (relativePath.compare(0, locationPath.size(), locationPath) == 0 &&
+      (relativePath.size() == locationPath.size() ||
+       locationPath[locationPath.size() - 1] == '/' ||
+       relativePath[locationPath.size()] == '/'))
+  {
+      relativePath.erase(0, locationPath.size());
+  }
+
+  La condicion adicional locationPath[locationPath.size() - 1] == '/'
+  cubre el caso en que la location ya termina en barra: cualquier URI
+  que empiece con ese prefijo es valida y debe tener el prefijo eliminado.
+
+================================================================================
+
+RESULTADO
+---------
+./tester http://localhost:8080 -> exit code 0 (todos los tests pasan)
+
+Tests verificados:
+  GET /                                          OK
+  POST / (size 0)                                OK
+  HEAD /                                         OK
+  GET /directory                                 OK
+  GET /directory/youpi.bad_extension             OK
+  GET /directory/youpi.bla                       OK
+  GET /directory/oulalala        (espera 404)    OK
+  GET /directory/nop                             OK
+  GET /directory/nop/                            OK
+  GET /directory/nop/other.pouic                 OK
+  GET /directory/nop/other.pouac (espera 404)    OK
+  GET /directory/Yeah            (espera 404)    OK
+  GET /directory/Yeah/not_happy.bad_extension    OK
+  POST /directory/youpi.bla  (100 MB)            OK
+  POST /directory/youpla.bla (100 MB)            OK
+  POST /directory/youpi.bla  (100 KB, headers)   OK
+  POST /post_body (size 0)                       OK
+  POST /post_body (size 100)                     OK
+  POST /post_body (size 200)     (espera 413)    OK
+  POST /post_body (size 101)     (espera 413)    OK
+  5  workers x 15   GET /                        OK
+  20 workers x 5000 GET /                        OK
+  128 workers x 50  GET /directory/nop           OK
+  20 workers x 5    POST /directory/youpi.bla
+                    (100 MB, concurrente)         OK
+
+================================================================================

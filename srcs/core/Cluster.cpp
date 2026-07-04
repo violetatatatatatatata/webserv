@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include <Cluster.hpp>
-#define TIMEOUT 10
+#define TIMEOUT 120
 
 Cluster::Cluster(const std::map<int, std::vector<ServerParser> >& configs)
 	: _needsCompaction(false) {
@@ -229,7 +229,7 @@ void Cluster::handleCGIStdin(int stdinFd)
 
     if (ret > 0)
         cgi.stdinOffset += static_cast<size_t>(ret);
-    else if (ret == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
+    else if (ret == -1)
     {
         close(stdinFd);
         for (size_t i = 0; i < _fds.size(); i++)
@@ -265,7 +265,7 @@ void Cluster::handleCGI(int pipeFd)
         return;
     }
 
-    if (n == -1 && errno == EAGAIN)
+    if (n == -1)
         return;
 
     close(pipeFd);
@@ -630,7 +630,7 @@ bool Cluster::handleClientError(int fd, size_t pollIndex, short revents) {
     return false;
 
 	std::map<int, Client>::iterator cit = _clientsFds.find(fd);
-	if (cit != _clientsFds.end() && cit->second.hasDataToSend())
+	if (cit != _clientsFds.end() && (cit->second.hasDataToSend() || hasPendingCGI(fd)))
 		return false;
 
 	std::ostringstream oss;
