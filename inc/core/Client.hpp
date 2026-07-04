@@ -46,6 +46,7 @@ class Client {
 		size_t _maxBodySize;
 
 		bool _isChunked;
+		size_t _chunkedSearchPos;
 
 		time_t _lastActivity;
 
@@ -75,7 +76,8 @@ class Client {
 		bool		isResponseFullySent() const;
 
 		bool isBodyTooLarge() const;
-
+	
+		size_t getMaxBodySize() const;
 		time_t getLastActivity() const;
 		void updateActivity();
 

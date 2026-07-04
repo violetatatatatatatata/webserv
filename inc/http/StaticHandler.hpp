@@ -21,8 +21,8 @@ class StaticHandler : public HttpHandler
     int   resolveDirectory();
     int   resolveAbsolutePath();
     void  handleGET(Response& response) const;
-    void  handlePOST(Response& response) const;
     void  handleDELETE(Response& response) const;
+    void  handlePOST(Response& response) const;
     void  fillErrorResponse(int error, Response& response) const;
     std::string getErrorBody(int error) const;
 

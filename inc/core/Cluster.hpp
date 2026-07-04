@@ -13,14 +13,14 @@
 #ifndef CLUSTER_HPP
 # define CLUSTER_HPP
 
- # include <Webserv.hpp>
- # include <Server.hpp>
- # include <Client.hpp>
- # include <Router.hpp>
- # include <Response.hpp>
- # include <ServerParser.hpp>
- # include <HandlerFactory.hpp>
- # include <ErrorHandler.hpp>
+ # include "Webserv.hpp"
+ # include "Server.hpp"
+ # include "Client.hpp"
+ # include "Router.hpp"
+ # include "Response.hpp"
+ # include "ServerParser.hpp"
+ # include "HandlerFactory.hpp"
+ # include "ErrorHandler.hpp"
 
 class Server;
 class Client;
@@ -29,10 +29,11 @@ class Request;
 
 class Cluster {
 	private:
-		std::vector<Server*> _servers;
-		std::vector<struct pollfd> _fds;
-		std::map<int, Client>      _clientsFds;
-		bool _needsCompaction;
+		std::vector<Server*>				_servers;
+		std::vector<struct pollfd>	_fds;
+		std::map<int, Client>      	_clientsFds;
+		std::map<int, CGIState>			_cgiStates;
+		bool												_needsCompaction;
 
 	public:
 		Cluster();
@@ -53,13 +54,19 @@ class Cluster {
 		void	handleClientData(int clientFd, size_t pollIndex);
 		void	processHttpRequest(Client& client, int clientFd, size_t pollIndex);
 		void	disconnectClient(int clientFd, size_t pollIndex);
+		void	handleCGI(int pipeFd);
+		void  handleCGIStdin(int stdinFd);
 
-		void handleClientWrite(int clientFd, size_t pollIndex);
-		void setPollEvents(int fd, short events);
-		void queueResponse(Client& client, int clientFd, Response& response);
-		bool handleClientError(int fd, size_t pollIndex, short revents);
-		void compactPollFds();
+		void	handleClientWrite(int clientFd, size_t pollIndex);
+		void	setPollEvents(int fd, short events);
+		void	queueResponse(Client& client, int clientFd, Response& response);
+		bool	handleClientError(int fd, size_t pollIndex, short revents);
+		void	compactPollFds();
 
-		void checkInactiveClients();
+		void	checkInactiveClients();
+		bool	isCGIPipe(int pipeFd) const;
+		bool	hasPendingCGI(int clientFd) const;
+		bool  isCGIStdin(int fd) const;
+		void  checkCGITimeout(int pipeFd);
 };
 #endif

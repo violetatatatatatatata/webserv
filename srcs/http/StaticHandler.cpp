@@ -15,19 +15,16 @@ StaticHandler::~StaticHandler() {}
 
 bool StaticHandler::isMethodAuthorized() const
 {
+    const std::string& method = _request.getMethod();
+
     if (_location == NULL || _location->getMethods().empty())
+        return method == "GET";
+
+    std::vector<std::string>::const_iterator it;
+    for (it = _location->getMethods().begin(); it != _location->getMethods().end(); ++it)
     {
-        if (_request.getMethod() == "GET")
+        if (*it == method)
             return true;
-    }
-    else
-    {
-        std::vector<std::string>::const_iterator it;
-        for(it = _location->getMethods().begin(); it < _location->getMethods().end(); it++)
-        {
-            if (*it == _request.getMethod())
-                return true;
-        }
     }
     return false;
 }
@@ -42,26 +39,15 @@ void StaticHandler::handleRequest(Response& response)
         return ;
     }
     
-    std::string methods[] =
-    {
-        "GET",
-        "POST",
-        "DELETE"
-    };
-
-    void (StaticHandler::*methodFunctions[3])(Response&) const =
-    {
-        &StaticHandler::handleGET,
-        &StaticHandler::handlePOST,
-        &StaticHandler::handleDELETE
-    };
-
-    for (int i = 0; i < 3; i++)
-    {
-        if (_request.getMethod() == methods[i])
-            (this->*methodFunctions[i])(response);
-    }
-
+    const std::string& method = _request.getMethod();
+    if (method == "GET")
+        handleGET(response);
+    else if (method == "DELETE")
+        handleDELETE(response);
+    else if (method == "POST")
+        handlePOST(response);
+    else
+        ErrorHandler(405, _request, _server, response);
 }
 
 std::string getFileContent(std::string path);
@@ -79,11 +65,6 @@ void StaticHandler::handleGET(Response& response) const
 
     response.setResponseData(200, "OK", content);
     response.setHeader("Content-Type", response.findMIME(_absolute_path));
-}
-
-void StaticHandler::handlePOST(Response& response) const
-{
-    handleGET(response);
 }
 
 void StaticHandler::handleDELETE(Response& response) const
@@ -115,4 +96,9 @@ void StaticHandler::handleDELETE(Response& response) const
             }
         }
     }
+}
+
+void StaticHandler::handlePOST(Response& response) const
+{
+    response.setResponseData(200, "OK", "");
 }

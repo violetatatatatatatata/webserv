@@ -25,5 +25,5 @@ void RedirectHandler::handleRequest(Response& response)
     iss >> code >> path;
 
     response.setResponseData(code, "Moved Permanently", "");
-    response.setHeader("LocationParser", path);
+    response.setHeader("Location", path);
 }

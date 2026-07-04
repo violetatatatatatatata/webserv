@@ -64,17 +64,57 @@ static std::string resolvePath(
     const ServerParser& server)
 {
     const std::string& uri = request.getURI();
-
+    
     if (!location || location->getRoot().empty())
-        return server.getRoot() + uri;
+   	return server.getRoot() + uri;
 
     std::string relativePath = uri;
     const std::string& locationPath = location->getPath();
 
-    if (relativePath.compare(0, locationPath.size(), locationPath) == 0)
-        relativePath.erase(0, locationPath.size());
+    if (relativePath.compare(0, locationPath.size(), locationPath) == 0 &&
+     (relativePath.size() == locationPath.size() ||
+     relativePath[locationPath.size()] == '/'))
+    {
+    	relativePath.erase(0, locationPath.size());
+    }
 
     return location->getRoot() + relativePath;
+}
+
+static int checkStat(struct stat& st, const std::string& file)
+{
+    if (stat(file.c_str(), &st) == -1)
+    {
+        switch(errno)
+        {
+            case ENOENT:
+            case ENOTDIR:
+                return 404;
+            case EACCES:
+                return 403;
+            default:
+                return 500;
+        }
+    }
+
+    return 0;
+}
+
+static int isFileInError(int mode, const std::string file)
+{
+    struct stat st;
+
+    int res = checkStat(st, file);
+    if (res != 0)
+        return res;
+
+    if (S_ISDIR(st.st_mode))
+            return 404;
+
+    if (access(file.c_str(), mode) == -1)
+        return 403;
+
+    return 0;
 }
 
 HttpHandler* HandlerFactory::create(const Request& request, const LocationParser* location, const ServerParser& server)
@@ -92,14 +132,15 @@ HttpHandler* HandlerFactory::create(const Request& request, const LocationParser
     {
         std::string index = getCorrectIndex(location, server);
         std::string indexPath = joinPath(path, index);
+        int error_code = isFileInError(R_OK, indexPath);
 
-        if (!indexPath.empty())
+        if (!indexPath.empty() && error_code == 0)
             return new StaticHandler(request, location, server, indexPath);
 
         if (location && location->getAutoindex())
             return new AutoIndexHandler(request, location, server, path);
 
-        return new ErrorHandler(403, request, server);
+        return new ErrorHandler(error_code, request, server);
     }
 
     return new StaticHandler(request, location, server, path);

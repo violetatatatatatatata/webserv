@@ -52,6 +52,8 @@ void ErrorHandler::fillErrorResponse(Response& response) const
             break ;
         case 500: response.setResponseData(500, "Internal Server Error", getErrorBody());
             break ;
+        case 501: response.setResponseData(501, "Not implemented", getErrorBody());
+            break ;
         case 504: response.setResponseData(504, "Gateway Timeout", getErrorBody());
             break ;
         case 505: response.setResponseData(505, "Version Not Supported", getErrorBody());
